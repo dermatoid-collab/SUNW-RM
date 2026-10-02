@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static preview for launchers older than Android 12 (newer ones use previewLayout). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/widget_background" />
+    <item
+        android:bottom="40dp"
+        android:drawable="@drawable/curve_placeholder"
+        android:left="14dp"
+        android:right="14dp"
+        android:top="14dp" />
+</layer-list>

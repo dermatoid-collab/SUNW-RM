@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sunrise · Sunset</string>
+    <string name="widget_name">Sunrise · Sunset</string>
+    <string name="widget_description">Today\'s sunrise, sunset and the Sun\'s path</string>
+    <string name="curve_description">Solar elevation over the day</string>
+    <string name="polar_day">Midnight sun</string>
+    <string name="polar_night">Polar night</string>
+    <string name="auto_location">Use device location</string>
+    <string name="latitude">Latitude (°N, negative = S)</string>
+    <string name="longitude">Longitude (°E, negative = W)</string>
+    <string name="save">Save</string>
+    <string name="saved">Saved</string>
+    <string name="invalid_coordinates">Invalid coordinates</string>
+    <string name="permission_denied">Location permission denied: enter coordinates manually.</string>
+    <string name="no_fix_yet">No location available yet: the widget will use the last saved coordinates.</string>
+    <string name="summary">Sunrise %1$s · Sunset %2$s\nDaylight %3$s · Solar noon %4$s</string>
+    <string name="about">Computed on the device with NOAA solar equations. No internet access is used. Tap the widget to open this screen.</string>
+</resources>

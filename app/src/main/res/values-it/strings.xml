@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Alba · Tramonto</string>
+    <string name="widget_name">Alba · Tramonto</string>
+    <string name="widget_description">Alba, tramonto e percorso del Sole di oggi</string>
+    <string name="curve_description">Altezza del Sole durante la giornata</string>
+    <string name="polar_day">Sole di mezzanotte</string>
+    <string name="polar_night">Notte polare</string>
+    <string name="auto_location">Usa la posizione del dispositivo</string>
+    <string name="latitude">Latitudine (°N, negativa = S)</string>
+    <string name="longitude">Longitudine (°E, negativa = O)</string>
+    <string name="save">Salva</string>
+    <string name="saved">Salvato</string>
+    <string name="invalid_coordinates">Coordinate non valide</string>
+    <string name="permission_denied">Permesso di posizione negato: inserisci le coordinate a mano.</string>
+    <string name="no_fix_yet">Nessuna posizione disponibile: il widget userà le ultime coordinate salvate.</string>
+    <string name="summary">Alba %1$s · Tramonto %2$s\nLuce %3$s · Mezzogiorno solare %4$s</string>
+    <string name="about">Calcolato sul dispositivo con le equazioni solari NOAA. Nessun accesso a internet. Tocca il widget per aprire questa schermata.</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown in the widget picker preview and before the first update. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="80dp"
+    android:viewportWidth="300"
+    android:viewportHeight="80">
+    <path
+        android:strokeColor="@color/widget_text_secondary"
+        android:strokeAlpha="0.35"
+        android:strokeWidth="1"
+        android:pathData="M0,46H300" />
+    <path
+        android:strokeColor="@color/widget_text_secondary"
+        android:strokeAlpha="0.45"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M6,74 C40,74 55,60 82,46 M218,46 C245,60 260,74 294,74" />
+    <path
+        android:strokeColor="@color/widget_accent"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M82,46 C110,30 130,8 150,8 C170,8 190,30 218,46" />
+    <path
+        android:fillColor="@color/widget_accent"
+        android:pathData="M120,19.5m-4.5,0a4.5,4.5 0,1 1,9 0a4.5,4.5 0,1 1,-9 0" />
+</vector>
