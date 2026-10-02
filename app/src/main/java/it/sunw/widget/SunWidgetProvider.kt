@@ -11,7 +11,8 @@ import android.os.Bundle
 import java.time.Instant
 import java.time.ZoneId
 
-class SunWidgetProvider : AppWidgetProvider() {
+/** Widget picker entry "4×2"; [SunWidgetProviderSmall] is the 1×1 entry. Both render by size. */
+open class SunWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         updateWidgets(context, manager, ids)
@@ -22,7 +23,9 @@ class SunWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onDisabled(context: Context) {
-        context.getSystemService(AlarmManager::class.java)?.cancel(tickIntent(context))
+        if (allWidgetIds(context).isEmpty()) {
+            context.getSystemService(AlarmManager::class.java)?.cancel(tickIntent(context))
+        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -36,9 +39,15 @@ class SunWidgetProvider : AppWidgetProvider() {
         private const val ACTION_TICK = "it.sunw.widget.TICK"
 
         fun updateAll(context: Context) {
+            val ids = allWidgetIds(context)
+            if (ids.isNotEmpty()) updateWidgets(context, AppWidgetManager.getInstance(context), ids)
+        }
+
+        private fun allWidgetIds(context: Context): IntArray {
             val manager = AppWidgetManager.getInstance(context)
-            val ids = manager.getAppWidgetIds(ComponentName(context, SunWidgetProvider::class.java))
-            if (ids.isNotEmpty()) updateWidgets(context, manager, ids)
+            return listOf(SunWidgetProvider::class.java, SunWidgetProviderSmall::class.java)
+                .flatMap { manager.getAppWidgetIds(ComponentName(context, it)).toList() }
+                .toIntArray()
         }
 
         private fun updateWidgets(context: Context, manager: AppWidgetManager, ids: IntArray) {
@@ -47,15 +56,17 @@ class SunWidgetProvider : AppWidgetProvider() {
             val now = Instant.now()
             val zone = ZoneId.systemDefault()
             for (id in ids) {
-                manager.updateAppWidget(id, renderer.render(sizeOf(manager.getAppWidgetOptions(id)), place, now, zone))
+                val small = manager.getAppWidgetInfo(id)?.provider?.className == SunWidgetProviderSmall::class.java.name
+                manager.updateAppWidget(id, renderer.render(sizeOf(manager.getAppWidgetOptions(id), small), place, now, zone))
             }
             scheduleNextTick(context, place, now, zone)
         }
 
         /** Portrait size of the widget in dp (min width × max height, as launchers report it). */
-        private fun sizeOf(options: Bundle): WidgetRenderer.Size {
-            val width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH).takeIf { it > 0 } ?: 250
-            val height = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT).takeIf { it > 0 } ?: 110
+        private fun sizeOf(options: Bundle, small: Boolean): WidgetRenderer.Size {
+            // Defaults for launchers that don't report sizes: a typical 1×1 or 4×2 cell area.
+            val width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH).takeIf { it > 0 } ?: if (small) 72 else 250
+            val height = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT).takeIf { it > 0 } ?: if (small) 80 else 110
             return WidgetRenderer.Size(width, height)
         }
 

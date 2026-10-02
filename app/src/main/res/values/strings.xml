@@ -16,4 +16,8 @@
     <string name="no_fix_yet">No location available yet: the widget will use the last saved coordinates.</string>
     <string name="summary">Sunrise %1$s · Sunset %2$s\nDaylight %3$s · Solar noon %4$s</string>
     <string name="about">Computed on the device with NOAA solar equations. No internet access is used. Tap the widget to open this screen.</string>
+    <string name="widget_name_small">Sunrise · Sunset 1×1</string>
+    <string name="widget_description_small">Next sunrise or sunset, with the Sun\'s path</string>
+    <string name="polar_day_short">24h ☀</string>
+    <string name="polar_night_short">Polar</string>
 </resources>
