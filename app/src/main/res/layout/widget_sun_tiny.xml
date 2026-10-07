@@ -17,15 +17,28 @@
         android:scaleType="fitCenter"
         android:src="@drawable/curve_placeholder" />
 
+    <!-- Sunrise above sunset; 2 × 17dp = TINY_TEXT_ROW_DP in WidgetRenderer. -->
     <TextView
-        android:id="@+id/next_event"
+        android:id="@+id/sunrise"
         android:layout_width="wrap_content"
-        android:layout_height="22dp"
+        android:layout_height="17dp"
+        android:drawableStart="@drawable/ic_sunrise"
+        android:drawablePadding="3dp"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:text="07:17"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/sunset"
+        android:layout_width="wrap_content"
+        android:layout_height="17dp"
         android:drawableStart="@drawable/ic_sunset"
         android:drawablePadding="3dp"
         android:gravity="center_vertical"
         android:maxLines="1"
         android:text="18:57"
         android:textColor="@color/widget_text"
-        android:textSize="14sp" />
+        android:textSize="13sp" />
 </LinearLayout>

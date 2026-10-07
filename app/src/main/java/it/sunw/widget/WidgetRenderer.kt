@@ -66,26 +66,32 @@ class WidgetRenderer(private val context: Context) {
         }
     }
 
-    /** 1×1: mini curve plus only the next event (sunrise, then sunset, then tomorrow's sunrise). */
+    /**
+     * 1×1: mini curve with sunrise and sunset stacked below. After today's sunset it
+     * switches to tomorrow's times; the next event is in full colour, the other dimmed.
+     */
     private fun renderTiny(size: Size, place: Place, day: SunCalculator.Day, now: Instant, zone: ZoneId): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_sun_tiny)
-        val next: Pair<Instant, Boolean>? = when (day) {
-            is SunCalculator.Day.Normal -> when {
-                now.isBefore(day.sunrise) -> day.sunrise to true
-                now.isBefore(day.sunset) -> day.sunset to false
-                else -> (SunCalculator.day(day.date.plusDays(1), place.latitude, place.longitude, zone)
-                    as? SunCalculator.Day.Normal)?.let { it.sunrise to true }
-            }
-            else -> null
-        }
-        if (next != null) {
-            views.setTextViewText(R.id.next_event, Formatters.time(context, next.first, zone))
-            views.setTextViewCompoundDrawablesRelative(
-                R.id.next_event, if (next.second) R.drawable.ic_sunrise else R.drawable.ic_sunset, 0, 0, 0,
-            )
+        val shown = if (day is SunCalculator.Day.Normal && !now.isBefore(day.sunset)) {
+            SunCalculator.day(day.date.plusDays(1), place.latitude, place.longitude, zone)
         } else {
-            views.setTextViewText(R.id.next_event, if (day is SunCalculator.Day.Normal) DASH else context.getString(polarLabel(day, short = true)))
-            views.setTextViewCompoundDrawablesRelative(R.id.next_event, 0, 0, 0, 0)
+            day
+        }
+        if (shown is SunCalculator.Day.Normal) {
+            val sunriseNext = now.isBefore(shown.sunrise)
+            val bright = context.getColor(R.color.widget_text)
+            val dim = context.getColor(R.color.widget_text_secondary)
+            views.setTextViewText(R.id.sunrise, Formatters.time(context, shown.sunrise, zone))
+            views.setTextViewText(R.id.sunset, Formatters.time(context, shown.sunset, zone))
+            views.setTextColor(R.id.sunrise, if (sunriseNext) bright else dim)
+            views.setTextColor(R.id.sunset, if (sunriseNext) dim else bright)
+            views.setTextViewCompoundDrawablesRelative(R.id.sunrise, R.drawable.ic_sunrise, 0, 0, 0)
+            views.setViewVisibility(R.id.sunset, View.VISIBLE)
+        } else {
+            views.setTextViewText(R.id.sunrise, context.getString(polarLabel(shown, short = true)))
+            views.setTextColor(R.id.sunrise, context.getColor(R.color.widget_text))
+            views.setTextViewCompoundDrawablesRelative(R.id.sunrise, 0, 0, 0, 0)
+            views.setViewVisibility(R.id.sunset, View.GONE)
         }
         setCurve(views, size.widthDp - 2 * TINY_PADDING_DP, size.heightDp - 2 * TINY_PADDING_DP - TINY_TEXT_ROW_DP, place, day.date, now, zone)
         return views
@@ -178,7 +184,7 @@ class WidgetRenderer(private val context: Context) {
         private const val TINY_MAX_WIDTH_DP = 110
         private const val COMPACT_MAX_HEIGHT_DP = 100
         private const val TINY_PADDING_DP = 8
-        private const val TINY_TEXT_ROW_DP = 22
+        private const val TINY_TEXT_ROW_DP = 34
         private const val MIN_CURVE_HEIGHT_DP = 16
         private const val PADDING_DP = 14
         private const val TEXT_ROW_DP = 46

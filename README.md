@@ -8,7 +8,7 @@ Widget per la home di Android che mostra, per la posizione corrente:
 
 Ridimensionando il widget a una sola riga di altezza resta solo la riga con gli orari.
 
-C'è anche una versione **1×1** (voce separata nel selettore dei widget, «Alba · Tramonto 1×1»): mini-curva con il Sole e l'orario del **prossimo evento**, cioè l'alba prima che il Sole sorga, il tramonto durante il giorno, l'alba di domani dopo il tramonto. Qualunque widget ristretto a una colonna passa automaticamente a questo layout.
+C'è anche una versione **1×1** (voce separata nel selettore dei widget, «Alba · Tramonto 1×1»): mini-curva con il Sole e, sotto, **alba e tramonto** uno sopra l'altro. Il prossimo evento è in evidenza e l'altro attenuato; dopo il tramonto mostra gli orari di domani. Qualunque widget ristretto a una colonna passa automaticamente a questo layout.
 
 ## Come funziona
 
