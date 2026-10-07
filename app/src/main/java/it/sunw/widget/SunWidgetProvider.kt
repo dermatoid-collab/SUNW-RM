@@ -11,7 +11,10 @@ import android.os.Bundle
 import java.time.Instant
 import java.time.ZoneId
 
-/** Widget picker entry "4×2"; [SunWidgetProviderSmall] is the 1×1 entry. Both render by size. */
+/**
+ * Widget picker entry "4×2". [SunWidgetProviderSmall] and [SunWidgetProviderSmallCurve] are the two
+ * 1×1 entries; all of them pick their layout from the actual size.
+ */
 open class SunWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
@@ -37,6 +40,11 @@ open class SunWidgetProvider : AppWidgetProvider() {
 
     companion object {
         private const val ACTION_TICK = "it.sunw.widget.TICK"
+        private val PROVIDERS = listOf(
+            SunWidgetProvider::class.java,
+            SunWidgetProviderSmall::class.java,
+            SunWidgetProviderSmallCurve::class.java,
+        )
 
         fun updateAll(context: Context) {
             val ids = allWidgetIds(context)
@@ -45,8 +53,7 @@ open class SunWidgetProvider : AppWidgetProvider() {
 
         private fun allWidgetIds(context: Context): IntArray {
             val manager = AppWidgetManager.getInstance(context)
-            return listOf(SunWidgetProvider::class.java, SunWidgetProviderSmall::class.java)
-                .flatMap { manager.getAppWidgetIds(ComponentName(context, it)).toList() }
+            return PROVIDERS.flatMap { manager.getAppWidgetIds(ComponentName(context, it)).toList() }
                 .toIntArray()
         }
 
@@ -56,8 +63,15 @@ open class SunWidgetProvider : AppWidgetProvider() {
             val now = Instant.now()
             val zone = ZoneId.systemDefault()
             for (id in ids) {
-                val small = manager.getAppWidgetInfo(id)?.provider?.className == SunWidgetProviderSmall::class.java.name
-                manager.updateAppWidget(id, renderer.render(sizeOf(manager.getAppWidgetOptions(id), small), place, now, zone))
+                val provider = manager.getAppWidgetInfo(id)?.provider?.className
+                val small = provider != SunWidgetProvider::class.java.name
+                val style = if (provider == SunWidgetProviderSmallCurve::class.java.name) {
+                    WidgetRenderer.TinyStyle.CURVE
+                } else {
+                    WidgetRenderer.TinyStyle.BIG
+                }
+                val size = sizeOf(manager.getAppWidgetOptions(id), small)
+                manager.updateAppWidget(id, renderer.render(size, place, now, zone, style))
             }
             scheduleNextTick(context, place, now, zone)
         }

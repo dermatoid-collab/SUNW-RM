@@ -8,7 +8,12 @@ Widget per la home di Android che mostra, per la posizione corrente:
 
 Ridimensionando il widget a una sola riga di altezza resta solo la riga con gli orari.
 
-C'è anche una versione **1×1** (voce separata nel selettore dei widget, «Alba · Tramonto 1×1»): mini-curva con il Sole e, sotto, **alba e tramonto** uno sopra l'altro. Il prossimo evento è in evidenza e l'altro attenuato; dopo il tramonto mostra gli orari di domani. Qualunque widget ristretto a una colonna passa automaticamente a questo layout.
+Ci sono anche due versioni **1×1**, voci separate nel selettore dei widget. Entrambe mostrano una mini-curva con il Sole e, sotto, **alba e tramonto**: il prossimo evento è in evidenza e l'altro attenuato; dopo il tramonto compaiono gli orari di domani.
+
+- **«Alba · Tramonto 1×1 · grande»**: numeri il più grandi possibile (carattere condensed), curva sottile, angoli squadrati (8dp).
+- **«Alba · Tramonto 1×1 · curva»**: curva più alta, numeri un po' più piccoli, angoli arrotondati di sistema.
+
+Qualunque widget ristretto a una colonna passa automaticamente allo stile «grande».
 
 ## Come funziona
 
@@ -38,7 +43,7 @@ Ogni push su GitHub esegue la workflow **Android build**, che lancia i test e al
 | `SunCalculator.kt` | posizione del Sole, alba/tramonto/mezzogiorno solare |
 | `WidgetRenderer.kt` | `RemoteViews` e disegno della curva |
 | `SunWidgetProvider.kt` | ciclo di vita del widget e pianificazione degli aggiornamenti |
-| `SunWidgetProviderSmall.kt` | voce 1×1 nel selettore dei widget |
+| `SunWidgetProviderSmall.kt`, `SunWidgetProviderSmallCurve.kt` | le due voci 1×1 nel selettore dei widget |
 | `LocationStore.kt` | posizione automatica o manuale |
 | `SettingsActivity.kt` | schermata impostazioni |
 

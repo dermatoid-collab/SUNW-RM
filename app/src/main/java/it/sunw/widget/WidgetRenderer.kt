@@ -24,11 +24,26 @@ class WidgetRenderer(private val context: Context) {
 
     data class Size(val widthDp: Int, val heightDp: Int)
 
-    fun render(size: Size, place: Place, now: Instant = Instant.now(), zone: ZoneId = ZoneId.systemDefault()): RemoteViews {
+    /** The two 1×1 looks. Fractions must match the layout weights. */
+    enum class TinyStyle(val layout: Int, val paddingDp: Int, val curveFraction: Double) {
+        /** Big condensed times, squarer corners, thin curve. */
+        BIG(R.layout.widget_sun_tiny, paddingDp = 5, curveFraction = 0.26),
+
+        /** Taller curve, system-rounded corners. */
+        CURVE(R.layout.widget_sun_tiny_curve, paddingDp = 6, curveFraction = 0.34),
+    }
+
+    fun render(
+        size: Size,
+        place: Place,
+        now: Instant = Instant.now(),
+        zone: ZoneId = ZoneId.systemDefault(),
+        tinyStyle: TinyStyle = TinyStyle.BIG,
+    ): RemoteViews {
         val today = now.atZone(zone).toLocalDate()
         val day = SunCalculator.day(today, place.latitude, place.longitude, zone)
         val views = when {
-            size.widthDp < TINY_MAX_WIDTH_DP -> renderTiny(size, place, day, now, zone)
+            size.widthDp < TINY_MAX_WIDTH_DP -> renderTiny(size, place, day, now, zone, tinyStyle)
             size.heightDp < COMPACT_MAX_HEIGHT_DP -> RemoteViews(context.packageName, R.layout.widget_sun_compact)
                 .also { fillRow(it, day, place, zone) }
             else -> RemoteViews(context.packageName, R.layout.widget_sun).also {
@@ -70,8 +85,8 @@ class WidgetRenderer(private val context: Context) {
      * 1×1: mini curve with sunrise and sunset stacked below. After today's sunset it
      * switches to tomorrow's times; the next event is in full colour, the other dimmed.
      */
-    private fun renderTiny(size: Size, place: Place, day: SunCalculator.Day, now: Instant, zone: ZoneId): RemoteViews {
-        val views = RemoteViews(context.packageName, R.layout.widget_sun_tiny)
+    private fun renderTiny(size: Size, place: Place, day: SunCalculator.Day, now: Instant, zone: ZoneId, style: TinyStyle): RemoteViews {
+        val views = RemoteViews(context.packageName, style.layout)
         val shown = if (day is SunCalculator.Day.Normal && !now.isBefore(day.sunset)) {
             SunCalculator.day(day.date.plusDays(1), place.latitude, place.longitude, zone)
         } else {
@@ -93,9 +108,9 @@ class WidgetRenderer(private val context: Context) {
             views.setViewVisibility(R.id.sunrise_icon, View.GONE)
             views.setViewVisibility(R.id.sunset_row, View.GONE)
         }
-        val innerHeight = size.heightDp - 2 * TINY_PADDING_DP
-        val curveHeight = if (shown is SunCalculator.Day.Normal) (innerHeight * TINY_CURVE_FRACTION).toInt() else innerHeight / 2
-        setCurve(views, size.widthDp - 2 * TINY_PADDING_DP, curveHeight, place, day.date, now, zone)
+        val innerHeight = size.heightDp - 2 * style.paddingDp
+        val curveHeight = if (shown is SunCalculator.Day.Normal) (innerHeight * style.curveFraction).toInt() else innerHeight / 2
+        setCurve(views, size.widthDp - 2 * style.paddingDp, curveHeight, place, day.date, now, zone)
         return views
     }
 
@@ -185,8 +200,6 @@ class WidgetRenderer(private val context: Context) {
         private const val SAMPLES = 144 // every 10 minutes
         private const val TINY_MAX_WIDTH_DP = 110
         private const val COMPACT_MAX_HEIGHT_DP = 100
-        private const val TINY_PADDING_DP = 5
-        private const val TINY_CURVE_FRACTION = 0.26 // layout weights in widget_sun_tiny.xml
         private const val MIN_CURVE_HEIGHT_DP = 12
         private const val PADDING_DP = 14
         private const val TEXT_ROW_DP = 56

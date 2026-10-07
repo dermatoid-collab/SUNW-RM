@@ -16,8 +16,10 @@
     <string name="no_fix_yet">Nessuna posizione disponibile: il widget userà le ultime coordinate salvate.</string>
     <string name="summary">Alba %1$s · Tramonto %2$s\nLuce %3$s · Mezzogiorno solare %4$s</string>
     <string name="about">Calcolato sul dispositivo con le equazioni solari NOAA. Nessun accesso a internet. Tocca il widget per aprire questa schermata.</string>
-    <string name="widget_name_small">Alba · Tramonto 1×1</string>
+    <string name="widget_name_small">Alba · Tramonto 1×1 · grande</string>
     <string name="widget_description_small">Alba e tramonto, con il percorso del Sole</string>
     <string name="polar_day_short">24h ☀</string>
     <string name="polar_night_short">Polare</string>
+    <string name="widget_name_small_curve">Alba · Tramonto 1×1 · curva</string>
+    <string name="widget_description_small_curve">Alba e tramonto sotto una curva del Sole più alta, angoli arrotondati</string>
 </resources>

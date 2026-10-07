@@ -47,5 +47,19 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/sun_widget_small_info" />
         </receiver>
+
+        <receiver
+            android:name=".SunWidgetProviderSmallCurve"
+            android:exported="true"
+            android:label="@string/widget_name_small_curve">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/sun_widget_small_curve_info" />
+        </receiver>
     </application>
 </manifest>
