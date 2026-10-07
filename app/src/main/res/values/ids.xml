@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Views created in code (dialog fields), referenced by tests. -->
+    <item name="favorite_name" type="id" />
+</resources>

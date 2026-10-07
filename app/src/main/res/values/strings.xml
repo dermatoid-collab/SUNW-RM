@@ -80,4 +80,5 @@
     <string name="theme_black">Black</string>
     <string name="theme_glass">Glass</string>
     <string name="theme_tokyo_night">Tokyo Night</string>
+    <string name="favorite_added">“%1$s” added to favourites</string>
 </resources>

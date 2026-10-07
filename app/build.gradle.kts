@@ -32,8 +32,13 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    testOptions {
+        // Robolectric UI tests need merged resources and the manifest.
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.14.1")
 }

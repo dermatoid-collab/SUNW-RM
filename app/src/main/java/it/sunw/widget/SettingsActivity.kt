@@ -238,23 +238,27 @@ class SettingsActivity : Activity() {
 
     private fun addFavorite() {
         val place = store.current()
+        val coordinates = String.format(Locale.ROOT, "%.4f, %.4f", place.latitude, place.longitude)
         val input = EditText(this).apply {
-            setText(place.name ?: if (place.automatic) "" else MainActivity.placeLabel(this@SettingsActivity, place))
+            id = R.id.favorite_name
+            setText(place.name ?: if (place.automatic) "" else coordinates)
             hint = getString(R.string.favorite_name_hint)
+            setSingleLine()
             selectAll()
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
         AlertDialog.Builder(this)
             .setTitle(R.string.add_favorite_title)
             .setView(LinearLayout(this).apply { setPadding(dp(22), dp(8), dp(22), 0); addView(input) })
             .setPositiveButton(R.string.save) { _, _ ->
-                val name = input.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    FavoritesStore(this).add(Favorite(name, place.latitude, place.longitude))
-                    if (!place.automatic) store.save(place.latitude, place.longitude, automatic = false, name = name)
-                    SunWidgetProvider.updateAll(this)
-                    refreshSummary()
-                    refreshFavorites()
-                }
+                // An empty name still saves the place, labelled with its coordinates.
+                val name = input.text.toString().trim().ifEmpty { coordinates }
+                FavoritesStore(this).add(Favorite(name, place.latitude, place.longitude))
+                if (!place.automatic) store.save(place.latitude, place.longitude, automatic = false, name = name)
+                SunWidgetProvider.updateAll(this)
+                refreshSummary()
+                refreshFavorites()
+                Toast.makeText(this, getString(R.string.favorite_added, name), Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
