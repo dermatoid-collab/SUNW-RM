@@ -103,12 +103,21 @@ class SettingsActivity : Activity() {
         }
     }
 
+    /** "Save" button: store the place and go back to the main page, where the change shows. */
     private fun save() {
+        if (persist()) {
+            Toast.makeText(this, R.string.saved, Toast.LENGTH_SHORT).show()
+            finish()
+        }
+    }
+
+    /** Stores the place shown in the fields and refreshes the widgets; false if the coordinates are invalid. */
+    private fun persist(): Boolean {
         val lat = latitude.text.toString().replace(',', '.').toDoubleOrNull()
         val lon = longitude.text.toString().replace(',', '.').toDoubleOrNull()
         if (lat == null || lon == null || lat !in -90.0..90.0 || lon !in -180.0..180.0) {
             Toast.makeText(this, R.string.invalid_coordinates, Toast.LENGTH_LONG).show()
-            return
+            return false
         }
         // Keep the searched name only if the user didn't retype the coordinates afterwards.
         val name = pickedName.takeIf { picked == latitude.text.toString() to longitude.text.toString() }
@@ -116,7 +125,7 @@ class SettingsActivity : Activity() {
         SunWidgetProvider.updateAll(this)
         refreshSummary()
         refreshFavorites()
-        Toast.makeText(this, R.string.saved, Toast.LENGTH_SHORT).show()
+        return true
     }
 
     private fun search() {
@@ -152,13 +161,29 @@ class SettingsActivity : Activity() {
         }
     }
 
-    /** Fills in the coordinates of [address], switches to manual mode and saves right away. */
-    private fun pick(address: Address) {
+    /**
+     * Uses the found place right away (manual mode), then offers to add it to the favourites;
+     * either way it returns to the main page, which shows the new place.
+     */
+    internal fun pick(address: Address) {
         auto.isChecked = false
         showCoordinates(address.latitude, address.longitude)
+        val name = shortName(address)
         picked = latitude.text.toString() to longitude.text.toString()
-        pickedName = shortName(address)
-        save()
+        pickedName = name
+        if (!persist()) return
+        val place = store.current()
+        AlertDialog.Builder(this)
+            .setTitle(name)
+            .setMessage(R.string.search_picked)
+            .setPositiveButton(R.string.add_to_favorites) { _, _ ->
+                FavoritesStore(this).add(Favorite(name, place.latitude, place.longitude))
+                Toast.makeText(this, getString(R.string.favorite_added, name), Toast.LENGTH_SHORT).show()
+                finish()
+            }
+            .setNegativeButton(R.string.just_use) { _, _ -> finish() }
+            .setOnCancelListener { finish() }
+            .show()
     }
 
     /** "Passo dello Stelvio, Bormio, Lombardia, Italia" — for the result list. */
@@ -233,7 +258,7 @@ class SettingsActivity : Activity() {
         showCoordinates(fav.latitude, fav.longitude)
         picked = latitude.text.toString() to longitude.text.toString()
         pickedName = fav.name
-        save()
+        if (persist()) finish()
     }
 
     private fun addFavorite() {

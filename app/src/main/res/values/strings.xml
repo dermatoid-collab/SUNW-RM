@@ -81,4 +81,7 @@
     <string name="theme_glass">Glass</string>
     <string name="theme_tokyo_night">Tokyo Night</string>
     <string name="favorite_added">“%1$s” added to favourites</string>
+    <string name="search_picked">Now in use on the widgets. Add it to your favourites?</string>
+    <string name="add_to_favorites">Add to favourites</string>
+    <string name="just_use">Just use it</string>
 </resources>

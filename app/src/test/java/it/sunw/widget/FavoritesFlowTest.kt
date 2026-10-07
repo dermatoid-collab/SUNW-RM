@@ -2,6 +2,7 @@ package it.sunw.widget
 
 import android.app.AlertDialog
 import android.content.Context
+import android.location.Address
 import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -21,6 +22,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlertDialog
 import org.robolectric.shadows.ShadowLooper
 import org.robolectric.shadows.ShadowPopupMenu
+import java.util.Locale
 
 /** Drives the real activities: add, select and remove favourites, and the quick switch. */
 @RunWith(RobolectricTestRunner::class)
@@ -81,17 +83,52 @@ class FavoritesFlowTest {
         val activity = settings()
         assertEquals(2, favoriteRows(activity).size)
 
-        favoriteRows(activity)[1].performClick()
-        val place = LocationStore(context).current()
-        assertFalse(place.automatic)
-        assertEquals("Passo Gavia", place.name)
-        assertEquals(46.3437, place.latitude, 1e-4)
-
         favoriteRows(activity)[0].performLongClick()
         ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
         ShadowLooper.idleMainLooper()
         assertEquals(listOf("Passo Gavia"), FavoritesStore(context).all().map { it.name })
         assertEquals(1, favoriteRows(activity).size)
+
+        // Tapping a favourite uses it and returns to the main page.
+        favoriteRows(activity)[0].performClick()
+        val place = LocationStore(context).current()
+        assertFalse(place.automatic)
+        assertEquals("Passo Gavia", place.name)
+        assertEquals(46.3437, place.latitude, 1e-4)
+        assertTrue(activity.isFinishing)
+    }
+
+    private fun address(name: String, lat: Double, lon: Double) = Address(Locale.ITALY).apply {
+        featureName = name
+        locality = name
+        latitude = lat
+        longitude = lon
+    }
+
+    @Test
+    fun searchResultIsUsedAndCanBeAddedToFavorites() {
+        val activity = settings()
+        activity.pick(address("Livigno", 46.5386, 10.1357))
+
+        // Used right away, even before answering the dialog.
+        assertEquals("Livigno", LocationStore(context).current().name)
+        ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        ShadowLooper.idleMainLooper()
+
+        assertEquals(listOf("Livigno"), FavoritesStore(context).all().map { it.name })
+        assertTrue(activity.isFinishing)
+    }
+
+    @Test
+    fun searchResultJustUsed() {
+        val activity = settings()
+        activity.pick(address("Bormio", 46.4669, 10.3705))
+        ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
+        ShadowLooper.idleMainLooper()
+
+        assertEquals("Bormio", LocationStore(context).current().name)
+        assertTrue(FavoritesStore(context).all().isEmpty())
+        assertTrue(activity.isFinishing)
     }
 
     @Test

@@ -81,4 +81,7 @@
     <string name="theme_glass">Vetro</string>
     <string name="theme_tokyo_night">Tokyo Night</string>
     <string name="favorite_added">«%1$s» aggiunto ai preferiti</string>
+    <string name="search_picked">Ora è la località dei widget. Vuoi aggiungerla ai preferiti?</string>
+    <string name="add_to_favorites">Aggiungi ai preferiti</string>
+    <string name="just_use">Usa e basta</string>
 </resources>
