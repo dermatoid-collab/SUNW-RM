@@ -185,8 +185,8 @@ class WidgetRenderer(private val context: Context) {
         private const val SAMPLES = 144 // every 10 minutes
         private const val TINY_MAX_WIDTH_DP = 110
         private const val COMPACT_MAX_HEIGHT_DP = 100
-        private const val TINY_PADDING_DP = 6
-        private const val TINY_CURVE_FRACTION = 0.34 // layout weights in widget_sun_tiny.xml
+        private const val TINY_PADDING_DP = 5
+        private const val TINY_CURVE_FRACTION = 0.26 // layout weights in widget_sun_tiny.xml
         private const val MIN_CURVE_HEIGHT_DP = 12
         private const val PADDING_DP = 14
         private const val TEXT_ROW_DP = 56
