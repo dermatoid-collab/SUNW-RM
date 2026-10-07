@@ -6,7 +6,8 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 
-data class Place(val latitude: Double, val longitude: Double, val automatic: Boolean)
+/** [name] is set when the place was picked from a search, null for device location or typed coordinates. */
+data class Place(val latitude: Double, val longitude: Double, val automatic: Boolean, val name: String? = null)
 
 /**
  * Remembers where the widget computes the Sun for. In automatic mode it uses the
@@ -24,14 +25,16 @@ class LocationStore(private val context: Context) {
             Double.fromBits(prefs.getLong(KEY_LAT, DEFAULT_LAT.toRawBits())),
             Double.fromBits(prefs.getLong(KEY_LON, DEFAULT_LON.toRawBits())),
             automatic,
+            if (automatic) null else prefs.getString(KEY_NAME, null),
         )
     }
 
-    fun save(latitude: Double, longitude: Double, automatic: Boolean) {
+    fun save(latitude: Double, longitude: Double, automatic: Boolean, name: String? = null) {
         prefs.edit()
             .putLong(KEY_LAT, latitude.toRawBits())
             .putLong(KEY_LON, longitude.toRawBits())
             .putBoolean(KEY_AUTO, automatic)
+            .putString(KEY_NAME, name)
             .apply()
     }
 
@@ -54,6 +57,7 @@ class LocationStore(private val context: Context) {
         private const val KEY_LAT = "lat"
         private const val KEY_LON = "lon"
         private const val KEY_AUTO = "auto"
+        private const val KEY_NAME = "name"
         const val DEFAULT_LAT = 44.8015 // Parma
         const val DEFAULT_LON = 10.3279
     }

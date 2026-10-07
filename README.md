@@ -17,9 +17,9 @@ Qualunque widget ristretto a una colonna passa automaticamente allo stile «gran
 
 ## Come funziona
 
-- I calcoli usano le equazioni del **NOAA Solar Calculator** (Meeus, *Astronomical Algorithms*), fatte girare sul telefono: nessun accesso a internet.
+- I calcoli usano le equazioni del **NOAA Solar Calculator** (Meeus, *Astronomical Algorithms*), fatte girare sul telefono, senza internet. Solo la ricerca delle località per nome usa il servizio di geocoding del sistema e richiede una connessione (l'app non chiede il permesso Internet; su telefoni senza servizi Google la ricerca può non essere disponibile).
   Alba e tramonto si riferiscono al bordo superiore del disco con rifrazione standard (−0,833°), e vengono raffinati iterativamente; l'errore è sotto il minuto per latitudini entro ±72°. Notte polare e sole di mezzanotte sono gestiti.
-- **Posizione**: di default usa l'ultima posizione nota del dispositivo (permesso *approssimativo*, nessun GPS attivo). In alternativa si inseriscono le coordinate a mano. Senza nessuna posizione usa Parma.
+- **Posizione**: di default usa l'ultima posizione nota del dispositivo (permesso *approssimativo*, nessun GPS attivo). In alternativa si **cerca una località per nome** (es. «Livigno», «Passo dello Stelvio») con il Geocoder di Android, oppure si inseriscono le coordinate a mano. Senza nessuna posizione usa Parma.
 - **Aggiornamento**: ogni 30 minuti (per far avanzare il punto sulla curva) e in più subito dopo alba, tramonto e mezzanotte, con allarmi non esatti che non svegliano il telefono e non richiedono permessi speciali.
 - Su Android 12+ i colori seguono la palette Material You dello sfondo.
 

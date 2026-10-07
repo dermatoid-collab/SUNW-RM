@@ -15,11 +15,19 @@
     <string name="permission_denied">Permesso di posizione negato: inserisci le coordinate a mano.</string>
     <string name="no_fix_yet">Nessuna posizione disponibile: il widget userà le ultime coordinate salvate.</string>
     <string name="summary">Alba %1$s · Tramonto %2$s\nLuce %3$s · Mezzogiorno solare %4$s</string>
-    <string name="about">Calcolato sul dispositivo con le equazioni solari NOAA. Nessun accesso a internet. Tocca il widget per aprire questa schermata.</string>
+    <string name="about">Calcolato sul dispositivo con le equazioni solari NOAA. Solo la ricerca delle località richiede una connessione. Tocca il widget per aprire questa schermata.</string>
     <string name="widget_name_small">Alba · Tramonto 1×1 · grande</string>
     <string name="widget_description_small">Alba e tramonto, con il percorso del Sole</string>
     <string name="polar_day_short">24h ☀</string>
     <string name="polar_night_short">Polare</string>
     <string name="widget_name_small_curve">Alba · Tramonto 1×1 · curva</string>
     <string name="widget_description_small_curve">Alba e tramonto sotto una curva del Sole più alta, angoli arrotondati</string>
+    <string name="search_label">Cerca una località</string>
+    <string name="search_hint">es. Livigno, Passo dello Stelvio</string>
+    <string name="search">Cerca</string>
+    <string name="search_unavailable">Ricerca località non disponibile su questo dispositivo: inserisci le coordinate a mano.</string>
+    <string name="search_failed">Ricerca non riuscita: controlla la connessione.</string>
+    <string name="search_no_results">Nessuna località trovata</string>
+    <string name="search_pick">Scegli la località</string>
+    <string name="place_device">Posizione del dispositivo</string>
 </resources>
