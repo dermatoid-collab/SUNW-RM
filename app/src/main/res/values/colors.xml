@@ -5,4 +5,5 @@
     <color name="widget_text_secondary">#A8A6A1</color>
     <color name="widget_accent">#FFB547</color>
     <color name="launcher_background">#16171B</color>
+    <color name="page_background">#121316</color>
 </resources>

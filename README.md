@@ -15,22 +15,46 @@ Ci sono anche due versioni **1×1**, voci separate nel selettore dei widget. Ent
 
 Qualunque widget ristretto a una colonna passa automaticamente allo stile «grande».
 
+## L'app
+
+Toccando un widget (o dall'icona) si apre la **pagina principale**:
+
+- in alto il nome della località: toccandolo si passa al volo tra i **preferiti** o alla posizione del dispositivo;
+- il **widget 4×2** completo, identico a quello sulla home;
+- la **Luna**: disegno della fase, percentuale illuminata, nome della fase, levata e tramonto lunare, date di luna nuova, primo quarto e piena.
+
+L'icona ⚙ apre le **impostazioni**:
+
+- **Posizione**: dispositivo, ricerca per nome o coordinate a mano;
+- **Preferiti**: «+ Salva la posizione attuale»; tocca per usarne uno, tieni premuto per rimuoverlo;
+- **Aspetto**: colore della curva, colore d'accento e sfondo (anche **Tokyo Night**).
+
+### Colore della curva
+
+- **Cielo** (predefinito): il colore segue l'altezza del Sole — notte blu, crepuscolo astronomico/nautico indaco e viola, civile rosa, orizzonte arancio, ora dorata, giallo chiaro col Sole alto. Anche il punto cambia colore.
+- **Accento**: colore d'accento sopra l'orizzonte, grigio sotto.
+- **Ora dorata e ora blu**: evidenzia solo −6°…−4° (ora blu) e −4°…+6° (ora dorata).
+- **Crepuscoli**: curva come «Accento» più tre fasce sotto l'orizzonte (civile 0…−6°, nautico −6…−12°, astronomico −12…−18°).
+
+Colori d'accento: Ambra, Material You, Ghiaccio, Alpino, Corallo, Bianco, Tokyo giallo, Tokyo blu.
+Sfondi: Antracite, Nero, Vetro (semitrasparente), Material You, Tokyo Night (con la scala «Cielo» ricavata dalla palette Tokyo Night).
+
 ## Come funziona
 
-- I calcoli usano le equazioni del **NOAA Solar Calculator** (Meeus, *Astronomical Algorithms*), fatte girare sul telefono, senza internet. Solo la ricerca delle località per nome usa il servizio di geocoding del sistema e richiede una connessione (l'app non chiede il permesso Internet; su telefoni senza servizi Google la ricerca può non essere disponibile).
+- **Luna**: posizione con l'algoritmo di Paul Schlyter (termini periodici principali), illuminazione dall'angolo di fase vero Sole–Luna. Confrontata con PyEphem: illuminazione entro 0,1 %, levata/tramonto entro ~1 minuto (rifrazione standard, bordo superiore), fasi principali entro ~10 minuti.
+- I calcoli del Sole usano le equazioni del **NOAA Solar Calculator** (Meeus, *Astronomical Algorithms*), fatte girare sul telefono, senza internet. Solo la ricerca delle località per nome usa il servizio di geocoding del sistema e richiede una connessione (l'app non chiede il permesso Internet; su telefoni senza servizi Google la ricerca può non essere disponibile).
   Alba e tramonto si riferiscono al bordo superiore del disco con rifrazione standard (−0,833°), e vengono raffinati iterativamente; l'errore è sotto il minuto per latitudini entro ±72°. Notte polare e sole di mezzanotte sono gestiti.
 - **Posizione**: di default usa l'ultima posizione nota del dispositivo (permesso *approssimativo*, nessun GPS attivo). In alternativa si **cerca una località per nome** (es. «Livigno», «Passo dello Stelvio») con il Geocoder di Android, oppure si inseriscono le coordinate a mano. Senza nessuna posizione usa Parma.
 - **Aggiornamento**: ogni 30 minuti (per far avanzare il punto sulla curva) e in più subito dopo alba, tramonto e mezzanotte, con allarmi non esatti che non svegliano il telefono e non richiedono permessi speciali.
 - Su Android 12+ i colori seguono la palette Material You dello sfondo.
 
-Toccare il widget apre la schermata delle impostazioni (anche dall'icona dell'app).
 
 ## Compilare
 
 Requisiti: JDK 17 e Android SDK (API 35).
 
 ```sh
-./gradlew testDebugUnitTest   # test del calcolo solare
+./gradlew testDebugUnitTest   # test del calcolo solare e lunare
 ./gradlew assembleDebug       # app/build/outputs/apk/debug/app-debug.apk
 ```
 
@@ -45,6 +69,10 @@ Ogni push su GitHub esegue la workflow **Android build**, che lancia i test e al
 | `SunWidgetProvider.kt` | ciclo di vita del widget e pianificazione degli aggiornamenti |
 | `SunWidgetProviderSmall.kt`, `SunWidgetProviderSmallCurve.kt` | le due voci 1×1 nel selettore dei widget |
 | `LocationStore.kt` | posizione automatica o manuale |
-| `SettingsActivity.kt` | schermata impostazioni |
+| `MainActivity.kt` | pagina principale: widget, Luna, cambio località |
+| `SettingsActivity.kt` | impostazioni: posizione, preferiti, aspetto |
+| `MoonCalculator.kt`, `MoonRenderer.kt` | fase, illuminazione, levata/tramonto lunare; disegno del disco |
+| `Appearance.kt` | stili della curva, accenti, temi e palette |
+| `FavoritesStore.kt` | località preferite |
 
 minSdk 26 (Android 8.0), nessuna dipendenza esterna.

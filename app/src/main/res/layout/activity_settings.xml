@@ -8,23 +8,31 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingHorizontal="22dp"
+        android:paddingBottom="28dp">
 
         <TextView
+            android:id="@+id/back"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-light"
-            android:text="@string/app_name"
-            android:textSize="28sp" />
+            android:layout_height="56dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:text="@string/settings_title"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/summary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="24dp"
-            android:lineSpacingExtra="4dp"
-            android:textSize="16sp" />
+            android:layout_marginBottom="4dp"
+            android:alpha="0.8"
+            android:lineSpacingExtra="3dp"
+            android:textSize="14sp" />
+
+        <!-- Position -->
+        <TextView
+            style="@style/SectionHeader"
+            android:text="@string/section_position" />
 
         <Switch
             android:id="@+id/auto_location"
@@ -33,12 +41,6 @@
             android:minHeight="48dp"
             android:text="@string/auto_location"
             android:textSize="16sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/search_label" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -64,44 +66,116 @@
                 android:text="@string/search" />
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/latitude" />
-
-        <EditText
-            android:id="@+id/latitude"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:importantForAutofill="no"
-            android:inputType="numberSigned|numberDecimal" />
+            android:orientation="horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/longitude" />
+            <EditText
+                android:id="@+id/latitude"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:hint="@string/latitude"
+                android:importantForAutofill="no"
+                android:inputType="numberSigned|numberDecimal" />
 
-        <EditText
-            android:id="@+id/longitude"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:importantForAutofill="no"
-            android:inputType="numberSigned|numberDecimal" />
+            <EditText
+                android:id="@+id/longitude"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/longitude"
+                android:importantForAutofill="no"
+                android:inputType="numberSigned|numberDecimal" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:layout_marginTop="16dp"
             android:text="@string/save" />
+
+        <!-- Favourites -->
+        <TextView
+            style="@style/SectionHeader"
+            android:text="@string/section_favorites" />
+
+        <LinearLayout
+            android:id="@+id/favorites"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <TextView
+            android:id="@+id/add_favorite"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="10dp"
+            android:text="@string/add_favorite"
+            android:textSize="15sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:alpha="0.6"
+            android:text="@string/favorites_hint"
+            android:textSize="12sp" />
+
+        <!-- Appearance -->
+        <TextView
+            style="@style/SectionHeader"
+            android:text="@string/section_appearance" />
+
+        <TextView
+            style="@style/SubHeader"
+            android:text="@string/curve_color" />
+
+        <RadioGroup
+            android:id="@+id/curve_styles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            style="@style/SubHeader"
+            android:text="@string/accent_color" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/accents"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        <TextView
+            style="@style/SubHeader"
+            android:text="@string/background" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/themes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
             android:alpha="0.6"
             android:text="@string/about"
             android:textSize="12sp" />

@@ -1,6 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.SunW" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:colorAccent">#C77800</item>
+    <!-- Always dark: the app pages match the widget. -->
+    <style name="Theme.SunW" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorAccent">#FFB547</item>
+        <item name="android:windowBackground">@color/page_background</item>
+    </style>
+
+    <style name="SectionHeader">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">24dp</item>
+        <item name="android:layout_marginBottom">6dp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="android:textColor">?android:attr/colorAccent</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="SubHeader">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:layout_marginBottom">6dp</item>
+        <item name="android:alpha">0.75</item>
+        <item name="android:textSize">13sp</item>
     </style>
 </resources>

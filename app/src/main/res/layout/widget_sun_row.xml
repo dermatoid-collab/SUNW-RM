@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Sunrise · day length · sunset. Icons are tinted with the accent colour at runtime. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="56dp"
     android:gravity="center_vertical"
     android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/sunrise_icon"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginEnd="4dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_sunrise" />
 
     <TextView
         android:id="@+id/sunrise"
@@ -14,27 +23,26 @@
         android:autoSizeMinTextSize="14sp"
         android:autoSizeStepGranularity="1sp"
         android:autoSizeTextType="uniform"
-        android:includeFontPadding="false"
-        android:drawableStart="@drawable/ic_sunrise"
-        android:drawablePadding="4dp"
         android:fontFamily="sans-serif-light"
         android:gravity="center_vertical|start"
+        android:includeFontPadding="false"
         android:maxLines="1"
-        android:text="07:18"
+        android:text="07:23"
         android:textColor="@color/widget_text" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingHorizontal="4dp">
 
         <TextView
             android:id="@+id/day_length"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="1"
-            android:text="11h 40m"
+            android:text="11h 24m"
             android:textColor="@color/widget_text_secondary"
             android:textSize="14sp" />
 
@@ -43,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="1"
-            android:text="−2m 54s"
+            android:text="−3m 03s"
             android:textColor="@color/widget_text_secondary"
             android:textSize="12sp" />
     </LinearLayout>
@@ -57,12 +65,18 @@
         android:autoSizeMinTextSize="14sp"
         android:autoSizeStepGranularity="1sp"
         android:autoSizeTextType="uniform"
-        android:includeFontPadding="false"
-        android:drawableEnd="@drawable/ic_sunset"
-        android:drawablePadding="4dp"
         android:fontFamily="sans-serif-light"
         android:gravity="center_vertical|end"
+        android:includeFontPadding="false"
         android:maxLines="1"
-        android:text="18:58"
+        android:text="18:48"
         android:textColor="@color/widget_text" />
+
+    <ImageView
+        android:id="@+id/sunset_icon"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginStart="4dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_sunset" />
 </LinearLayout>

@@ -1,0 +1,185 @@
+package it.sunw.widget
+
+import android.app.Activity
+import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.PopupMenu
+import android.widget.TextView
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+/**
+ * Opened by tapping a widget or from the launcher: place (with quick switch between favourites),
+ * the full 4×2 widget, and today's Moon. Settings live behind the gear icon.
+ */
+class MainActivity : Activity() {
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val tick = object : Runnable {
+        override fun run() {
+            refresh()
+            handler.postDelayed(this, REFRESH_MS)
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        findViewById<ImageButton>(R.id.settings).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+        findViewById<TextView>(R.id.place).setOnClickListener { showPlaces(it) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        handler.post(tick)
+    }
+
+    override fun onPause() {
+        handler.removeCallbacks(tick)
+        super.onPause()
+    }
+
+    private fun refresh() {
+        val palette = AppearanceStore(this).palette()
+        val place = LocationStore(this).current()
+        val zone = ZoneId.systemDefault()
+        val now = Instant.now()
+
+        window.decorView.setBackgroundColor(palette.pageBackground)
+        window.statusBarColor = palette.pageBackground
+        window.navigationBarColor = palette.pageBackground
+
+        findViewById<TextView>(R.id.place).apply {
+            text = getString(R.string.place_with_menu, placeLabel(this@MainActivity, place))
+            setTextColor(palette.text)
+        }
+        findViewById<TextView>(R.id.date).apply {
+            text = capitalize(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.getDefault()).format(now.atZone(zone)))
+            setTextColor(palette.textSecondary)
+        }
+        findViewById<ImageButton>(R.id.settings).setColorFilter(palette.text)
+
+        // The same RemoteViews the 4×2 widget shows, sized to the page width.
+        val container = findViewById<FrameLayout>(R.id.widget_container)
+        val metrics = resources.displayMetrics
+        val widthDp = (metrics.widthPixels / metrics.density).toInt() - 28
+        val views = WidgetRenderer(this, palette).render(WidgetRenderer.Size(widthDp, WIDGET_HEIGHT_DP), place, now, zone, clickable = false)
+        container.removeAllViews()
+        container.addView(views.apply(this, container))
+
+        showMoon(palette, place, now, zone)
+    }
+
+    private fun showMoon(palette: Palette, place: Place, now: Instant, zone: ZoneId) {
+        findViewById<LinearLayout>(R.id.moon_card).background =
+            (getDrawable(R.drawable.card_background)!!.mutate() as GradientDrawable).apply { setColor(palette.cardBackground) }
+
+        val phase = MoonCalculator.phase(now)
+        val sizePx = (72 * resources.displayMetrics.density).toInt()
+        findViewById<ImageView>(R.id.moon_image).setImageBitmap(
+            MoonRenderer.draw(sizePx, phase, place.latitude < 0, dark = Palette.blend(palette.cardBackground, Color.WHITE, 0.08f), lit = MOON_LIT),
+        )
+        findViewById<TextView>(R.id.moon_illumination).apply {
+            text = getString(R.string.percent, Math.round(phase.illumination * 100).toInt())
+            setTextColor(palette.text)
+        }
+        findViewById<TextView>(R.id.moon_phase).apply {
+            text = getString(PHASE_NAMES.getValue(phase.name))
+            setTextColor(palette.textSecondary)
+        }
+
+        val riseSet = MoonCalculator.riseSet(now.atZone(zone).toLocalDate(), place.latitude, place.longitude, zone)
+        val parts = listOfNotNull(
+            riseSet.rise?.let { getString(R.string.moon_rise, Formatters.time(this, it, zone)) },
+            riseSet.set?.let { getString(R.string.moon_set, Formatters.time(this, it, zone)) },
+        )
+        findViewById<TextView>(R.id.moon_times).apply {
+            text = if (parts.isEmpty()) getString(R.string.moon_no_events) else parts.joinToString("   ")
+            setTextColor(palette.text)
+        }
+
+        val dateFormat = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
+        val next = MoonCalculator.nextQuarters(now)
+            .filter { it.first == MoonCalculator.Quarter.NEW || it.first == MoonCalculator.Quarter.FULL || it.first == MoonCalculator.Quarter.FIRST_QUARTER }
+            .joinToString(" · ") { (quarter, at) ->
+                getString(QUARTER_NAMES.getValue(quarter), dateFormat.format(at.atZone(zone)))
+            }
+        findViewById<TextView>(R.id.moon_next).apply {
+            text = next
+            setTextColor(palette.textSecondary)
+        }
+    }
+
+    /** Quick switch: favourites plus device location. */
+    private fun showPlaces(anchor: android.view.View) {
+        val store = LocationStore(this)
+        val current = store.current()
+        val favorites = FavoritesStore(this).all()
+        val menu = PopupMenu(this, anchor)
+        favorites.forEachIndexed { i, fav ->
+            menu.menu.add(0, i, i, if (fav.matches(current)) "★ ${fav.name}" else fav.name)
+        }
+        menu.menu.add(0, DEVICE_ITEM, favorites.size, getString(R.string.place_device_menu))
+        if (favorites.isEmpty()) menu.menu.add(0, SETTINGS_ITEM, favorites.size + 1, getString(R.string.favorites_empty_menu))
+        menu.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                DEVICE_ITEM -> {
+                    store.save(current.latitude, current.longitude, automatic = true)
+                    if (!store.hasLocationPermission()) startActivity(Intent(this, SettingsActivity::class.java))
+                }
+                SETTINGS_ITEM -> startActivity(Intent(this, SettingsActivity::class.java))
+                else -> favorites[item.itemId].let { store.save(it.latitude, it.longitude, automatic = false, name = it.name) }
+            }
+            SunWidgetProvider.updateAll(this)
+            refresh()
+            true
+        }
+        menu.show()
+    }
+
+    private fun capitalize(s: String) = s.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+
+    companion object {
+        private const val REFRESH_MS = 60_000L
+        private const val WIDGET_HEIGHT_DP = 170
+        private const val DEVICE_ITEM = 10_000
+        private const val SETTINGS_ITEM = 10_001
+        private const val MOON_LIT = 0xFFECE6D2.toInt()
+
+        private val PHASE_NAMES = mapOf(
+            MoonCalculator.Name.NEW to R.string.moon_new,
+            MoonCalculator.Name.WAXING_CRESCENT to R.string.moon_waxing_crescent,
+            MoonCalculator.Name.FIRST_QUARTER to R.string.moon_first_quarter,
+            MoonCalculator.Name.WAXING_GIBBOUS to R.string.moon_waxing_gibbous,
+            MoonCalculator.Name.FULL to R.string.moon_full,
+            MoonCalculator.Name.WANING_GIBBOUS to R.string.moon_waning_gibbous,
+            MoonCalculator.Name.LAST_QUARTER to R.string.moon_last_quarter,
+            MoonCalculator.Name.WANING_CRESCENT to R.string.moon_waning_crescent,
+        )
+        private val QUARTER_NAMES = mapOf(
+            MoonCalculator.Quarter.NEW to R.string.next_new,
+            MoonCalculator.Quarter.FIRST_QUARTER to R.string.next_first_quarter,
+            MoonCalculator.Quarter.FULL to R.string.next_full,
+            MoonCalculator.Quarter.LAST_QUARTER to R.string.next_last_quarter,
+        )
+
+        /** "Parma", "Device location" or "44.8015, 10.3279". */
+        fun placeLabel(activity: Activity, place: Place): String = when {
+            place.automatic -> activity.getString(R.string.place_device)
+            place.name != null -> place.name
+            else -> String.format(Locale.ROOT, "%.4f, %.4f", place.latitude, place.longitude)
+        }
+    }
+}
