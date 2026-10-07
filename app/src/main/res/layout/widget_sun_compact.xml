@@ -6,7 +6,12 @@
     android:background="@drawable/widget_background"
     android:gravity="center_vertical"
     android:orientation="vertical"
-    android:paddingHorizontal="14dp">
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="4dp">
 
-    <include layout="@layout/widget_sun_row" />
+    <!-- Row fills the whole height so the autosized times grow with the widget. -->
+    <include
+        layout="@layout/widget_sun_row"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </LinearLayout>

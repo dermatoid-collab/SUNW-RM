@@ -85,15 +85,17 @@ class WidgetRenderer(private val context: Context) {
             views.setTextViewText(R.id.sunset, Formatters.time(context, shown.sunset, zone))
             views.setTextColor(R.id.sunrise, if (sunriseNext) bright else dim)
             views.setTextColor(R.id.sunset, if (sunriseNext) dim else bright)
-            views.setTextViewCompoundDrawablesRelative(R.id.sunrise, R.drawable.ic_sunrise, 0, 0, 0)
-            views.setViewVisibility(R.id.sunset, View.VISIBLE)
+            views.setViewVisibility(R.id.sunrise_icon, View.VISIBLE)
+            views.setViewVisibility(R.id.sunset_row, View.VISIBLE)
         } else {
             views.setTextViewText(R.id.sunrise, context.getString(polarLabel(shown, short = true)))
             views.setTextColor(R.id.sunrise, context.getColor(R.color.widget_text))
-            views.setTextViewCompoundDrawablesRelative(R.id.sunrise, 0, 0, 0, 0)
-            views.setViewVisibility(R.id.sunset, View.GONE)
+            views.setViewVisibility(R.id.sunrise_icon, View.GONE)
+            views.setViewVisibility(R.id.sunset_row, View.GONE)
         }
-        setCurve(views, size.widthDp - 2 * TINY_PADDING_DP, size.heightDp - 2 * TINY_PADDING_DP - TINY_TEXT_ROW_DP, place, day.date, now, zone)
+        val innerHeight = size.heightDp - 2 * TINY_PADDING_DP
+        val curveHeight = if (shown is SunCalculator.Day.Normal) (innerHeight * TINY_CURVE_FRACTION).toInt() else innerHeight / 2
+        setCurve(views, size.widthDp - 2 * TINY_PADDING_DP, curveHeight, place, day.date, now, zone)
         return views
     }
 
@@ -183,11 +185,11 @@ class WidgetRenderer(private val context: Context) {
         private const val SAMPLES = 144 // every 10 minutes
         private const val TINY_MAX_WIDTH_DP = 110
         private const val COMPACT_MAX_HEIGHT_DP = 100
-        private const val TINY_PADDING_DP = 8
-        private const val TINY_TEXT_ROW_DP = 34
-        private const val MIN_CURVE_HEIGHT_DP = 16
+        private const val TINY_PADDING_DP = 6
+        private const val TINY_CURVE_FRACTION = 0.34 // layout weights in widget_sun_tiny.xml
+        private const val MIN_CURVE_HEIGHT_DP = 12
         private const val PADDING_DP = 14
-        private const val TEXT_ROW_DP = 46
+        private const val TEXT_ROW_DP = 56
         private const val MAX_BITMAP_WIDTH_PX = 900
         private const val MAX_BITMAP_HEIGHT_PX = 420
         private const val DASH = "—"

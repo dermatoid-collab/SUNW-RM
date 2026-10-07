@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="46dp"
+    android:layout_height="56dp"
     android:gravity="center_vertical"
     android:orientation="horizontal">
 
     <TextView
         android:id="@+id/sunrise"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="1"
+        android:autoSizeMaxTextSize="36sp"
+        android:autoSizeMinTextSize="14sp"
+        android:autoSizeStepGranularity="1sp"
+        android:autoSizeTextType="uniform"
+        android:includeFontPadding="false"
         android:drawableStart="@drawable/ic_sunrise"
-        android:drawablePadding="6dp"
+        android:drawablePadding="4dp"
         android:fontFamily="sans-serif-light"
         android:gravity="center_vertical|start"
         android:maxLines="1"
         android:text="07:18"
-        android:textColor="@color/widget_text"
-        android:textSize="20sp" />
+        android:textColor="@color/widget_text" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -32,7 +36,7 @@
             android:maxLines="1"
             android:text="11h 40m"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp" />
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/day_delta"
@@ -41,20 +45,24 @@
             android:maxLines="1"
             android:text="−2m 54s"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="10sp" />
+            android:textSize="12sp" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/sunset"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="1"
+        android:autoSizeMaxTextSize="36sp"
+        android:autoSizeMinTextSize="14sp"
+        android:autoSizeStepGranularity="1sp"
+        android:autoSizeTextType="uniform"
+        android:includeFontPadding="false"
         android:drawableEnd="@drawable/ic_sunset"
-        android:drawablePadding="6dp"
+        android:drawablePadding="4dp"
         android:fontFamily="sans-serif-light"
         android:gravity="center_vertical|end"
         android:maxLines="1"
         android:text="18:58"
-        android:textColor="@color/widget_text"
-        android:textSize="20sp" />
+        android:textColor="@color/widget_text" />
 </LinearLayout>
