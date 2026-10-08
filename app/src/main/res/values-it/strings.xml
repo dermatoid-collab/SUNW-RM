@@ -48,9 +48,9 @@
     <string name="moon_last_quarter">Ultimo quarto</string>
     <string name="moon_waning_crescent">Falce calante</string>
     <string name="next_new">Nuova %1$s</string>
-    <string name="next_first_quarter">Primo quarto %1$s</string>
+    <string name="next_first_quarter">1° Q %1$s</string>
     <string name="next_full">Piena %1$s</string>
-    <string name="next_last_quarter">Ultimo quarto %1$s</string>
+    <string name="next_last_quarter">Ult. Q %1$s</string>
     <string name="section_position">Posizione</string>
     <string name="section_favorites">Preferiti</string>
     <string name="section_appearance">Aspetto</string>

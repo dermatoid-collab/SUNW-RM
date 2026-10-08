@@ -194,10 +194,10 @@ class MainActivity : Activity() {
             setTextColor(palette.text)
         }
 
-        val dateFormat = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
+        val dateFormat = DateTimeFormatter.ofPattern("dd/MM")
         val next = MoonCalculator.nextQuarters(now)
             .filter { it.first == MoonCalculator.Quarter.NEW || it.first == MoonCalculator.Quarter.FULL || it.first == MoonCalculator.Quarter.FIRST_QUARTER }
-            .joinToString(" · ") { (quarter, at) ->
+            .joinToString(" • ") { (quarter, at) ->
                 getString(QUARTER_NAMES.getValue(quarter), dateFormat.format(at.atZone(zone)))
             }
         findViewById<TextView>(R.id.moon_next).apply {

@@ -48,9 +48,9 @@
     <string name="moon_last_quarter">Last quarter</string>
     <string name="moon_waning_crescent">Waning crescent</string>
     <string name="next_new">New %1$s</string>
-    <string name="next_first_quarter">First quarter %1$s</string>
+    <string name="next_first_quarter">1st Q %1$s</string>
     <string name="next_full">Full %1$s</string>
-    <string name="next_last_quarter">Last quarter %1$s</string>
+    <string name="next_last_quarter">Last Q %1$s</string>
     <string name="section_position">Location</string>
     <string name="section_favorites">Favourites</string>
     <string name="section_appearance">Appearance</string>
