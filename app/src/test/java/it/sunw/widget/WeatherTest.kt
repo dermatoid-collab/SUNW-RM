@@ -26,15 +26,15 @@ class WeatherTest {
     private fun sampleJson() = Companion.sampleJson()
 
     companion object {
-    /** A response shaped like MeteoBlue's basic-1h_basic-day: 2 days of hours, 3 days. */
-    fun sampleJson(): String {
-        val start = LocalDateTime.of(2026, 10, 8, 0, 0)
+    /** A response shaped like MeteoBlue's basic-1h_basic-day: 2 days of hours, 3 days from [first]. */
+    fun sampleJson(first: LocalDate = LocalDate.of(2026, 10, 8)): String {
+        val start = first.atStartOfDay()
         val hours = (0 until 48).map { start.plusHours(it.toLong()) }
         fun arr(values: List<Any>) = JSONArray(values)
         val hourlyPicto = hours.map { t ->
             when {
-                t.toLocalDate() == LocalDate.of(2026, 10, 8) && t.hour >= 21 -> 27 // thunderstorm in the evening
-                t.toLocalDate() == LocalDate.of(2026, 10, 9) && t.hour < 5 -> 33 // light rain overnight
+                t.toLocalDate() == first && t.hour >= 21 -> 27 // thunderstorm in the evening
+                t.toLocalDate() == first.plusDays(1) && t.hour < 5 -> 33 // light rain overnight
                 else -> 7
             }
         }
@@ -50,7 +50,7 @@ class WeatherTest {
             .put("uvindex", arr(hours.map { 3 }))
             .put("isdaylight", arr(hours.map { if (it.hour in 7..18) 1 else 0 }))
         val dataDay = JSONObject()
-            .put("time", arr(listOf("2026-10-08", "2026-10-09", "2026-10-10")))
+            .put("time", arr((0L..2L).map { first.plusDays(it).toString() }))
             .put("pictocode", arr(listOf(8, 6, 3)))
             .put("temperature_max", arr(listOf(20.4, 18.0, 19.6)))
             .put("temperature_min", arr(listOf(15.0, 14.6, 13.8)))

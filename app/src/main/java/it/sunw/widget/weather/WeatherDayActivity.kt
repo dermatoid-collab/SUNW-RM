@@ -2,12 +2,14 @@ package it.sunw.widget.weather
 
 import android.app.Activity
 import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.Gravity
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.ImageView
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
@@ -94,7 +96,11 @@ class WeatherDayActivity : Activity() {
             ?: forecast.days.first().date
         findViewById<TextView>(R.id.day_step).apply {
             setTextColor(palette.accent)
-            setOnClickListener { stepHours = if (stepHours == 1) 3 else 1; showHours(); scrollToFocusedHour() }
+            setOnClickListener {
+                stepHours = if (stepHours == 1) 3 else 1
+                showHours()
+                if (focusedRow != null) scrollToFocusedHour() // other days keep their position
+            }
         }
         render()
     }
@@ -242,7 +248,7 @@ class WeatherDayActivity : Activity() {
 
     private fun hoursOf(date: LocalDate): List<Forecast.Hour> = forecast.hours.filter { it.time.toLocalDate() == date }
 
-    /** Row to bring into view: the current hour today, the same time of day on other days. */
+    /** Current hour's row (today only): highlighted and brought into view. */
     private var focusedRow: View? = null
 
     /** Hour-by-hour table: time + temperature pill · icon · feels like · wind · rain mm · probability. */
@@ -269,18 +275,22 @@ class WeatherDayActivity : Activity() {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(6), dp(8), dp(6), dp(8))
-                if (h.time.hour == focusHour) {
+                val isNow = isToday && h.time.hour == focusHour
+                if (isNow) {
                     focusedRow = this
-                    if (isToday) background = GradientDrawable().apply {
+                    background = GradientDrawable().apply {
                         cornerRadius = dp(12).toFloat()
-                        setColor(Palette.blend(palette.cardBackground, palette.accent, 0.18f))
+                        setColor(Palette.blend(palette.cardBackground, palette.accent, 0.22f))
+                        setStroke(dp(2), palette.accent)
                     }
                 }
                 addView(LinearLayout(this@WeatherDayActivity).apply {
                     orientation = LinearLayout.VERTICAL
                     gravity = Gravity.CENTER_HORIZONTAL
                     layoutParams = LinearLayout.LayoutParams(dp(50), LinearLayout.LayoutParams.WRAP_CONTENT)
-                    addView(text("%02d:00".format(h.time.hour), 12f, palette.textSecondary, Gravity.CENTER_HORIZONTAL))
+                    addView(text("%02d:00".format(h.time.hour), 12f, if (isNow) palette.accent else palette.textSecondary, Gravity.CENTER_HORIZONTAL).apply {
+                        if (isNow) setTypeface(typeface, Typeface.BOLD)
+                    })
                     addView(WeatherCard.temperaturePill(this@WeatherDayActivity, h.temperature, 14f, 44).apply {
                         (layoutParams as LinearLayout.LayoutParams).topMargin = dp(2)
                     })
@@ -312,19 +322,30 @@ class WeatherDayActivity : Activity() {
         }
     }
 
-    /** Scrolls the page so the focused hour sits near the top, below the cards. */
+    /**
+     * After the next layout pass (so the new rows have their positions), shows today's current
+     * hour near the top of the page; any other day starts from the top.
+     */
     private fun scrollToFocusedHour() {
         val page = findViewById<ScrollView>(R.id.day_page)
-        page.post {
-            val row = focusedRow ?: return@post
-            var y = 0
-            var v: View? = row
-            while (v != null && v !== page) {
-                y += v.top
-                v = v.parent as? View
+        page.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                page.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                page.scrollTo(0, focusedRowOffset(page)?.let { (it - dp(90)).coerceAtLeast(0) } ?: 0)
             }
-            page.smoothScrollTo(0, (y - dp(90)).coerceAtLeast(0))
+        })
+        page.requestLayout()
+    }
+
+    /** Top of the focused row inside the page, or null when there is none. */
+    internal fun focusedRowOffset(page: View = findViewById(R.id.day_page)): Int? {
+        var y = 0
+        var v: View = focusedRow ?: return null
+        while (v !== page) {
+            y += v.top
+            v = v.parent as? View ?: return null
         }
+        return y
     }
 
     private fun text(value: String, sizeSp: Float, color: Int, gravity: Int = Gravity.START) = TextView(this).apply {

@@ -3,7 +3,9 @@ package it.sunw.widget
 import android.content.Context
 import android.content.Intent
 import android.view.View
+import android.os.Looper
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import it.sunw.widget.weather.Condition
 import it.sunw.widget.weather.WeatherDayActivity
@@ -17,8 +19,11 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.io.File
+import java.time.Instant
+import java.time.ZoneOffset
 
 /** The day detail page, fed from a cached MeteoBlue response (no network, no key). */
 @RunWith(RobolectricTestRunner::class)
@@ -97,5 +102,26 @@ class WeatherDayActivityTest {
         val hours = activity.findViewById<LinearLayout>(R.id.day_hours)
         // 24 rows plus 23 dividers for a full day in 1 h steps.
         assertEquals(47, hours.childCount)
+    }
+
+    @Test
+    fun todayOpensOnTheCurrentHourOtherDaysAtTheTop() {
+        // The sample's UTC offset is +2 h: "today" is the forecast's local date.
+        val today = Instant.now().atOffset(ZoneOffset.ofHours(2)).toLocalDate()
+        File(context.cacheDir, "meteoblue.json").writeText(WeatherTest.sampleJson(today))
+        val activity = open(today.toString())
+        val page = activity.findViewById<ScrollView>(R.id.day_page)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertNotNull(activity.focusedRowOffset())
+        assertTrue("today scrollY=${page.scrollY}", page.scrollY > 0)
+
+        assertTrue(activity.showDay(1))           // tomorrow: no current hour, top of the page
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(null, activity.focusedRowOffset())
+        assertEquals(0, page.scrollY)
+
+        assertTrue(activity.showDay(-1))          // back to today: current hour again
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue("back to today scrollY=${page.scrollY}", page.scrollY > 0)
     }
 }
