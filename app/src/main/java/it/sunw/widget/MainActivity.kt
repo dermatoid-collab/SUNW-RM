@@ -13,6 +13,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
+import it.sunw.widget.weather.WeatherCard
+import it.sunw.widget.weather.WeatherRepository
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -97,6 +99,43 @@ class MainActivity : Activity() {
         setUpCountdowns(widget, palette, place, now, zone)
 
         showMoon(palette, place, now, zone)
+        showWeather(palette, place, now, zone)
+    }
+
+    private var weatherInFlight = false
+    private var lastWeatherFailure: Instant? = null
+
+    /** Cached forecast right away; a background refresh when it's missing or older than an hour. */
+    private fun showWeather(palette: Palette, place: Place, now: Instant, zone: ZoneId) {
+        val repository = WeatherRepository(this)
+        val card = WeatherCard(this)
+        if (!repository.hasKey) {
+            card.showStatus(palette, getString(R.string.weather_missing_key))
+            return
+        }
+        val cached = repository.cached(place)
+        if (cached != null) {
+            card.show(palette, cached, now, zone, stale = !repository.isFresh(cached, now))
+        } else {
+            card.showStatus(palette, getString(R.string.weather_loading))
+        }
+        val recentlyFailed = lastWeatherFailure?.let { now.isBefore(it.plusSeconds(RETRY_AFTER_FAILURE_S)) } == true
+        if ((cached == null || !repository.isFresh(cached, now)) && !weatherInFlight && !recentlyFailed) {
+            weatherInFlight = true
+            repository.refresh(place) { result ->
+                runOnUiThread {
+                    weatherInFlight = false
+                    if (isDestroyed) return@runOnUiThread
+                    result.onSuccess {
+                        lastWeatherFailure = null
+                        card.show(AppearanceStore(this).palette(), it, Instant.now(), ZoneId.systemDefault(), stale = false)
+                    }.onFailure {
+                        lastWeatherFailure = Instant.now()
+                        if (cached == null) card.showStatus(palette, getString(R.string.weather_error, it.message ?: it.javaClass.simpleName))
+                    }
+                }
+            }
+        }
     }
 
     /** Shows the countdown row under the times and works out which events it counts down to. */
@@ -238,6 +277,7 @@ class MainActivity : Activity() {
 
     companion object {
         private const val REFRESH_MS = 60_000L
+        private const val RETRY_AFTER_FAILURE_S = 300L
         private const val WIDGET_HEIGHT_DP = 192
 
         /** The countdown row takes this much of the widget height; the curve gets the rest. */

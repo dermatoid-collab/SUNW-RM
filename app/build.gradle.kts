@@ -13,6 +13,13 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+
+        // MeteoBlue key from the CI secret METEOBLUE_API_KEY; without it the weather card says so.
+        buildConfigField("String", "METEOBLUE_API_KEY", "\"${System.getenv("METEOBLUE_API_KEY") ?: ""}\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {

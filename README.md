@@ -21,7 +21,8 @@ Toccando un widget (o dall'icona) si apre la **pagina principale**:
 
 - in alto il nome della località: toccandolo si passa al volo tra i **preferiti** o alla posizione del dispositivo;
 - il **widget 4×2** completo, identico a quello sulla home;
-- la **Luna**: disegno della fase, percentuale illuminata, nome della fase, levata e tramonto lunare, date di luna nuova, primo quarto e piena.
+- la **Luna**: disegno della fase, percentuale illuminata, nome della fase, levata e tramonto lunare, date di luna nuova, primo quarto e piena, e una riga con i prossimi 7 giorni;
+- il **meteo** (MeteoBlue): in alto oggi (icona, temperatura, percepita, UV, massima/minima, pioggia, vento), sotto i giorni successivi con icona di giorno e di notte, temperature, vento, pioggia e UV. I dati sono tenuti in cache e aggiornati al massimo ogni ora; offline si vede l'ultimo aggiornamento.
 
 L'icona ⚙ apre le **impostazioni**:
 
@@ -48,6 +49,10 @@ Sfondi: Antracite, Nero, Vetro (semitrasparente), Material You, Tokyo Night (con
 - **Aggiornamento**: ogni 30 minuti (per far avanzare il punto sulla curva) e in più subito dopo alba, tramonto e mezzanotte, con allarmi non esatti che non svegliano il telefono e non richiedono permessi speciali.
 - Su Android 12+ i colori seguono la palette Material You dello sfondo.
 
+
+## Meteo
+
+Le previsioni arrivano dal pacchetto MeteoBlue `basic-1h_basic-day`. La chiave è il secret GitHub `METEOBLUE_API_KEY`, inserito nell'APK al momento della build: senza secret la scheda meteo lo segnala. Le icone sono disegnate dall'app (non sono quelle di MeteoBlue). Il pacchetto non fornisce le ore di sole: al loro posto si mostra l'indice UV.
 
 ## Compilare
 

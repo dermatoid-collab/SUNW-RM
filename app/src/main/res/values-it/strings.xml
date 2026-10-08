@@ -15,7 +15,7 @@
     <string name="permission_denied">Permesso di posizione negato: inserisci le coordinate a mano.</string>
     <string name="no_fix_yet">Nessuna posizione disponibile: il widget userà le ultime coordinate salvate.</string>
     <string name="summary">Alba %1$s · Tramonto %2$s\nLuce %3$s · Mezzogiorno solare %4$s</string>
-    <string name="about">Calcolato sul dispositivo con le equazioni solari NOAA. Solo la ricerca delle località richiede una connessione. Tocca il widget per aprire questa schermata.</string>
+    <string name="about">Calcolato sul dispositivo con le equazioni solari NOAA. Ricerca delle località e meteo (MeteoBlue) richiedono una connessione. Tocca il widget per aprire questa schermata.</string>
     <string name="widget_name_small">Alba · Tramonto 1×1 · grande</string>
     <string name="widget_description_small">Alba e tramonto, con il percorso del Sole</string>
     <string name="polar_day_short">24h ☀</string>
@@ -84,4 +84,26 @@
     <string name="search_picked">Ora è la località dei widget. Vuoi aggiungerla ai preferiti?</string>
     <string name="add_to_favorites">Aggiungi ai preferiti</string>
     <string name="just_use">Usa e basta</string>
+    <string name="wx_clear">Sereno</string>
+    <string name="wx_mostly_clear">Prevalentemente sereno</string>
+    <string name="wx_partly_cloudy">Parzialmente nuvoloso</string>
+    <string name="wx_mostly_cloudy">Molto nuvoloso</string>
+    <string name="wx_overcast">Coperto</string>
+    <string name="wx_fog">Nebbia</string>
+    <string name="wx_light_rain">Pioggia debole</string>
+    <string name="wx_showers">Rovesci</string>
+    <string name="wx_rain">Pioggia</string>
+    <string name="wx_heavy_rain">Pioggia forte</string>
+    <string name="wx_sleet">Pioggia e neve</string>
+    <string name="wx_snow_showers">Rovesci di neve</string>
+    <string name="wx_snow">Neve</string>
+    <string name="wx_thunderstorm">Temporali</string>
+    <string name="weather_felt_uv">Percepita %1$s · UV %2$d</string>
+    <string name="weather_today_facts">Pioggia %1$d%% · %2$s    Vento %3$s %4$d km/h    UV %5$d</string>
+    <string name="weather_source">Dati MeteoBlue · aggiornato alle %1$s</string>
+    <string name="weather_source_stale">Dati MeteoBlue · ultimo aggiornamento alle %1$s (offline)</string>
+    <string name="weather_loading">Caricamento del meteo…</string>
+    <string name="weather_missing_key">Meteo non disponibile: chiave MeteoBlue mancante in questa build.</string>
+    <string name="weather_error">Meteo non disponibile: %1$s</string>
+    <string name="weather_unavailable">Meteo non disponibile per questa località.</string>
 </resources>

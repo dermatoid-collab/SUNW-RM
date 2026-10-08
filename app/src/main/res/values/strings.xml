@@ -15,7 +15,7 @@
     <string name="permission_denied">Location permission denied: enter coordinates manually.</string>
     <string name="no_fix_yet">No location available yet: the widget will use the last saved coordinates.</string>
     <string name="summary">Sunrise %1$s · Sunset %2$s\nDaylight %3$s · Solar noon %4$s</string>
-    <string name="about">Computed on the device with NOAA solar equations. Only the place search needs a connection. Tap the widget to open this screen.</string>
+    <string name="about">Computed on the device with NOAA solar equations. Place search and weather (MeteoBlue) need a connection. Tap the widget to open this screen.</string>
     <string name="widget_name_small">Sunrise · Sunset 1×1 · big</string>
     <string name="widget_description_small">Sunrise and sunset, with the Sun\'s path</string>
     <string name="polar_day_short">24h ☀</string>
@@ -84,4 +84,26 @@
     <string name="search_picked">Now in use on the widgets. Add it to your favourites?</string>
     <string name="add_to_favorites">Add to favourites</string>
     <string name="just_use">Just use it</string>
+    <string name="wx_clear">Clear</string>
+    <string name="wx_mostly_clear">Mostly clear</string>
+    <string name="wx_partly_cloudy">Partly cloudy</string>
+    <string name="wx_mostly_cloudy">Mostly cloudy</string>
+    <string name="wx_overcast">Overcast</string>
+    <string name="wx_fog">Fog</string>
+    <string name="wx_light_rain">Light rain</string>
+    <string name="wx_showers">Showers</string>
+    <string name="wx_rain">Rain</string>
+    <string name="wx_heavy_rain">Heavy rain</string>
+    <string name="wx_sleet">Rain and snow</string>
+    <string name="wx_snow_showers">Snow showers</string>
+    <string name="wx_snow">Snow</string>
+    <string name="wx_thunderstorm">Thunderstorms</string>
+    <string name="weather_felt_uv">Feels like %1$s · UV %2$d</string>
+    <string name="weather_today_facts">Rain %1$d%% · %2$s    Wind %3$s %4$d km/h    UV %5$d</string>
+    <string name="weather_source">MeteoBlue data · updated at %1$s</string>
+    <string name="weather_source_stale">MeteoBlue data · last updated at %1$s (offline)</string>
+    <string name="weather_loading">Loading the weather…</string>
+    <string name="weather_missing_key">Weather unavailable: this build has no MeteoBlue key.</string>
+    <string name="weather_error">Weather unavailable: %1$s</string>
+    <string name="weather_unavailable">No weather data for this place.</string>
 </resources>
