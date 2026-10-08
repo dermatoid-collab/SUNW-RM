@@ -155,6 +155,13 @@ class FavoritesFlowTest {
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.countdown_row).visibility)
         val countdown = activity.findViewById<TextView>(R.id.sunrise_countdown).text.toString()
         assertTrue("countdown: $countdown", Regex("− \\d{2}:\\d{2}:\\d{2}").matches(countdown))
-        assertEquals(7, activity.findViewById<LinearLayout>(R.id.moon_week).childCount)
+        val week = activity.findViewById<LinearLayout>(R.id.moon_week)
+        assertEquals(7, week.childCount)
+        // Each day: icon + percentage + weekday + dd/MM, all centred in the column.
+        val firstDay = week.getChildAt(0) as LinearLayout
+        assertEquals(4, firstDay.childCount)
+        val date = (firstDay.getChildAt(3) as TextView)
+        assertTrue("date: ${date.text}", Regex("\\d{2}/\\d{2}").matches(date.text))
+        assertEquals(android.view.Gravity.CENTER_HORIZONTAL, date.gravity and android.view.Gravity.HORIZONTAL_GRAVITY_MASK)
     }
 }

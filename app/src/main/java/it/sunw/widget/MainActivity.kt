@@ -169,13 +169,14 @@ class MainActivity : Activity() {
         showMoonWeek(palette, place, now, zone)
     }
 
-    /** The next 7 days on one row: phase icon, illumination at local noon, abbreviated weekday. */
+    /** The next 7 days on one row: phase icon, illumination at local noon, abbreviated weekday, dd/MM. */
     private fun showMoonWeek(palette: Palette, place: Place, now: Instant, zone: ZoneId) {
         val row = findViewById<LinearLayout>(R.id.moon_week)
         row.removeAllViews()
         val density = resources.displayMetrics.density
         val iconPx = (24 * density).toInt()
         val dayFormat = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
+        val dateFormat = DateTimeFormatter.ofPattern("dd/MM")
         val today = now.atZone(zone).toLocalDate()
         for (offset in 1L..7L) {
             val date = today.plusDays(offset)
@@ -189,17 +190,19 @@ class MainActivity : Activity() {
                 layoutParams = LinearLayout.LayoutParams(iconPx, iconPx)
                 setImageBitmap(MoonRenderer.draw(iconPx, phase, place.latitude < 0, Palette.blend(palette.cardBackground, Color.WHITE, 0.08f), MOON_LIT))
             })
-            cell.addView(TextView(this).apply {
-                text = getString(R.string.percent, Math.round(phase.illumination * 100).toInt())
-                textSize = 13f
-                setTextColor(palette.text)
-                setPadding(0, (6 * density).toInt(), 0, 0)
-            })
-            cell.addView(TextView(this).apply {
-                text = capitalize(dayFormat.format(date).trimEnd('.'))
-                textSize = 11f
-                setTextColor(palette.textSecondary)
-            })
+            // Labels span the column and centre their text, so they line up under the icon.
+            fun label(value: String, sizeSp: Float, color: Int, topPadPx: Int = 0) = TextView(this).apply {
+                text = value
+                textSize = sizeSp
+                gravity = android.view.Gravity.CENTER_HORIZONTAL
+                maxLines = 1
+                setTextColor(color)
+                setPadding(0, topPadPx, 0, 0)
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            }
+            cell.addView(label(getString(R.string.percent, Math.round(phase.illumination * 100).toInt()), 13f, palette.text, (6 * density).toInt()))
+            cell.addView(label(capitalize(dayFormat.format(date).trimEnd('.')), 11f, palette.textSecondary))
+            cell.addView(label(dateFormat.format(date), 10f, palette.textSecondary).apply { alpha = 0.75f })
             row.addView(cell)
         }
     }
