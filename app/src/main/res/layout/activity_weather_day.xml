@@ -22,7 +22,7 @@
             android:gravity="center_vertical"
             android:maxLines="1"
             android:paddingHorizontal="10dp"
-            android:textSize="20sp" />
+            android:textSize="24sp" />
 
         <HorizontalScrollView
             android:id="@+id/day_tabs_scroll"
@@ -67,21 +67,21 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-light"
-                    android:textSize="22sp" />
+                    android:textSize="26.5sp" />
 
                 <TextView
                     android:id="@+id/day_desc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textSize="15sp" />
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/day_sub"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:textSize="12sp" />
+                    android:textSize="14.5sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -98,31 +98,31 @@
             android:layout_marginHorizontal="14dp"
             android:layout_marginTop="12dp"
             android:background="@drawable/card_background"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:padding="18dp">
 
+            <!-- Full width, so the enlarged lines don't wrap; the rainspot sits below. -->
             <TextView
                 android:id="@+id/day_info"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:lineSpacingExtra="6dp"
-                android:textSize="14sp" />
+                android:textSize="17sp" />
 
             <!-- MeteoBlue rainspot: where it rains around the place today. -->
             <LinearLayout
                 android:id="@+id/day_rainspot_box"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="14dp"
                 android:gravity="center_horizontal"
                 android:orientation="vertical">
 
                 <ImageView
                     android:id="@+id/day_rainspot"
-                    android:layout_width="84dp"
-                    android:layout_height="84dp"
+                    android:layout_width="126dp"
+                    android:layout_height="126dp"
                     android:contentDescription="@string/rainspot_label" />
 
                 <TextView
@@ -131,7 +131,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="@string/rainspot_label"
-                    android:textSize="10sp" />
+                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -143,7 +143,8 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/card_background"
             android:orientation="vertical"
-            android:padding="18dp">
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="18dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -157,7 +158,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/detail_hourly"
-                    android:textSize="16sp" />
+                    android:textSize="19sp" />
 
                 <TextView
                     android:id="@+id/day_step"
@@ -166,7 +167,7 @@
                     android:background="?android:attr/selectableItemBackground"
                     android:gravity="center"
                     android:paddingHorizontal="10dp"
-                    android:textSize="13sp" />
+                    android:textSize="15.5sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -183,6 +184,6 @@
             android:layout_marginTop="12dp"
             android:gravity="center_horizontal"
             android:paddingHorizontal="22dp"
-            android:textSize="11sp" />
+            android:textSize="13sp" />
     </LinearLayout>
 </ScrollView>
