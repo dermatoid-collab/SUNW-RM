@@ -34,6 +34,13 @@ object MoonRenderer {
             close()
         }
         canvas.drawPath(path, paint.apply { color = lit })
+        // Faint limb so a nearly new Moon still reads as a disc.
+        canvas.drawCircle(c, c, r - 0.5f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = maxOf(1f, sizePx / 48f)
+            color = lit
+            alpha = 70
+        })
         return bitmap
     }
 }

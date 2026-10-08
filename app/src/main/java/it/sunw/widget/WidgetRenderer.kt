@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.view.View
 import android.widget.RemoteViews
@@ -202,6 +203,12 @@ class WidgetRenderer(
         val cy = y(nowElevation)
         canvas.drawCircle(cx, cy, dotRadius * 1.9f, Paint(dotPaint).apply { alpha = 60 })
         canvas.drawCircle(cx, cy, dotRadius, dotPaint)
+        // Night colours (e.g. the "Sky" style below −12°) vanish on a dark background: add a light ring.
+        if (Color.luminance(dotPaint.color) < 0.12f) {
+            canvas.drawCircle(cx, cy, dotRadius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE; strokeWidth = 1.2f * scale; color = palette.textSecondary
+            })
+        }
         return bitmap
     }
 
