@@ -106,4 +106,11 @@
     <string name="weather_missing_key">Meteo non disponibile: chiave MeteoBlue mancante in questa build.</string>
     <string name="weather_error">Meteo non disponibile: %1$s</string>
     <string name="weather_unavailable">Meteo non disponibile per questa località.</string>
+    <string name="section_backup">Backup</string>
+    <string name="export_settings">Esporta impostazioni</string>
+    <string name="import_settings">Importa impostazioni</string>
+    <string name="backup_hint">Salva località, preferiti e aspetto in un file (es. su Drive o in Download) e ripristinali dopo una reinstallazione o su un altro telefono.</string>
+    <string name="settings_exported">Impostazioni esportate</string>
+    <string name="settings_imported">Impostazioni ripristinate</string>
+    <string name="backup_failed">Operazione non riuscita: %1$s</string>
 </resources>

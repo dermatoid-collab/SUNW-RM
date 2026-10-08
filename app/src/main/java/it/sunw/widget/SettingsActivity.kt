@@ -3,11 +3,13 @@ package it.sunw.widget
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.location.Address
 import android.location.Geocoder
+import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -73,6 +75,19 @@ class SettingsActivity : Activity() {
         }
         findViewById<TextView>(R.id.back).setOnClickListener { finish() }
         findViewById<TextView>(R.id.add_favorite).setOnClickListener { addFavorite() }
+        findViewById<Button>(R.id.export_settings).setOnClickListener {
+            startActivityForResult(
+                Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
+                    .setType("application/json").putExtra(Intent.EXTRA_TITLE, BACKUP_FILE_NAME),
+                REQUEST_EXPORT,
+            )
+        }
+        findViewById<Button>(R.id.import_settings).setOnClickListener {
+            startActivityForResult(
+                Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"),
+                REQUEST_IMPORT,
+            )
+        }
         findViewById<Button>(R.id.save).setOnClickListener { save() }
         findViewById<Button>(R.id.search).setOnClickListener { search() }
         searchQuery.setOnEditorActionListener { _, actionId, _ ->
@@ -82,6 +97,37 @@ class SettingsActivity : Activity() {
         refreshSummary()
         refreshFavorites()
         buildAppearance()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        val uri = data?.data
+        if (resultCode != RESULT_OK || uri == null) return
+        when (requestCode) {
+            REQUEST_EXPORT -> exportTo(uri)
+            REQUEST_IMPORT -> importFrom(uri)
+        }
+    }
+
+    internal fun exportTo(uri: Uri) {
+        try {
+            contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter().use { it.write(SettingsBackup.export(this)) }
+            Toast.makeText(this, R.string.settings_exported, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, getString(R.string.backup_failed, e.message ?: e.javaClass.simpleName), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    internal fun importFrom(uri: Uri) {
+        try {
+            val json = contentResolver.openInputStream(uri)!!.bufferedReader().use { it.readText() }
+            SettingsBackup.import(this, json)
+            SunWidgetProvider.updateAll(this)
+            Toast.makeText(this, R.string.settings_imported, Toast.LENGTH_SHORT).show()
+            recreate() // re-read every field from the restored settings
+        } catch (e: Exception) {
+            Toast.makeText(this, getString(R.string.backup_failed, e.message ?: e.javaClass.simpleName), Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -384,5 +430,8 @@ class SettingsActivity : Activity() {
         private const val REQUEST_LOCATION = 1
         private const val MAX_RESULTS = 6
         private const val SELECTED_ROW = 0x33FFB547
+        private const val REQUEST_EXPORT = 2
+        private const val REQUEST_IMPORT = 3
+        private const val BACKUP_FILE_NAME = "alba-tramonto-impostazioni.json"
     }
 }

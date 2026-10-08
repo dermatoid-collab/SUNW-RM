@@ -22,13 +22,31 @@ android {
         buildConfig = true
     }
 
+    // A fixed signing key (CI secrets SIGNING_KEYSTORE_BASE64 + SIGNING_PASSWORD, decoded by the
+    // workflow into SIGNING_STORE_FILE) lets each new APK install over the previous one, keeping
+    // the app's settings. Without it, builds fall back to the per-machine debug key.
+    val signingStore = System.getenv("SIGNING_STORE_FILE")?.let { file(it) }?.takeIf { it.exists() }
+    signingConfigs {
+        if (signingStore != null) {
+            create("stable") {
+                storeFile = signingStore
+                storePassword = System.getenv("SIGNING_PASSWORD")
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS") ?: "sunw"
+                keyPassword = System.getenv("SIGNING_PASSWORD")
+            }
+        }
+    }
+    val appSigning = if (signingStore != null) signingConfigs.getByName("stable") else signingConfigs.getByName("debug")
+
     buildTypes {
+        debug {
+            signingConfig = appSigning
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Signed with the debug key so the release APK is installable as-is.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = appSigning
         }
     }
 

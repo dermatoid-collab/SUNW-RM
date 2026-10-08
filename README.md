@@ -54,6 +54,15 @@ Sfondi: Antracite, Nero, Vetro (semitrasparente), Material You, Tokyo Night (con
 
 Le previsioni arrivano dal pacchetto MeteoBlue `basic-1h_basic-day`. La chiave è il secret GitHub `METEOBLUE_API_KEY`, inserito nell'APK al momento della build: senza secret la scheda meteo lo segnala. Le icone sono disegnate dall'app (non sono quelle di MeteoBlue). Il pacchetto non fornisce le ore di sole: al loro posto si mostra l'indice UV.
 
+## Aggiornamenti senza perdere le impostazioni
+
+Perché un nuovo APK si installi sopra il precedente (mantenendo località, preferiti e aspetto) serve sempre la stessa chiave di firma. La workflow la legge da due secret del repository:
+
+- `SIGNING_KEYSTORE_BASE64`: il keystore `.jks` codificato in base64;
+- `SIGNING_PASSWORD`: la password del keystore e della chiave (alias `sunw`).
+
+Senza questi secret gli APK sono firmati con una chiave di debug diversa a ogni build e Android li rifiuta come aggiornamento. In ogni caso, in Impostazioni → Backup si possono esportare e reimportare le impostazioni in un file.
+
 ## Compilare
 
 Requisiti: JDK 17 e Android SDK (API 35).
