@@ -98,10 +98,8 @@
     <string name="wx_snow_showers">Rovesci di neve</string>
     <string name="wx_snow">Neve</string>
     <string name="wx_thunderstorm">Temporali</string>
-    <string name="weather_felt_uv">Percepita %1$s · UV %2$d</string>
-    <string name="weather_today_facts">Pioggia %1$d%% · %2$s    Vento %3$s %4$d km/h    UV %5$d</string>
+    <string name="weather_today_facts">Pioggia %1$d%% · %2$s\nVento %3$s %4$d km/h · UV %5$d</string>
     <string name="weather_source">Dati MeteoBlue · aggiornato alle %1$s</string>
-    <string name="weather_source_stale">Dati MeteoBlue · ultimo aggiornamento alle %1$s (offline)</string>
     <string name="weather_loading">Caricamento del meteo…</string>
     <string name="weather_missing_key">Meteo non disponibile: chiave MeteoBlue mancante in questa build.</string>
     <string name="weather_error">Meteo non disponibile: %1$s</string>

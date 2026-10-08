@@ -15,15 +15,15 @@ import it.sunw.widget.Palette
 import it.sunw.widget.R
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
- * Fills the weather card of the main page: today fixed on top, then the following days on one
- * row (icon, max/min, weekday, dd/MM) in the same style as the Moon week. Tapping today or a
- * day opens [WeatherDayActivity].
+ * Fills the weather card of the main page: today fixed on top (now, rain/wind/UV for the day,
+ * min and max), then the following days on one row (icon, max/min, weekday, dd/MM) in the same
+ * style as the Moon week. Tapping today or a day opens [WeatherDayActivity]. The status line is
+ * used only while loading or on errors.
  */
 class WeatherCard(private val activity: Activity) {
 
@@ -34,13 +34,12 @@ class WeatherCard(private val activity: Activity) {
     fun showStatus(palette: Palette, message: String) {
         style(palette)
         find<View>(R.id.weather_now).visibility = View.GONE
-        find<View>(R.id.weather_today_facts).visibility = View.GONE
         find<View>(R.id.weather_divider).visibility = View.GONE
         find<LinearLayout>(R.id.weather_days).removeAllViews()
-        find<TextView>(R.id.weather_status).apply { text = message; textSize = 13f }
+        find<TextView>(R.id.weather_status).apply { text = message; visibility = View.VISIBLE }
     }
 
-    fun show(palette: Palette, forecast: Forecast, now: Instant, zone: ZoneId, stale: Boolean) {
+    fun show(palette: Palette, forecast: Forecast, now: Instant) {
         style(palette)
         val local = forecast.localTime(now)
         val hour = forecast.hourAt(local)
@@ -53,8 +52,8 @@ class WeatherCard(private val activity: Activity) {
             visibility = View.VISIBLE
             setOnClickListener { openDay(today.date) }
         }
-        find<View>(R.id.weather_today_facts).visibility = View.VISIBLE
         find<View>(R.id.weather_divider).visibility = View.VISIBLE
+        find<View>(R.id.weather_status).visibility = View.GONE
 
         WeatherIcons.show(find(R.id.weather_icon), hour.condition, !hour.isDaylight, palette.text)
         find<TextView>(R.id.weather_temp).apply { text = deg(hour.temperature); setTextColor(palette.text) }
@@ -63,17 +62,6 @@ class WeatherCard(private val activity: Activity) {
             setTextColor(palette.text)
         }
         find<TextView>(R.id.weather_sub).apply {
-            text = activity.getString(R.string.weather_felt_uv, deg(hour.feltTemperature), hour.uvIndex)
-            setTextColor(palette.textSecondary)
-        }
-        find<LinearLayout>(R.id.weather_today_pills).apply {
-            removeAllViews()
-            addView(temperaturePill(activity, today.temperatureMax, 17f, 46))
-            addView(temperaturePill(activity, today.temperatureMin, 17f, 46).apply {
-                (layoutParams as LinearLayout.LayoutParams).topMargin = dp(5)
-            })
-        }
-        find<TextView>(R.id.weather_today_facts).apply {
             text = activity.getString(
                 R.string.weather_today_facts,
                 today.precipitationProbability, mm(today.precipitation),
@@ -81,14 +69,16 @@ class WeatherCard(private val activity: Activity) {
             )
             setTextColor(palette.textSecondary)
         }
+        // Min and max side by side, to the right.
+        find<LinearLayout>(R.id.weather_today_pills).apply {
+            removeAllViews()
+            addView(temperaturePill(activity, today.temperatureMin, 15f, 40))
+            addView(temperaturePill(activity, today.temperatureMax, 15f, 40).apply {
+                (layoutParams as LinearLayout.LayoutParams).marginStart = dp(5)
+            })
+        }
 
         showWeek(palette, forecast.days.filter { it.date.isAfter(today.date) }.take(DAYS))
-
-        val updated = DateTimeFormatter.ofPattern("HH:mm").format(forecast.fetchedAt.atZone(zone))
-        find<TextView>(R.id.weather_status).apply {
-            text = activity.getString(if (stale) R.string.weather_source_stale else R.string.weather_source, updated)
-            textSize = 11f
-        }
     }
 
     /** Following days on one row: icon, max/min, weekday, dd/MM. Each column opens the day. */

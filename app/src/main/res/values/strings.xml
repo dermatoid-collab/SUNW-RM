@@ -98,10 +98,8 @@
     <string name="wx_snow_showers">Snow showers</string>
     <string name="wx_snow">Snow</string>
     <string name="wx_thunderstorm">Thunderstorms</string>
-    <string name="weather_felt_uv">Feels like %1$s · UV %2$d</string>
-    <string name="weather_today_facts">Rain %1$d%% · %2$s    Wind %3$s %4$d km/h    UV %5$d</string>
+    <string name="weather_today_facts">Rain %1$d%% · %2$s\nWind %3$s %4$d km/h · UV %5$d</string>
     <string name="weather_source">MeteoBlue data · updated at %1$s</string>
-    <string name="weather_source_stale">MeteoBlue data · last updated at %1$s (offline)</string>
     <string name="weather_loading">Loading the weather…</string>
     <string name="weather_missing_key">Weather unavailable: this build has no MeteoBlue key.</string>
     <string name="weather_error">Weather unavailable: %1$s</string>

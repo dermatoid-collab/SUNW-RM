@@ -4,6 +4,8 @@ import android.app.AlertDialog
 import android.content.Context
 import android.location.Address
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ScrollView
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -22,6 +24,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlertDialog
 import org.robolectric.shadows.ShadowLooper
 import org.robolectric.shadows.ShadowPopupMenu
+import java.io.File
 import java.util.Locale
 
 /** Drives the real activities: add, select and remove favourites, and the quick switch. */
@@ -171,5 +174,29 @@ class FavoritesFlowTest {
         val date = (firstDay.getChildAt(3) as TextView)
         assertTrue("date: ${date.text}", Regex("\\d{2}/\\d{2}").matches(date.text))
         assertEquals(android.view.Gravity.CENTER_HORIZONTAL, date.gravity and android.view.Gravity.HORIZONTAL_GRAVITY_MASK)
+    }
+
+    /** A typical phone (393 × 852 dp, minus about 80 dp of system bars). */
+    @Test
+    @Config(qualifiers = "w393dp-h772dp")
+    fun mainPageIsWeatherSunMoonAndFitsOneScreen() {
+        LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
+        File(context.cacheDir, "meteoblue.json").writeText(WeatherTest.sampleJson())
+        context.getSharedPreferences("weather", Context.MODE_PRIVATE).edit()
+            .putLong("fetched", System.currentTimeMillis())
+            .putLong("lat", 44.80.toRawBits())
+            .putLong("lon", 10.33.toRawBits())
+            .commit()
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible().get()
+        ShadowLooper.idleMainLooper()
+
+        val column = activity.findViewById<View>(R.id.weather_card).parent as ViewGroup
+        val order = listOf(R.id.header, R.id.weather_card, R.id.widget_container, R.id.moon_card)
+            .map { column.indexOfChild(activity.findViewById(it)) }
+        assertEquals(order.sorted(), order)
+
+        val page = activity.findViewById<ScrollView>(R.id.page)
+        val content = page.getChildAt(0)
+        assertTrue("content ${content.height}px > page ${page.height}px", content.height <= page.height)
     }
 }

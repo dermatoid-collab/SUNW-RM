@@ -81,6 +81,8 @@ class MainActivity : Activity() {
         findViewById<TextView>(R.id.place).apply {
             text = getString(R.string.place_with_menu, placeLabel(this@MainActivity, place))
             setTextColor(palette.text)
+            // Leave room for the date beside a long place name.
+            maxWidth = (resources.displayMetrics.widthPixels * 0.6f).toInt()
         }
         findViewById<TextView>(R.id.date).apply {
             text = capitalize(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.getDefault()).format(now.atZone(zone)))
@@ -95,18 +97,20 @@ class MainActivity : Activity() {
         val views = WidgetRenderer(this, palette).render(WidgetRenderer.Size(widthDp, WIDGET_HEIGHT_DP - COUNTDOWN_ROW_DP), place, now, zone, clickable = false)
         container.removeAllViews()
         val widget = views.apply(this, container)
+        // Less vertical padding than on the home screen, so the page fits on one screen.
+        widget.setPadding(widget.paddingLeft, dp(EMBEDDED_PADDING_V_DP), widget.paddingRight, dp(EMBEDDED_PADDING_V_DP))
         container.addView(widget)
         setUpCountdowns(widget, palette, place, now, zone)
 
         showMoon(palette, place, now, zone)
-        showWeather(palette, place, now, zone)
+        showWeather(palette, place, now)
     }
 
     private var weatherInFlight = false
     private var lastWeatherFailure: Instant? = null
 
     /** Cached forecast right away; a background refresh when it's missing or older than an hour. */
-    private fun showWeather(palette: Palette, place: Place, now: Instant, zone: ZoneId) {
+    private fun showWeather(palette: Palette, place: Place, now: Instant) {
         val repository = WeatherRepository(this)
         val card = WeatherCard(this)
         if (!repository.hasKey) {
@@ -115,7 +119,7 @@ class MainActivity : Activity() {
         }
         val cached = repository.cached(place)
         if (cached != null) {
-            card.show(palette, cached, now, zone, stale = !repository.isFresh(cached, now))
+            card.show(palette, cached, now)
         } else {
             card.showStatus(palette, getString(R.string.weather_loading))
         }
@@ -128,7 +132,7 @@ class MainActivity : Activity() {
                     if (isDestroyed) return@runOnUiThread
                     result.onSuccess {
                         lastWeatherFailure = null
-                        card.show(AppearanceStore(this).palette(), it, Instant.now(), ZoneId.systemDefault(), stale = false)
+                        card.show(AppearanceStore(this).palette(), it, Instant.now())
                     }.onFailure {
                         lastWeatherFailure = Instant.now()
                         if (cached == null) card.showStatus(palette, getString(R.string.weather_error, it.message ?: it.javaClass.simpleName))
@@ -171,7 +175,7 @@ class MainActivity : Activity() {
             (getDrawable(R.drawable.card_background)!!.mutate() as GradientDrawable).apply { setColor(palette.cardBackground) }
 
         val phase = MoonCalculator.phase(now)
-        val sizePx = (72 * resources.displayMetrics.density).toInt()
+        val sizePx = dp(64)
         findViewById<ImageView>(R.id.moon_image).setImageBitmap(
             MoonRenderer.draw(sizePx, phase, place.latitude < 0, dark = Palette.blend(palette.cardBackground, Color.WHITE, 0.08f), lit = MOON_LIT),
         )
@@ -273,12 +277,16 @@ class MainActivity : Activity() {
         menu.show()
     }
 
+    private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+
     private fun capitalize(s: String) = s.replaceFirstChar { it.titlecase(Locale.getDefault()) }
 
     companion object {
         private const val REFRESH_MS = 60_000L
         private const val RETRY_AFTER_FAILURE_S = 300L
+        /** Size the widget is rendered at (home-screen padding 14 dp); shown 176 dp tall with 6 dp padding. */
         private const val WIDGET_HEIGHT_DP = 192
+        private const val EMBEDDED_PADDING_V_DP = 6
 
         /** The countdown row takes this much of the widget height; the curve gets the rest. */
         private const val COUNTDOWN_ROW_DP = 20
