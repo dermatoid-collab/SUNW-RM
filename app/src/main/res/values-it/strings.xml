@@ -31,7 +31,7 @@
     <string name="search_pick">Scegli la località</string>
     <string name="place_device">Posizione del dispositivo</string>
     <string name="settings">Impostazioni</string>
-    <string name="settings_title">←  Impostazioni</string>
+    <string name="settings_title">Impostazioni</string>
     <string name="place_with_menu">%1$s ▾</string>
     <string name="place_device_menu">◎ Posizione del dispositivo</string>
     <string name="favorites_empty_menu">Aggiungi preferiti…</string>
@@ -116,8 +116,8 @@
     <string name="section_about">Informazioni</string>
     <string name="build_info">Versione %1$s\nBuild GitHub n. %2$d del %3$s\nCommit %4$s</string>
     <string name="data_sources">Fonti dei dati</string>
-    <string name="sources">• Sole: equazioni del NOAA Solar Calculator (J. Meeus, «Astronomical Algorithms»), calcolate sul telefono.\n• Luna: algoritmo di Paul Schlyter («How to compute planetary positions»), calcolato sul telefono e verificato con PyEphem.\n• Meteo: meteoblue AG (pacchetto basic-1h / basic-day). Dati meteo © meteoblue.\n• Ricerca località: servizio di geocoding di Android (Google).\n• Icone meteo: Lucide (lucide.dev), licenza ISC © Lucide Icons and Contributors.</string>
-    <string name="detail_back">←  %1$s</string>
+    <string name="sources">• Sole: equazioni del NOAA Solar Calculator (J. Meeus, «Astronomical Algorithms»), calcolate sul telefono.\n• Luna: algoritmo di Paul Schlyter («How to compute planetary positions»), calcolato sul telefono e verificato con PyEphem.\n• Meteo: meteoblue AG (pacchetto basic-1h / basic-day). Dati meteo © meteoblue.\n• Ricerca località: servizio di geocoding di Android (Google).\n• Icone meteo: Material Symbols di Google, licenza Apache 2.0.</string>
+    <string name="detail_back">%1$s</string>
     <string name="detail_hourly">Ora per ora</string>
     <string name="detail_step_1h">Ogni ora ▾</string>
     <string name="detail_step_3h">Ogni 3 ore ▾</string>

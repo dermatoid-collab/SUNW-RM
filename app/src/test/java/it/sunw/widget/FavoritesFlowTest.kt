@@ -201,9 +201,9 @@ class FavoritesFlowTest {
         assertEquals(android.view.Gravity.CENTER_HORIZONTAL, date.gravity and android.view.Gravity.HORIZONTAL_GRAVITY_MASK)
     }
 
-    /** A typical phone (393 × 852 dp, minus about 80 dp of system bars). */
+    /** Galaxy S25 at default zoom: 384 × 832 dp, minus about 60 dp of status and navigation bars. */
     @Test
-    @Config(qualifiers = "w393dp-h772dp")
+    @Config(qualifiers = "w384dp-h772dp")
     fun mainPageIsWeatherSunMoonAndFitsOneScreen() {
         LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
         File(context.cacheDir, "meteoblue.json").writeText(WeatherTest.sampleJson())

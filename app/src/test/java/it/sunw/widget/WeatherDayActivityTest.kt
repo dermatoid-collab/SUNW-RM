@@ -49,7 +49,7 @@ class WeatherDayActivityTest {
     ).setup().get()
 
     @Test
-    fun everyConditionHasALucideIconByDayAndByNight() {
+    fun everyConditionHasAnIconByDayAndByNight() {
         for (condition in Condition.values()) for (night in listOf(false, true)) {
             assertNotNull("$condition night=$night", context.getDrawable(WeatherIcons.icon(condition, night)))
         }

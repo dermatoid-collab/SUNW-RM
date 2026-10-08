@@ -284,9 +284,9 @@ class MainActivity : Activity() {
     companion object {
         private const val REFRESH_MS = 60_000L
         private const val RETRY_AFTER_FAILURE_S = 300L
-        /** Size the widget is rendered at (home-screen padding 14 dp); shown 176 dp tall with 6 dp padding. */
+        /** Size the widget is rendered at (home-screen padding 14 dp); shown 188 dp tall with 12 dp padding. */
         private const val WIDGET_HEIGHT_DP = 192
-        private const val EMBEDDED_PADDING_V_DP = 6
+        private const val EMBEDDED_PADDING_V_DP = 12
 
         /** The countdown row takes this much of the widget height; the curve gets the rest. */
         private const val COUNTDOWN_ROW_DP = 20

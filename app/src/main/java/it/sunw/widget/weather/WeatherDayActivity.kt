@@ -1,6 +1,7 @@
 package it.sunw.widget.weather
 
 import android.app.Activity
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -9,12 +10,12 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.DynamicDrawableSpan
 import android.text.style.ImageSpan
-import android.text.style.RelativeSizeSpan
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.Gravity
 import android.view.View
 import android.view.ViewTreeObserver
+import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
@@ -78,6 +79,7 @@ class WeatherDayActivity : Activity() {
         findViewById<TextView>(R.id.day_back).apply {
             text = getString(R.string.detail_back, MainActivity.placeLabel(this@WeatherDayActivity, place))
             setTextColor(palette.text)
+            compoundDrawableTintList = ColorStateList.valueOf(palette.text)
             setOnClickListener { finish() }
         }
         for (id in listOf(R.id.day_hero, R.id.day_info_card, R.id.day_hourly_card)) {
@@ -124,12 +126,27 @@ class WeatherDayActivity : Activity() {
         return e.rawY >= loc[1] && e.rawY <= loc[1] + tabs.height
     }
 
+    /**
+     * Slides the new day in from the side it comes from (from the right for a later day), like
+     * turning a page; [delta] 0 means no movement.
+     */
+    private fun slideIn(delta: Int) {
+        if (delta == 0) return
+        val content = findViewById<View>(R.id.day_content)
+        content.animate().cancel()
+        content.translationX = delta * content.width * SLIDE_FRACTION
+        content.alpha = 0f
+        content.animate().translationX(0f).alpha(1f).setDuration(SLIDE_MS)
+            .setInterpolator(DecelerateInterpolator()).start()
+    }
+
     /** Moves [delta] days (±1); false at either end of the forecast. */
     internal fun showDay(delta: Int): Boolean {
         val index = forecast.days.indexOfFirst { it.date == selected } + delta
         if (index !in forecast.days.indices) return false
         selected = forecast.days[index].date
         render()
+        slideIn(delta)
         return true
     }
 
@@ -165,7 +182,12 @@ class WeatherDayActivity : Activity() {
                     cornerRadius = dp(14).toFloat()
                     setColor(Palette.blend(palette.cardBackground, palette.accent, 0.22f))
                 }
-                setOnClickListener { selected = day.date; render() }
+                setOnClickListener {
+                    val delta = day.date.compareTo(selected).coerceIn(-1, 1)
+                    selected = day.date
+                    render()
+                    slideIn(delta)
+                }
                 addView(text(dayFormat.format(day.date).trimEnd('.').replaceFirstChar { it.titlecase() }, 15.5f,
                     if (isSelected) palette.text else palette.textSecondary, Gravity.CENTER_HORIZONTAL))
                 addView(ImageView(this@WeatherDayActivity).apply {
@@ -202,8 +224,8 @@ class WeatherDayActivity : Activity() {
         }
         findViewById<LinearLayout>(R.id.day_pills).apply {
             removeAllViews()
-            addView(WeatherCard.temperaturePill(this@WeatherDayActivity, day.temperatureMax, 20.5f, 55))
-            addView(WeatherCard.temperaturePill(this@WeatherDayActivity, day.temperatureMin, 20.5f, 55).apply {
+            addView(WeatherCard.temperaturePill(this@WeatherDayActivity, day.temperatureMax, 17f, 46))
+            addView(WeatherCard.temperaturePill(this@WeatherDayActivity, day.temperatureMin, 17f, 46).apply {
                 (layoutParams as LinearLayout.LayoutParams).topMargin = dp(5)
             })
         }
@@ -219,9 +241,9 @@ class WeatherDayActivity : Activity() {
         when (val sun = SunCalculator.day(day.date, place.latitude, place.longitude, zone)) {
             // Sunrise, sunset and day length as icons instead of words.
             is SunCalculator.Day.Normal -> text
-                .icon(R.drawable.ic_sunrise, iconPx).append(" ${Formatters.time(this, sun.sunrise, zone)}    ")
-                .icon(R.drawable.ic_sunset, iconPx).append(" ${Formatters.time(this, sun.sunset, zone)}    ")
-                .icon(R.drawable.wx_sun, iconPx, getColor(R.color.widget_accent)).append(" ${Formatters.length(sun.length)}")
+                .icon(R.drawable.ic_sunrise, iconPx).append(" ${Formatters.time(this, sun.sunrise, zone)}   ")
+                .icon(R.drawable.ic_sunset, iconPx).append(" ${Formatters.time(this, sun.sunset, zone)}   ")
+                .icon(R.drawable.wx_sunny, iconPx, getColor(R.color.widget_accent)).append(" ${Formatters.length(sun.length)}")
             is SunCalculator.Day.PolarDay -> text.append(getString(R.string.polar_day))
             is SunCalculator.Day.PolarNight -> text.append(getString(R.string.polar_night))
         }
@@ -237,15 +259,13 @@ class WeatherDayActivity : Activity() {
         lines += getString(R.string.detail_rain, day.precipitationProbability, WeatherCard.mm(day.precipitation)) +
             " · " + getString(R.string.detail_uv, day.uvIndex)
         val wind = getString(R.string.detail_wind, WeatherCard.windArrow(day.windDirection), day.windSpeedMax.roundToInt())
-        // Wind stays at the previous size; the other lines were enlarged by 20 %.
-        text.append(lines.joinToString("\n", prefix = "\n", postfix = "\n"))
-            .append(wind, RelativeSizeSpan(1 / FONT_SCALE), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        text.append((lines + wind).joinToString("\n", prefix = "\n"))
         info.text = text
         info.setTextColor(palette.text)
         val spot = day.rainspot
         findViewById<View>(R.id.day_rainspot_box).visibility = if (spot != null) View.VISIBLE else View.GONE
         if (spot != null) {
-            findViewById<ImageView>(R.id.day_rainspot).setImageBitmap(Rainspot.draw(dp(126), spot))
+            findViewById<ImageView>(R.id.day_rainspot).setImageBitmap(Rainspot.draw(dp(84), spot))
             findViewById<TextView>(R.id.day_rainspot_label).setTextColor(palette.textSecondary)
         }
     }
@@ -382,10 +402,11 @@ class WeatherDayActivity : Activity() {
         private const val STATE_DATE = "date"
         private const val STATE_STEP = "step"
         private const val RAIN_TEXT = 0xFF8FB8F2.toInt()
-
-        /** Day-page text was enlarged by this factor; wind and "feels like" kept their size. */
-        private const val FONT_SCALE = 1.2f
         private const val SWIPE_MIN_DP = 80
+        private const val SLIDE_MS = 260L
+
+        /** How far (share of the width) the new day starts from. */
+        private const val SLIDE_FRACTION = 0.6f
         private const val SWIPE_MIN_VELOCITY = 600f
     }
 }
