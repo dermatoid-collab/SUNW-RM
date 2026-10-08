@@ -308,6 +308,15 @@ class SettingsActivity : Activity() {
                 textSize = 12f
                 alpha = 0.6f
             })
+            row.addView(TextView(this).apply {
+                text = "✎"
+                textSize = 18f
+                gravity = Gravity.CENTER
+                contentDescription = getString(R.string.rename_favorite)
+                minimumWidth = dp(44)
+                minimumHeight = dp(44)
+                setOnClickListener { renameFavorite(fav) }
+            })
             list.addView(row)
         }
     }
@@ -343,6 +352,38 @@ class SettingsActivity : Activity() {
                 refreshSummary()
                 refreshFavorites()
                 Toast.makeText(this, getString(R.string.favorite_added, name), Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun renameFavorite(fav: Favorite) {
+        val input = EditText(this).apply {
+            id = R.id.favorite_name
+            setText(fav.name)
+            hint = getString(R.string.favorite_name_hint)
+            setSingleLine()
+            selectAll()
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.rename_favorite)
+            .setView(LinearLayout(this).apply { setPadding(dp(22), dp(8), dp(22), 0); addView(input) })
+            .setPositiveButton(R.string.save) { _, _ ->
+                val name = input.text.toString().trim()
+                if (name.isEmpty() || name == fav.name) return@setPositiveButton
+                if (!FavoritesStore(this).rename(fav, name)) {
+                    Toast.makeText(this, getString(R.string.favorite_exists, name), Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                // The place in use is this favourite: show the new name on the page and widgets.
+                val current = store.current()
+                if (fav.matches(current)) {
+                    store.save(current.latitude, current.longitude, automatic = false, name = name)
+                    SunWidgetProvider.updateAll(this)
+                    refreshSummary()
+                }
+                refreshFavorites()
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()

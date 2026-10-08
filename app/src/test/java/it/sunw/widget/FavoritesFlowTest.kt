@@ -79,6 +79,31 @@ class FavoritesFlowTest {
         assertEquals("44.8015, 10.3279", favorites[0].name)
     }
 
+    private fun renameViaDialog(activity: SettingsActivity, row: Int, name: String) {
+        val pencil = (favoriteRows(activity)[row] as LinearLayout).let { it.getChildAt(it.childCount - 1) }
+        pencil.performClick()
+        val dialog = ShadowAlertDialog.getLatestAlertDialog()
+        dialog.findViewById<EditText>(R.id.favorite_name).setText(name)
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        ShadowLooper.idleMainLooper()
+    }
+
+    @Test
+    fun renameFavoriteKeepsOrderAndUpdatesThePlaceInUse() {
+        FavoritesStore(context).add(Favorite("Livigno", 46.5386, 10.1357))
+        FavoritesStore(context).add(Favorite("Passo Gavia", 46.3437, 10.4876))
+        LocationStore(context).save(46.3437, 10.4876, automatic = false, name = "Passo Gavia")
+        val activity = settings()
+
+        renameViaDialog(activity, 1, "Gavia")
+        assertEquals(listOf("Livigno", "Gavia"), FavoritesStore(context).all().map { it.name })
+        assertEquals("Gavia", LocationStore(context).current().name)
+
+        renameViaDialog(activity, 0, "Gavia") // name already taken: nothing changes
+        assertEquals(listOf("Livigno", "Gavia"), FavoritesStore(context).all().map { it.name })
+        assertEquals("Gavia", LocationStore(context).current().name)
+    }
+
     @Test
     fun selectAndRemoveFavorite() {
         FavoritesStore(context).add(Favorite("Livigno", 46.5386, 10.1357))

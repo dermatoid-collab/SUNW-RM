@@ -26,6 +26,17 @@ class FavoritesStore(context: Context) {
 
     fun remove(favorite: Favorite) = write(all() - favorite)
 
+    /**
+     * Gives [favorite] a new name, keeping its place in the list. False when another favourite
+     * already has that name.
+     */
+    fun rename(favorite: Favorite, name: String): Boolean {
+        val list = all()
+        if (list.any { it.name == name && it != favorite }) return false
+        write(list.map { if (it == favorite) it.copy(name = name) else it })
+        return true
+    }
+
     private fun write(list: List<Favorite>) {
         val json = JSONArray()
         list.forEach { json.put(JSONObject().put("name", it.name).put("lat", it.latitude).put("lon", it.longitude)) }

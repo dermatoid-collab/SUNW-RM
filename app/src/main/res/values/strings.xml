@@ -57,7 +57,9 @@
     <string name="add_favorite">+ Save current location</string>
     <string name="add_favorite_title">Favourite name</string>
     <string name="favorite_name_hint">e.g. Home, Gavia Pass</string>
-    <string name="favorites_hint">Tap to use, long-press to remove. On the main page, tap the place name to switch.</string>
+    <string name="favorites_hint">Tap to use it, ✎ to rename it, long-press to remove it. On the main page, tap the place name to switch.</string>
+    <string name="rename_favorite">Rename favourite</string>
+    <string name="favorite_exists">A favourite named “%1$s” already exists</string>
     <string name="favorites_empty">No favourites yet</string>
     <string name="remove_favorite">Remove “%1$s” from favourites?</string>
     <string name="remove">Remove</string>

@@ -57,7 +57,9 @@
     <string name="add_favorite">+ Salva la posizione attuale</string>
     <string name="add_favorite_title">Nome del preferito</string>
     <string name="favorite_name_hint">es. Casa, Passo Gavia</string>
-    <string name="favorites_hint">Tocca per usarlo, tieni premuto per rimuoverlo. Dalla pagina principale cambi località toccando il nome.</string>
+    <string name="favorites_hint">Tocca per usarlo, ✎ per rinominarlo, tieni premuto per rimuoverlo. Dalla pagina principale cambi località toccando il nome.</string>
+    <string name="rename_favorite">Rinomina preferito</string>
+    <string name="favorite_exists">Esiste già un preferito «%1$s»</string>
     <string name="favorites_empty">Nessun preferito</string>
     <string name="remove_favorite">Rimuovere «%1$s» dai preferiti?</string>
     <string name="remove">Rimuovi</string>
