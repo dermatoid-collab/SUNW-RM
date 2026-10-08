@@ -68,4 +68,24 @@ class WeatherDayActivityTest {
         (activity.findViewById<LinearLayout>(R.id.day_tabs).getChildAt(1)).performClick()
         assertTrue(before != title.text.toString())
     }
+
+    @Test
+    fun swipeMovesBetweenDaysAndStopsAtTheEnds() {
+        val activity = open("2026-10-08")
+        val title = activity.findViewById<TextView>(R.id.day_title)
+        val first = title.text.toString()
+        assertTrue(!activity.showDay(-1))          // no day before the first
+        assertTrue(activity.showDay(1))            // swipe left → next day
+        assertTrue(first != title.text.toString())
+        assertTrue(activity.showDay(1))
+        assertTrue(!activity.showDay(1))           // last day
+    }
+
+    @Test
+    fun hourRowsShowAllHoursOfTheDay() {
+        val activity = open("2026-10-09")
+        val hours = activity.findViewById<LinearLayout>(R.id.day_hours)
+        // 24 rows plus 23 dividers for a full day in 1 h steps.
+        assertEquals(47, hours.childCount)
+    }
 }

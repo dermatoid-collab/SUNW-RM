@@ -30,6 +30,8 @@ data class Forecast(
         val condition: Condition,
         val uvIndex: Int,
         val isDaylight: Boolean,
+        /** MeteoBlue "rainspot": 7×7 precipitation around the place, 49 digits, north row first. */
+        val rainspot: String? = null,
     )
 
     data class Day(
@@ -42,6 +44,7 @@ data class Forecast(
         val windSpeedMax: Double,
         val windDirection: Int,
         val uvIndex: Int,
+        val rainspot: String? = null,
     )
 
     /** Local date-time at the forecast location for an instant. */
@@ -63,6 +66,9 @@ data class Forecast(
 
     companion object {
         private val HOUR_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+        private fun rainspot(data: JSONObject, i: Int): String? =
+            data.optJSONArray("rainspot")?.optString(i)?.takeIf { it.length == 49 && it.all(Char::isDigit) }
 
         /** Parses a MeteoBlue JSON response; throws [ForecastException] for API errors. */
         fun parse(json: String, fetchedAt: Instant): Forecast {
@@ -86,6 +92,7 @@ data class Forecast(
                     condition = Condition.fromHourlyPictocode(h.getJSONArray("pictocode").optInt(i, 1)),
                     uvIndex = h.optJSONArray("uvindex")?.optInt(i, 0) ?: 0,
                     isDaylight = h.optJSONArray("isdaylight")?.optInt(i, 1) != 0,
+                    rainspot = rainspot(h, i),
                 )
             }
 
@@ -101,6 +108,7 @@ data class Forecast(
                     windSpeedMax = d.optJSONArray("windspeed_max")?.optDouble(i, 0.0) ?: 0.0,
                     windDirection = d.optJSONArray("winddirection")?.optInt(i, 0) ?: 0,
                     uvIndex = d.optJSONArray("uvindex")?.optInt(i, 0) ?: 0,
+                    rainspot = rainspot(d, i),
                 )
             }
             return Forecast(

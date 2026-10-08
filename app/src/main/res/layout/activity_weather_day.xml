@@ -25,6 +25,7 @@
             android:textSize="20sp" />
 
         <HorizontalScrollView
+            android:id="@+id/day_tabs_scroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingHorizontal="10dp"
@@ -90,16 +91,49 @@
                 android:orientation="vertical" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/day_info"
+        <LinearLayout
+            android:id="@+id/day_info_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="14dp"
             android:layout_marginTop="12dp"
             android:background="@drawable/card_background"
-            android:lineSpacingExtra="6dp"
-            android:padding="18dp"
-            android:textSize="14sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="18dp">
+
+            <TextView
+                android:id="@+id/day_info"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:lineSpacingExtra="6dp"
+                android:textSize="14sp" />
+
+            <!-- MeteoBlue rainspot: where it rains around the place today. -->
+            <LinearLayout
+                android:id="@+id/day_rainspot_box"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/day_rainspot"
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:contentDescription="@string/rainspot_label" />
+
+                <TextView
+                    android:id="@+id/day_rainspot_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/rainspot_label"
+                    android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/day_hourly_card"

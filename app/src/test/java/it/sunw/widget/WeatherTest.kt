@@ -3,6 +3,7 @@ package it.sunw.widget
 import it.sunw.widget.weather.Condition
 import it.sunw.widget.weather.Forecast
 import it.sunw.widget.weather.ForecastException
+import it.sunw.widget.weather.Rainspot
 import it.sunw.widget.weather.WeatherCard
 import org.json.JSONArray
 import org.json.JSONObject
@@ -116,6 +117,29 @@ class WeatherTest {
         assertEquals(Condition.SHOWERS, Condition.fromDailyPictocode(7))
         assertEquals(Condition.SLEET, Condition.fromDailyPictocode(11))
         assertFalse(Condition.OVERCAST.hasSunOrMoon)
+    }
+
+    @Test
+    fun rainspotRunsSouthToNorth() {
+        // Decoded from a Meteoblue screenshot (Pannocchia, 21:00): rain to the south, dry north.
+        val spot = "1111111111111111191119119900009000000000000000000"
+        assertEquals('0', Rainspot.cell(spot, 0, 0)) // north-west
+        assertEquals('1', Rainspot.cell(spot, 6, 0)) // south-west
+        assertEquals('9', Rainspot.cell(spot, 3, 0)) // the place's row, west edge
+        assertTrue(Rainspot.hasRain(spot))
+        assertFalse(Rainspot.hasRain("0".repeat(49)))
+    }
+
+    @Test
+    fun rainspotIsParsedPerHourAndDay() {
+        val json = JSONObject(sampleJson())
+        val spot = "0".repeat(42) + "1111111"
+        json.getJSONObject("data_1h").put("rainspot", JSONArray(List(48) { spot }))
+        json.getJSONObject("data_day").put("rainspot", JSONArray(listOf(spot, "bad", spot)))
+        val forecast = Forecast.parse(json.toString(), Instant.now())
+        assertEquals(spot, forecast.hours[0].rainspot)
+        assertEquals(spot, forecast.days[0].rainspot)
+        assertEquals(null, forecast.days[1].rainspot) // malformed → ignored
     }
 
     @Test

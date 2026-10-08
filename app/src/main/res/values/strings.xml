@@ -131,4 +131,5 @@
     <string name="detail_felt">Feels %1$s</string>
     <string name="detail_no_hours">No hourly data for this day.</string>
     <string name="detail_no_data">No forecast downloaded yet: open the main page while online.</string>
+    <string name="rainspot_label">Rain around</string>
 </resources>

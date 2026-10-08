@@ -131,4 +131,5 @@
     <string name="detail_felt">Perc. %1$s</string>
     <string name="detail_no_hours">Nessun dato orario per questo giorno.</string>
     <string name="detail_no_data">Previsioni non ancora scaricate: apri la pagina principale con la connessione attiva.</string>
+    <string name="rainspot_label">Pioggia nei dintorni</string>
 </resources>
