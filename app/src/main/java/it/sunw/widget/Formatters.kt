@@ -26,4 +26,10 @@ object Formatters {
         val s = abs(seconds)
         return "%s%dm %02ds".format(Locale.ROOT, sign, s / 60, s % 60)
     }
+
+    /** Time left as "HH:MM:SS" (hours keep counting past 24). */
+    fun countdown(seconds: Long): String {
+        val s = seconds.coerceAtLeast(0)
+        return "%02d:%02d:%02d".format(Locale.ROOT, s / 3600, s / 60 % 60, s % 60)
+    }
 }

@@ -32,6 +32,19 @@ class MainActivity : Activity() {
         }
     }
 
+    /** Next sunrise / sunset for the live countdowns; null near the poles. */
+    private var nextSunrise: Instant? = null
+    private var nextSunset: Instant? = null
+    private var sunriseCountdown: TextView? = null
+    private var sunsetCountdown: TextView? = null
+    private val secondTick = object : Runnable {
+        override fun run() {
+            updateCountdowns()
+            // Align to the next whole second so the digits change together with the clock.
+            handler.postDelayed(this, 1000 - System.currentTimeMillis() % 1000)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -44,10 +57,12 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         handler.post(tick)
+        handler.post(secondTick)
     }
 
     override fun onPause() {
         handler.removeCallbacks(tick)
+        handler.removeCallbacks(secondTick)
         super.onPause()
     }
 
@@ -75,11 +90,41 @@ class MainActivity : Activity() {
         val container = findViewById<FrameLayout>(R.id.widget_container)
         val metrics = resources.displayMetrics
         val widthDp = (metrics.widthPixels / metrics.density).toInt() - 28
-        val views = WidgetRenderer(this, palette).render(WidgetRenderer.Size(widthDp, WIDGET_HEIGHT_DP), place, now, zone, clickable = false)
+        val views = WidgetRenderer(this, palette).render(WidgetRenderer.Size(widthDp, WIDGET_HEIGHT_DP - COUNTDOWN_ROW_DP), place, now, zone, clickable = false)
         container.removeAllViews()
-        container.addView(views.apply(this, container))
+        val widget = views.apply(this, container)
+        container.addView(widget)
+        setUpCountdowns(widget, palette, place, now, zone)
 
         showMoon(palette, place, now, zone)
+    }
+
+    /** Shows the countdown row under the times and works out which events it counts down to. */
+    private fun setUpCountdowns(widget: android.view.View, palette: Palette, place: Place, now: Instant, zone: ZoneId) {
+        val today = now.atZone(zone).toLocalDate()
+        fun nextEvent(pick: (SunCalculator.Day.Normal) -> Instant): Instant? =
+            (0L..1L).asSequence()
+                .mapNotNull { SunCalculator.day(today.plusDays(it), place.latitude, place.longitude, zone) as? SunCalculator.Day.Normal }
+                .map(pick)
+                .firstOrNull { it.isAfter(now) }
+        nextSunrise = nextEvent { it.sunrise }
+        nextSunset = nextEvent { it.sunset }
+        sunriseCountdown = widget.findViewById<TextView>(R.id.sunrise_countdown)?.apply { setTextColor(palette.textSecondary) }
+        sunsetCountdown = widget.findViewById<TextView>(R.id.sunset_countdown)?.apply { setTextColor(palette.textSecondary) }
+        widget.findViewById<android.view.View>(R.id.countdown_row)?.visibility =
+            if (nextSunrise != null || nextSunset != null) android.view.View.VISIBLE else android.view.View.GONE
+        updateCountdowns()
+    }
+
+    private fun updateCountdowns() {
+        val now = Instant.now()
+        // An event just passed: recompute everything (times, curve, next targets).
+        if (listOfNotNull(nextSunrise, nextSunset).any { !it.isAfter(now) }) {
+            refresh()
+            return
+        }
+        sunriseCountdown?.text = nextSunrise?.let { "− " + Formatters.countdown(it.epochSecond - now.epochSecond) } ?: ""
+        sunsetCountdown?.text = nextSunset?.let { "− " + Formatters.countdown(it.epochSecond - now.epochSecond) } ?: ""
     }
 
     private fun showMoon(palette: Palette, place: Place, now: Instant, zone: ZoneId) {
@@ -120,6 +165,43 @@ class MainActivity : Activity() {
             text = next
             setTextColor(palette.textSecondary)
         }
+        findViewById<android.view.View>(R.id.moon_divider).setBackgroundColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.08f))
+        showMoonWeek(palette, place, now, zone)
+    }
+
+    /** The next 7 days on one row: phase icon, illumination at local noon, abbreviated weekday. */
+    private fun showMoonWeek(palette: Palette, place: Place, now: Instant, zone: ZoneId) {
+        val row = findViewById<LinearLayout>(R.id.moon_week)
+        row.removeAllViews()
+        val density = resources.displayMetrics.density
+        val iconPx = (24 * density).toInt()
+        val dayFormat = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
+        val today = now.atZone(zone).toLocalDate()
+        for (offset in 1L..7L) {
+            val date = today.plusDays(offset)
+            val phase = MoonCalculator.phase(date.atTime(12, 0).atZone(zone).toInstant())
+            val cell = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = android.view.Gravity.CENTER_HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            cell.addView(ImageView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(iconPx, iconPx)
+                setImageBitmap(MoonRenderer.draw(iconPx, phase, place.latitude < 0, Palette.blend(palette.cardBackground, Color.WHITE, 0.08f), MOON_LIT))
+            })
+            cell.addView(TextView(this).apply {
+                text = getString(R.string.percent, Math.round(phase.illumination * 100).toInt())
+                textSize = 13f
+                setTextColor(palette.text)
+                setPadding(0, (6 * density).toInt(), 0, 0)
+            })
+            cell.addView(TextView(this).apply {
+                text = capitalize(dayFormat.format(date).trimEnd('.'))
+                textSize = 11f
+                setTextColor(palette.textSecondary)
+            })
+            row.addView(cell)
+        }
     }
 
     /** Quick switch: favourites plus device location. */
@@ -153,7 +235,10 @@ class MainActivity : Activity() {
 
     companion object {
         private const val REFRESH_MS = 60_000L
-        private const val WIDGET_HEIGHT_DP = 170
+        private const val WIDGET_HEIGHT_DP = 192
+
+        /** The countdown row takes this much of the widget height; the curve gets the rest. */
+        private const val COUNTDOWN_ROW_DP = 20
         private const val DEVICE_ITEM = 10_000
         private const val SETTINGS_ITEM = 10_001
         private const val MOON_LIT = 0xFFECE6D2.toInt()

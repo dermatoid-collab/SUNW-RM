@@ -17,4 +17,35 @@
         android:src="@drawable/curve_placeholder" />
 
     <include layout="@layout/widget_sun_row" />
+
+    <!-- Live countdowns, shown only on the app's main page (the home widget can't tick every second). -->
+    <LinearLayout
+        android:id="@+id/countdown_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/sunrise_countdown"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFeatureSettings="tnum"
+            android:gravity="start"
+            android:paddingStart="20dp"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/sunset_countdown"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFeatureSettings="tnum"
+            android:gravity="end"
+            android:paddingEnd="20dp"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="14sp" />
+    </LinearLayout>
 </LinearLayout>

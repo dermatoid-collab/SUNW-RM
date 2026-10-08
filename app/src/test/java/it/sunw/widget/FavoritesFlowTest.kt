@@ -145,4 +145,16 @@ class FavoritesFlowTest {
         assertEquals("Livigno", place.name)
         assertTrue(activity.findViewById<TextView>(R.id.place).text.toString().startsWith("Livigno"))
     }
+
+    @Test
+    fun mainPageShowsCountdownsAndMoonWeek() {
+        LocationStore(context).save(44.8015, 10.3279, automatic = false, name = "Parma")
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        ShadowLooper.idleMainLooper()
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.countdown_row).visibility)
+        val countdown = activity.findViewById<TextView>(R.id.sunrise_countdown).text.toString()
+        assertTrue("countdown: $countdown", Regex("− \\d{2}:\\d{2}:\\d{2}").matches(countdown))
+        assertEquals(7, activity.findViewById<LinearLayout>(R.id.moon_week).childCount)
+    }
 }
