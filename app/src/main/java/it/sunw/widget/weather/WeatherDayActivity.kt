@@ -7,6 +7,8 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.style.DynamicDrawableSpan
+import android.text.style.ImageSpan
 import android.text.style.RelativeSizeSpan
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -183,7 +185,7 @@ class WeatherDayActivity : Activity() {
 
     private fun showHero() {
         val day = day()
-        WeatherIcons.show(findViewById(R.id.day_icon), day.condition, night = false, color = palette.text)
+        findViewById<ImageView>(R.id.day_icon).setImageBitmap(WeatherPictograms.draw(dp(84), day.condition, night = false))
         findViewById<TextView>(R.id.day_title).apply {
             text = DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.getDefault()).format(day.date)
                 .replaceFirstChar { it.titlecase() }
@@ -198,13 +200,6 @@ class WeatherDayActivity : Activity() {
             }
             setTextColor(palette.text)
         }
-        val hours = hoursOf(day.date)
-        val feltMax = hours.maxOfOrNull { it.feltTemperature }
-        findViewById<TextView>(R.id.day_sub).apply {
-            text = if (feltMax != null) getString(R.string.detail_felt_uv, WeatherCard.deg(feltMax), day.uvIndex)
-            else getString(R.string.detail_uv, day.uvIndex)
-            setTextColor(palette.textSecondary)
-        }
         findViewById<LinearLayout>(R.id.day_pills).apply {
             removeAllViews()
             addView(WeatherCard.temperaturePill(this@WeatherDayActivity, day.temperatureMax, 20.5f, 55))
@@ -218,15 +213,19 @@ class WeatherDayActivity : Activity() {
     private fun showInfo() {
         val day = day()
         val place = LocationStore(this).current()
-        val lines = mutableListOf<String>()
+        val info = findViewById<TextView>(R.id.day_info)
+        val iconPx = (info.textSize * 1.15f).roundToInt()
+        val text = SpannableStringBuilder()
         when (val sun = SunCalculator.day(day.date, place.latitude, place.longitude, zone)) {
-            is SunCalculator.Day.Normal -> lines += getString(
-                R.string.detail_sun, Formatters.time(this, sun.sunrise, zone), Formatters.time(this, sun.sunset, zone),
-                Formatters.length(sun.length),
-            )
-            is SunCalculator.Day.PolarDay -> lines += getString(R.string.polar_day)
-            is SunCalculator.Day.PolarNight -> lines += getString(R.string.polar_night)
+            // Sunrise, sunset and day length as icons instead of words.
+            is SunCalculator.Day.Normal -> text
+                .icon(R.drawable.ic_sunrise, iconPx).append(" ${Formatters.time(this, sun.sunrise, zone)}    ")
+                .icon(R.drawable.ic_sunset, iconPx).append(" ${Formatters.time(this, sun.sunset, zone)}    ")
+                .icon(R.drawable.wx_sun, iconPx, getColor(R.color.widget_accent)).append(" ${Formatters.length(sun.length)}")
+            is SunCalculator.Day.PolarDay -> text.append(getString(R.string.polar_day))
+            is SunCalculator.Day.PolarNight -> text.append(getString(R.string.polar_night))
         }
+        val lines = mutableListOf<String>()
         val moon = MoonCalculator.riseSet(day.date, place.latitude, place.longitude, zone)
         val phase = MoonCalculator.phase(day.date.atTime(12, 0).atZone(zone).toInstant())
         lines += getString(
@@ -235,21 +234,32 @@ class WeatherDayActivity : Activity() {
             moon.set?.let { Formatters.time(this, it, zone) } ?: "—",
             (phase.illumination * 100).roundToInt(),
         )
-        lines += getString(R.string.detail_rain, day.precipitationProbability, WeatherCard.mm(day.precipitation))
+        lines += getString(R.string.detail_rain, day.precipitationProbability, WeatherCard.mm(day.precipitation)) +
+            " · " + getString(R.string.detail_uv, day.uvIndex)
         val wind = getString(R.string.detail_wind, WeatherCard.windArrow(day.windDirection), day.windSpeedMax.roundToInt())
-        findViewById<TextView>(R.id.day_info).apply {
-            // Wind stays at the previous size; the other lines were enlarged by 20 %.
-            text = SpannableStringBuilder(lines.joinToString("\n", postfix = "\n")).apply {
-                append(wind, RelativeSizeSpan(1 / FONT_SCALE), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-            setTextColor(palette.text)
-        }
+        // Wind stays at the previous size; the other lines were enlarged by 20 %.
+        text.append(lines.joinToString("\n", prefix = "\n", postfix = "\n"))
+            .append(wind, RelativeSizeSpan(1 / FONT_SCALE), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        info.text = text
+        info.setTextColor(palette.text)
         val spot = day.rainspot
         findViewById<View>(R.id.day_rainspot_box).visibility = if (spot != null) View.VISIBLE else View.GONE
         if (spot != null) {
             findViewById<ImageView>(R.id.day_rainspot).setImageBitmap(Rainspot.draw(dp(126), spot))
             findViewById<TextView>(R.id.day_rainspot_label).setTextColor(palette.textSecondary)
         }
+    }
+
+    /** Appends [res] as an inline icon of [sizePx], sitting on the text baseline. */
+    private fun SpannableStringBuilder.icon(res: Int, sizePx: Int, tint: Int? = null): SpannableStringBuilder {
+        val drawable = getDrawable(res)!!.mutate().apply {
+            setBounds(0, 0, sizePx, sizePx)
+            tint?.let { setTint(it) }
+        }
+        val start = length
+        append("\u00A0")
+        setSpan(ImageSpan(drawable, DynamicDrawableSpan.ALIGN_BASELINE), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return this
     }
 
     private fun hoursOf(date: LocalDate): List<Forecast.Hour> = forecast.hours.filter { it.time.toLocalDate() == date }
@@ -301,28 +311,33 @@ class WeatherDayActivity : Activity() {
                         (layoutParams as LinearLayout.LayoutParams).topMargin = dp(2)
                     })
                 })
+                // The other columns share the remaining width evenly, each centred in its cell,
+                // so there are no large gaps; a row without rainspot keeps an empty cell.
                 addView(ImageView(this@WeatherDayActivity).apply {
-                    layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply { marginStart = dp(10) }
+                    layoutParams = LinearLayout.LayoutParams(0, dp(40), 1f)
+                    scaleType = ImageView.ScaleType.FIT_CENTER
                     WeatherIcons.show(this, h.condition, !h.isDaylight, palette.text)
                     contentDescription = getString(h.condition.label)
                 })
-                addView(text(getString(R.string.detail_felt, WeatherCard.deg(h.feltTemperature)), 12f, palette.textSecondary).apply {
-                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(10) }
+                addView(text(getString(R.string.detail_felt, WeatherCard.deg(h.feltTemperature)), 12f, palette.textSecondary, Gravity.CENTER_HORIZONTAL).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 })
                 addView(LinearLayout(this@WeatherDayActivity).apply {
                     orientation = LinearLayout.VERTICAL
-                    gravity = Gravity.END
-                    addView(text("${WeatherCard.windArrow(h.windDirection)} ${h.windSpeed.roundToInt()} km/h", 12f, palette.text, Gravity.END))
-                    addView(text(WeatherCard.mm(h.precipitation), 14.5f, palette.text, Gravity.END))
-                    addView(text("${h.precipitationProbability}%", 14.5f, RAIN_TEXT, Gravity.END))
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.3f)
+                    addView(text("${WeatherCard.windArrow(h.windDirection)} ${h.windSpeed.roundToInt()} km/h", 12f, palette.text, Gravity.CENTER_HORIZONTAL))
+                    addView(text(WeatherCard.mm(h.precipitation), 14.5f, palette.text, Gravity.CENTER_HORIZONTAL))
+                    addView(text("${h.precipitationProbability}%", 14.5f, RAIN_TEXT, Gravity.CENTER_HORIZONTAL))
                 })
-                h.rainspot?.let { spot ->
-                    addView(ImageView(this@WeatherDayActivity).apply {
-                        layoutParams = LinearLayout.LayoutParams(dp(42), dp(42)).apply { marginStart = dp(10) }
+                addView(ImageView(this@WeatherDayActivity).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f)
+                    scaleType = ImageView.ScaleType.CENTER
+                    h.rainspot?.let { spot ->
                         setImageBitmap(Rainspot.draw(dp(42), spot))
                         contentDescription = getString(R.string.rainspot_label)
-                    })
-                }
+                    }
+                })
             }
             list.addView(row)
         }

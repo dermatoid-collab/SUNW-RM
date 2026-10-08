@@ -120,9 +120,7 @@
     <string name="detail_step_1h">Every hour ▾</string>
     <string name="detail_step_3h">Every 3 hours ▾</string>
     <string name="detail_day_night">%1$s, at night %2$s</string>
-    <string name="detail_felt_uv">Feels like up to %1$s · UV %2$d</string>
     <string name="detail_uv">UV %1$d</string>
-    <string name="detail_sun">Sunrise %1$s · Sunset %2$s · %3$s of daylight</string>
     <string name="detail_moon">Moon ↑ %1$s ↓ %2$s · %3$d%% lit</string>
     <string name="detail_rain">Rain %1$d%% · %2$s</string>
     <string name="detail_wind">Wind %1$s up to %2$d km/h</string>

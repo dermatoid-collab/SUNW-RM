@@ -120,9 +120,7 @@
     <string name="detail_step_1h">Ogni ora ▾</string>
     <string name="detail_step_3h">Ogni 3 ore ▾</string>
     <string name="detail_day_night">%1$s, di notte %2$s</string>
-    <string name="detail_felt_uv">Percepita fino a %1$s · UV %2$d</string>
     <string name="detail_uv">UV %1$d</string>
-    <string name="detail_sun">Alba %1$s · Tramonto %2$s · %3$s di luce</string>
     <string name="detail_moon">Luna ↑ %1$s ↓ %2$s · %3$d%% illuminata</string>
     <string name="detail_rain">Pioggia %1$d%% · %2$s</string>
     <string name="detail_wind">Vento %1$s fino a %2$d km/h</string>
