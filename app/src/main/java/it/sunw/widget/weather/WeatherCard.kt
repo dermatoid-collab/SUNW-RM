@@ -56,7 +56,7 @@ class WeatherCard(private val activity: Activity) {
         find<View>(R.id.weather_today_facts).visibility = View.VISIBLE
         find<View>(R.id.weather_divider).visibility = View.VISIBLE
 
-        find<ImageView>(R.id.weather_icon).setImageBitmap(WeatherIcons.draw(dp(76), hour.condition, !hour.isDaylight))
+        WeatherIcons.show(find(R.id.weather_icon), hour.condition, !hour.isDaylight, palette.text)
         find<TextView>(R.id.weather_temp).apply { text = deg(hour.temperature); setTextColor(palette.text) }
         find<TextView>(R.id.weather_desc).apply {
             text = activity.getString(hour.condition.label)
@@ -114,7 +114,7 @@ class WeatherCard(private val activity: Activity) {
             }
             cell.addView(ImageView(activity).apply {
                 layoutParams = LinearLayout.LayoutParams(dp(34), dp(34))
-                setImageBitmap(WeatherIcons.draw(dp(34), day.condition, night = false))
+                WeatherIcons.show(this, day.condition, night = false, color = palette.text)
             })
             cell.addView(label("${deg(day.temperatureMax)} ${deg(day.temperatureMin)}", 12f, palette.text, dp(4)))
             cell.addView(label(dayFormat.format(day.date).trimEnd('.').replaceFirstChar { it.titlecase() }, 11f, palette.textSecondary))

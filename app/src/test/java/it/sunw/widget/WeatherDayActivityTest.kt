@@ -5,8 +5,11 @@ import android.content.Intent
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import it.sunw.widget.weather.Condition
 import it.sunw.widget.weather.WeatherDayActivity
+import it.sunw.widget.weather.WeatherIcons
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -39,6 +42,13 @@ class WeatherDayActivityTest {
         WeatherDayActivity::class.java,
         Intent(context, WeatherDayActivity::class.java).putExtra(WeatherDayActivity.EXTRA_DATE, date),
     ).setup().get()
+
+    @Test
+    fun everyConditionHasALucideIconByDayAndByNight() {
+        for (condition in Condition.values()) for (night in listOf(false, true)) {
+            assertNotNull("$condition night=$night", context.getDrawable(WeatherIcons.icon(condition, night)))
+        }
+    }
 
     @Test
     fun showsTabsHeroAndHours() {

@@ -159,7 +159,7 @@ class WeatherDayActivity : Activity() {
                     if (isSelected) palette.text else palette.textSecondary, Gravity.CENTER_HORIZONTAL))
                 addView(ImageView(this@WeatherDayActivity).apply {
                     layoutParams = LinearLayout.LayoutParams(dp(28), dp(28))
-                    setImageBitmap(WeatherIcons.draw(dp(28), day.condition, night = false))
+                    WeatherIcons.show(this, day.condition, night = false, color = if (isSelected) palette.text else palette.textSecondary)
                 })
                 addView(text(dateFormat.format(day.date), 10f, palette.textSecondary, Gravity.CENTER_HORIZONTAL))
             })
@@ -174,7 +174,7 @@ class WeatherDayActivity : Activity() {
 
     private fun showHero() {
         val day = day()
-        findViewById<ImageView>(R.id.day_icon).setImageBitmap(WeatherIcons.draw(dp(84), day.condition, night = false))
+        WeatherIcons.show(findViewById(R.id.day_icon), day.condition, night = false, color = palette.text)
         findViewById<TextView>(R.id.day_title).apply {
             text = DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.getDefault()).format(day.date)
                 .replaceFirstChar { it.titlecase() }
@@ -287,7 +287,7 @@ class WeatherDayActivity : Activity() {
                 })
                 addView(ImageView(this@WeatherDayActivity).apply {
                     layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply { marginStart = dp(10) }
-                    setImageBitmap(WeatherIcons.draw(dp(40), h.condition, !h.isDaylight))
+                    WeatherIcons.show(this, h.condition, !h.isDaylight, palette.text)
                     contentDescription = getString(h.condition.label)
                 })
                 addView(text(getString(R.string.detail_felt, WeatherCard.deg(h.feltTemperature)), 12f, palette.textSecondary).apply {
