@@ -22,8 +22,11 @@ import java.time.LocalDateTime
 @Config(sdk = [34])
 class WeatherTest {
 
+    private fun sampleJson() = Companion.sampleJson()
+
+    companion object {
     /** A response shaped like MeteoBlue's basic-1h_basic-day: 2 days of hours, 3 days. */
-    private fun sampleJson(): String {
+    fun sampleJson(): String {
         val start = LocalDateTime.of(2026, 10, 8, 0, 0)
         val hours = (0 until 48).map { start.plusHours(it.toLong()) }
         fun arr(values: List<Any>) = JSONArray(values)
@@ -60,6 +63,7 @@ class WeatherTest {
             .put("data_1h", data1h)
             .put("data_day", dataDay)
             .toString()
+    }
     }
 
     @Test

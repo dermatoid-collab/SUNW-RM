@@ -22,7 +22,7 @@ Toccando un widget (o dall'icona) si apre la **pagina principale**:
 - in alto il nome della località: toccandolo si passa al volo tra i **preferiti** o alla posizione del dispositivo;
 - il **widget 4×2** completo, identico a quello sulla home;
 - la **Luna**: disegno della fase, percentuale illuminata, nome della fase, levata e tramonto lunare, date di luna nuova, primo quarto e piena, e una riga con i prossimi 7 giorni;
-- il **meteo** (MeteoBlue): in alto oggi (icona, temperatura, percepita, UV, massima/minima, pioggia, vento), sotto i giorni successivi con icona di giorno e di notte, temperature, vento, pioggia e UV. I dati sono tenuti in cache e aggiornati al massimo ogni ora; offline si vede l'ultimo aggiornamento.
+- il **meteo** (MeteoBlue): in alto oggi (icona, temperatura, percepita, UV, massima/minima, pioggia, vento), sotto una riga con i giorni successivi (icona, massima/minima, giorno, data). Toccando oggi o un giorno si apre il **dettaglio** in stile Meteoblue: giorni selezionabili, riepilogo, alba/tramonto, Luna, pioggia, vento e tabella ora per ora (ogni ora o ogni 3 ore). I dati sono tenuti in cache e aggiornati al massimo ogni ora; offline si vede l'ultimo aggiornamento.
 
 L'icona ⚙ apre le **impostazioni**:
 

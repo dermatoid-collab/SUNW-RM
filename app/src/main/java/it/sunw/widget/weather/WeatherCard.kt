@@ -1,8 +1,11 @@
 package it.sunw.widget.weather
 
 import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
@@ -11,12 +14,17 @@ import android.widget.TextView
 import it.sunw.widget.Palette
 import it.sunw.widget.R
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 
-/** Fills the weather card of the main page from a [Forecast] (or shows a status message). */
+/**
+ * Fills the weather card of the main page: today fixed on top, then the following days on one
+ * row (icon, max/min, weekday, dd/MM) in the same style as the Moon week. Tapping today or a
+ * day opens [WeatherDayActivity].
+ */
 class WeatherCard(private val activity: Activity) {
 
     private val density = activity.resources.displayMetrics.density
@@ -41,7 +49,10 @@ class WeatherCard(private val activity: Activity) {
             showStatus(palette, activity.getString(R.string.weather_unavailable))
             return
         }
-        find<View>(R.id.weather_now).visibility = View.VISIBLE
+        find<View>(R.id.weather_now).apply {
+            visibility = View.VISIBLE
+            setOnClickListener { openDay(today.date) }
+        }
         find<View>(R.id.weather_today_facts).visibility = View.VISIBLE
         find<View>(R.id.weather_divider).visibility = View.VISIBLE
 
@@ -57,8 +68,10 @@ class WeatherCard(private val activity: Activity) {
         }
         find<LinearLayout>(R.id.weather_today_pills).apply {
             removeAllViews()
-            addView(pill(today.temperatureMax, 17f, 46))
-            addView(pill(today.temperatureMin, 17f, 46).apply { (layoutParams as LinearLayout.LayoutParams).topMargin = dp(5) })
+            addView(temperaturePill(activity, today.temperatureMax, 17f, 46))
+            addView(temperaturePill(activity, today.temperatureMin, 17f, 46).apply {
+                (layoutParams as LinearLayout.LayoutParams).topMargin = dp(5)
+            })
         }
         find<TextView>(R.id.weather_today_facts).apply {
             text = activity.getString(
@@ -69,18 +82,7 @@ class WeatherCard(private val activity: Activity) {
             setTextColor(palette.textSecondary)
         }
 
-        val rows = find<LinearLayout>(R.id.weather_days)
-        rows.removeAllViews()
-        val dayFormat = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
-        val dateFormat = DateTimeFormatter.ofPattern("dd/MM")
-        val divider = Palette.blend(palette.cardBackground, Color.WHITE, 0.06f)
-        forecast.days.filter { it.date.isAfter(today.date) }.forEachIndexed { i, day ->
-            if (i > 0) rows.addView(View(activity).apply {
-                setBackgroundColor(divider)
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 1)
-            })
-            rows.addView(dayRow(palette, day, forecast.nightCondition(day.date) ?: day.condition, dayFormat, dateFormat))
-        }
+        showWeek(palette, forecast.days.filter { it.date.isAfter(today.date) }.take(DAYS))
 
         val updated = DateTimeFormatter.ofPattern("HH:mm").format(forecast.fetchedAt.atZone(zone))
         find<TextView>(R.id.weather_status).apply {
@@ -89,53 +91,40 @@ class WeatherCard(private val activity: Activity) {
         }
     }
 
-    private fun dayRow(
-        palette: Palette,
-        day: Forecast.Day,
-        night: Condition,
-        dayFormat: DateTimeFormatter,
-        dateFormat: DateTimeFormatter,
-    ): View {
-        val row = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(10), 0, dp(10))
-        }
-        row.addView(LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(dp(48), LinearLayout.LayoutParams.WRAP_CONTENT)
-            addView(text(dayFormat.format(day.date).trimEnd('.').replaceFirstChar { it.titlecase() }, 16f, palette.text))
-            addView(text(dateFormat.format(day.date), 12f, palette.textSecondary))
-        })
-        row.addView(LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(dp(52), LinearLayout.LayoutParams.WRAP_CONTENT)
-            addView(ImageView(activity).apply {
-                layoutParams = LinearLayout.LayoutParams(dp(42), dp(42))
-                setImageBitmap(WeatherIcons.draw(dp(42), day.condition, night = false))
+    /** Following days on one row: icon, max/min, weekday, dd/MM. Each column opens the day. */
+    private fun showWeek(palette: Palette, days: List<Forecast.Day>) {
+        val row = find<LinearLayout>(R.id.weather_days)
+        row.removeAllViews()
+        row.orientation = LinearLayout.HORIZONTAL
+        val dayFormat = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
+        val dateFormat = DateTimeFormatter.ofPattern("dd/MM")
+        val ripple = TypedValue().also {
+            activity.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, it, true)
+        }.resourceId
+        for (day in days) {
+            val cell = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                setPadding(0, dp(4), 0, dp(4))
+                setBackgroundResource(ripple)
+                isClickable = true
+                contentDescription = activity.getString(day.condition.label)
+                setOnClickListener { openDay(day.date) }
+            }
+            cell.addView(ImageView(activity).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(34), dp(34))
+                setImageBitmap(WeatherIcons.draw(dp(34), day.condition, night = false))
             })
-            addView(text("${day.precipitationProbability}%", 11f, RAIN_TEXT, Gravity.CENTER_HORIZONTAL))
-        })
-        row.addView(ImageView(activity).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(38), dp(38)).apply { marginEnd = dp(6) }
-            setImageBitmap(WeatherIcons.draw(dp(38), night, night = true))
-            contentDescription = activity.getString(night.label)
-        })
-        row.addView(LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            addView(pill(day.temperatureMax, 14f, 40))
-            addView(pill(day.temperatureMin, 14f, 40).apply { (layoutParams as LinearLayout.LayoutParams).topMargin = dp(4) })
-        })
-        row.addView(LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.END
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            addView(text("${windArrow(day.windDirection)} ${day.windSpeedMax.roundToInt()} km/h", 12f, palette.text, Gravity.END))
-            addView(text(mm(day.precipitation), 12f, palette.text, Gravity.END))
-            addView(text("UV ${day.uvIndex}", 12f, palette.textSecondary, Gravity.END))
-        })
-        return row
+            cell.addView(label("${deg(day.temperatureMax)} ${deg(day.temperatureMin)}", 12f, palette.text, dp(4)))
+            cell.addView(label(dayFormat.format(day.date).trimEnd('.').replaceFirstChar { it.titlecase() }, 11f, palette.textSecondary))
+            cell.addView(label(dateFormat.format(day.date), 10f, palette.textSecondary).apply { alpha = 0.75f })
+            row.addView(cell)
+        }
+    }
+
+    private fun openDay(date: LocalDate) {
+        activity.startActivity(Intent(activity, WeatherDayActivity::class.java).putExtra(WeatherDayActivity.EXTRA_DATE, date.toString()))
     }
 
     private fun style(palette: Palette) {
@@ -145,28 +134,20 @@ class WeatherCard(private val activity: Activity) {
         find<TextView>(R.id.weather_status).setTextColor(palette.textSecondary)
     }
 
-    private fun text(value: String, sizeSp: Float, color: Int, gravity: Int = Gravity.START) = TextView(activity).apply {
+    /** Full-width centred label, so it lines up under the icon. */
+    private fun label(value: String, sizeSp: Float, color: Int, topPadPx: Int = 0) = TextView(activity).apply {
         text = value
         textSize = sizeSp
+        gravity = Gravity.CENTER_HORIZONTAL
         maxLines = 1
-        this.gravity = gravity
         setTextColor(color)
+        setPadding(0, topPadPx, 0, 0)
         layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
     }
 
-    /** Temperature "pill" coloured like Meteoblue's: blue (cold) → green → yellow → red (hot). */
-    private fun pill(celsius: Double, sizeSp: Float, widthDp: Int) = TextView(activity).apply {
-        text = deg(celsius)
-        textSize = sizeSp
-        gravity = Gravity.CENTER
-        setTextColor(PILL_TEXT)
-        setPadding(0, dp(2), 0, dp(2))
-        background = GradientDrawable().apply { cornerRadius = dp(7).toFloat(); setColor(temperatureColor(celsius)) }
-        layoutParams = LinearLayout.LayoutParams(dp(widthDp), LinearLayout.LayoutParams.WRAP_CONTENT)
-    }
-
     companion object {
-        private const val RAIN_TEXT = 0xFF8FB8F2.toInt()
+        /** Days shown after today (the basic-day package covers today plus 6). */
+        const val DAYS = 7
         private const val PILL_TEXT = 0xFF1C1D22.toInt()
         private val TEMPERATURE_STOPS = listOf(
             0.0 to 0xFF7FB2FF.toInt(), 8.0 to 0xFF8FDCD0.toInt(), 14.0 to 0xFFA6E39A.toInt(),
@@ -179,6 +160,20 @@ class WeatherCard(private val activity: Activity) {
                 if (celsius <= b.first) return Palette.blend(a.second, b.second, ((celsius - a.first) / (b.first - a.first)).toFloat())
             }
             return TEMPERATURE_STOPS.last().second
+        }
+
+        /** Temperature "pill" coloured like Meteoblue's: blue (cold) → green → yellow → red (hot). */
+        fun temperaturePill(context: Context, celsius: Double, sizeSp: Float, widthDp: Int): TextView {
+            val density = context.resources.displayMetrics.density
+            return TextView(context).apply {
+                text = deg(celsius)
+                textSize = sizeSp
+                gravity = Gravity.CENTER
+                setTextColor(PILL_TEXT)
+                setPadding(0, (2 * density).roundToInt(), 0, (2 * density).roundToInt())
+                background = GradientDrawable().apply { cornerRadius = 7 * density; setColor(temperatureColor(celsius)) }
+                layoutParams = LinearLayout.LayoutParams((widthDp * density).roundToInt(), LinearLayout.LayoutParams.WRAP_CONTENT)
+            }
         }
 
         fun deg(celsius: Double) = "${celsius.roundToInt()}°"

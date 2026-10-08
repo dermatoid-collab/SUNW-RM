@@ -117,4 +117,18 @@
     <string name="build_info">Version %1$s\nGitHub build #%2$d of %3$s\nCommit %4$s</string>
     <string name="data_sources">Data sources</string>
     <string name="sources">• Sun: NOAA Solar Calculator equations (J. Meeus, “Astronomical Algorithms”), computed on the phone.\n• Moon: Paul Schlyter\'s algorithm (“How to compute planetary positions”), computed on the phone and checked against PyEphem.\n• Weather: meteoblue AG (basic-1h / basic-day package). Weather data © meteoblue.\n• Place search: Android geocoding service (Google).\n• Weather icons: drawn by the app.</string>
+    <string name="detail_back">←  %1$s</string>
+    <string name="detail_hourly">Hour by hour</string>
+    <string name="detail_step_1h">Every hour ▾</string>
+    <string name="detail_step_3h">Every 3 hours ▾</string>
+    <string name="detail_day_night">%1$s, at night %2$s</string>
+    <string name="detail_felt_uv">Feels like up to %1$s · UV %2$d</string>
+    <string name="detail_uv">UV %1$d</string>
+    <string name="detail_sun">Sunrise %1$s · Sunset %2$s · %3$s of daylight</string>
+    <string name="detail_moon">Moon ↑ %1$s ↓ %2$s · %3$d%% lit</string>
+    <string name="detail_rain">Rain %1$d%% · %2$s</string>
+    <string name="detail_wind">Wind %1$s up to %2$d km/h</string>
+    <string name="detail_felt">Feels %1$s</string>
+    <string name="detail_no_hours">No hourly data for this day.</string>
+    <string name="detail_no_data">No forecast downloaded yet: open the main page while online.</string>
 </resources>
