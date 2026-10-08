@@ -50,6 +50,10 @@ Sfondi: Antracite, Nero, Vetro (semitrasparente), Material You, Tokyo Night (con
 - Su Android 12+ i colori seguono la palette Material You dello sfondo.
 
 
+## Lingua
+
+L'app è in italiano e in inglese e segue la lingua del telefono. Da Android 13 si può scegliere una lingua solo per l'app: Impostazioni → App → Alba · Tramonto → Lingua.
+
 ## Meteo
 
 Le previsioni arrivano dal pacchetto MeteoBlue `basic-1h_basic-day`. La chiave è il secret GitHub `METEOBLUE_API_KEY`, inserito nell'APK al momento della build: senza secret la scheda meteo lo segnala. Le icone sono disegnate dall'app (non sono quelle di MeteoBlue). Il pacchetto non fornisce le ore di sole: al loro posto si mostra l'indice UV.
