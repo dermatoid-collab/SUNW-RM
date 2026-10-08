@@ -147,6 +147,14 @@ class FavoritesFlowTest {
     }
 
     @Test
+    fun aboutShowsBuildNumberAndDate() {
+        val text = settings().findViewById<TextView>(R.id.build_info).text.toString()
+        assertTrue(text, text.contains(BuildConfig.VERSION_NAME))
+        assertTrue(text, text.contains("#${BuildConfig.BUILD_NUMBER}") || text.contains("n. ${BuildConfig.BUILD_NUMBER}"))
+        assertTrue(text, Regex("\\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}").containsMatchIn(text))
+    }
+
+    @Test
     fun mainPageShowsCountdownsAndMoonWeek() {
         LocationStore(context).save(44.8015, 10.3279, automatic = false, name = "Parma")
         val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()

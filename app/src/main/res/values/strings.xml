@@ -113,4 +113,8 @@
     <string name="settings_exported">Settings exported</string>
     <string name="settings_imported">Settings restored</string>
     <string name="backup_failed">That didn\'t work: %1$s</string>
+    <string name="section_about">About</string>
+    <string name="build_info">Version %1$s\nGitHub build #%2$d of %3$s\nCommit %4$s</string>
+    <string name="data_sources">Data sources</string>
+    <string name="sources">• Sun: NOAA Solar Calculator equations (J. Meeus, “Astronomical Algorithms”), computed on the phone.\n• Moon: Paul Schlyter\'s algorithm (“How to compute planetary positions”), computed on the phone and checked against PyEphem.\n• Weather: meteoblue AG (basic-1h / basic-day package). Weather data © meteoblue.\n• Place search: Android geocoding service (Google).\n• Weather icons: drawn by the app.</string>
 </resources>

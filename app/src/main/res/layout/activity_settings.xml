@@ -205,10 +205,35 @@
             android:text="@string/backup_hint"
             android:textSize="12sp" />
 
+        <!-- About -->
+        <TextView
+            style="@style/SectionHeader"
+            android:text="@string/section_about" />
+
+        <TextView
+            android:id="@+id/build_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="3dp"
+            android:textIsSelectable="true"
+            android:textSize="14sp" />
+
+        <TextView
+            style="@style/SubHeader"
+            android:text="@string/data_sources" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
+            android:alpha="0.8"
+            android:lineSpacingExtra="4dp"
+            android:text="@string/sources"
+            android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:alpha="0.6"
             android:text="@string/about"
             android:textSize="12sp" />

@@ -97,6 +97,19 @@ class SettingsActivity : Activity() {
         refreshSummary()
         refreshFavorites()
         buildAppearance()
+        showBuildInfo()
+    }
+
+    /** "Version 1.0.42 · build #42 · 08/10/2026 14:05 · a1b2c3d" from the values baked in by CI. */
+    private fun showBuildInfo() {
+        val built = java.time.Instant.ofEpochMilli(BuildConfig.BUILD_TIME_MILLIS).atZone(ZoneId.systemDefault())
+        findViewById<TextView>(R.id.build_info).text = getString(
+            R.string.build_info,
+            BuildConfig.VERSION_NAME,
+            BuildConfig.BUILD_NUMBER,
+            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(built),
+            BuildConfig.GIT_SHA,
+        )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

@@ -113,4 +113,8 @@
     <string name="settings_exported">Impostazioni esportate</string>
     <string name="settings_imported">Impostazioni ripristinate</string>
     <string name="backup_failed">Operazione non riuscita: %1$s</string>
+    <string name="section_about">Informazioni</string>
+    <string name="build_info">Versione %1$s\nBuild GitHub n. %2$d del %3$s\nCommit %4$s</string>
+    <string name="data_sources">Fonti dei dati</string>
+    <string name="sources">• Sole: equazioni del NOAA Solar Calculator (J. Meeus, «Astronomical Algorithms»), calcolate sul telefono.\n• Luna: algoritmo di Paul Schlyter («How to compute planetary positions»), calcolato sul telefono e verificato con PyEphem.\n• Meteo: meteoblue AG (pacchetto basic-1h / basic-day). Dati meteo © meteoblue.\n• Ricerca località: servizio di geocoding di Android (Google).\n• Icone meteo: disegnate dall\'app.</string>
 </resources>
