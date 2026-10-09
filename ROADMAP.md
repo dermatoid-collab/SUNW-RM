@@ -24,7 +24,11 @@ nella tile meteo della pagina principale (a sinistra delle pillole max/min).
   nella pagina del giorno, tocco → dettaglio con validità "dalle… alle…", descrizione e
   istruzioni (italiano/inglese).
 
-## 3. Radar
+## 3. Radar — prima versione con Windy
+
+Scelta dell'utente: mappa incorporata di Windy (embed in WebView) nella pagina del meteogramma,
+con i pulsanti «Radar» (ultime ore) e «Pioggia prevista» (ECMWF); barra delle ore, Play e zoom
+sono quelli di Windy. Da verificare sul telefono (da qui windy.com non è raggiungibile).
 
 - **Preferenza dell'utente:** lo stile grafico del radar di **windy.com**.
 - **Opzioni da verificare (condizioni d'uso e costi):**
@@ -35,7 +39,7 @@ nella tile meteo della pagina principale (a sinistra delle pillole max/min).
     condizioni del servizio gratuito cambiate di recente) o radar della Protezione Civile
     (solo Italia, dati aperti), con mappa di base OpenStreetMap.
 - **Dove:** nella stessa pagina del meteogramma (mirino di oggi → radar + meteogramma), sopra il
-  meteogramma. Fonte ancora da scegliere con l'utente.
+  meteogramma.
 
 ## 4. Pagina «Sole e Luna per data» — prima versione sviluppata
 

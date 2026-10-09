@@ -90,4 +90,19 @@ class MeteogramTest {
         assertEquals(WeatherDayActivity::class.java.name, next.component?.className)
         assertEquals(today.toString(), next.getStringExtra(WeatherDayActivity.EXTRA_DATE))
     }
+
+    @Test
+    fun windyMapStartsOnRadarAndSwitchesToRainForecast() {
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        val map = activity.findViewById<android.webkit.WebView>(R.id.mg_map)
+        val first = android.net.Uri.parse(shadowOf(map).lastLoadedUrl)
+        assertEquals("embed.windy.com", first.host)
+        assertEquals("radar", first.getQueryParameter("overlay"))
+        assertEquals("44.800", first.getQueryParameter("lat"))
+        assertEquals("km/h", first.getQueryParameter("metricWind"))
+
+        activity.findViewById<View>(R.id.mg_layer_rain).performClick()
+        assertEquals(MeteogramActivity.Layer.RAIN, activity.layer)
+        assertEquals("rain", android.net.Uri.parse(shadowOf(map).lastLoadedUrl).getQueryParameter("overlay"))
+    }
 }

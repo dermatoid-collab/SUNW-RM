@@ -125,7 +125,7 @@
     <string name="section_about">About</string>
     <string name="build_info">Version %1$s\nGitHub build #%2$d of %3$s\nCommit %4$s</string>
     <string name="data_sources">Data sources</string>
-    <string name="sources">• Sun: NOAA Solar Calculator equations (J. Meeus, “Astronomical Algorithms”), computed on the phone.\n• Moon: Paul Schlyter\'s algorithm (“How to compute planetary positions”), computed on the phone and checked against PyEphem.\n• Weather: meteoblue AG (basic-1h / basic-day package). Weather data © meteoblue.\n• Place search: Android geocoding service (Google).\n• Weather icons: Material Symbols by Google, Apache License 2.0.</string>
+    <string name="sources">• Sun: NOAA Solar Calculator equations (J. Meeus, “Astronomical Algorithms”), computed on the phone.\n• Moon: Paul Schlyter\'s algorithm (“How to compute planetary positions”), computed on the phone and checked against PyEphem.\n• Weather: meteoblue AG (basic-1h / basic-day package). Weather data © meteoblue.\n• Place search: Android geocoding service (Google).\n• Weather icons: Material Symbols by Google, Apache License 2.0.\n• Radar and rain map: Windy.com embedded map (shown as provided by Windy, logo included).</string>
     <string name="detail_back">%1$s</string>
     <string name="detail_hourly">Hour by hour</string>
     <string name="detail_step_1h">Every hour ▾</string>
@@ -190,4 +190,7 @@
     <string name="mg_subtitle">%1$s · next 7 days</string>
     <string name="mg_legend">Temperature over day/night · rain mm/h (stronger = more likely) · wind km/h and direction · tap a day to open it</string>
     <string name="mg_open">Radar and meteogram</string>
+    <string name="mg_layer_radar">Radar</string>
+    <string name="mg_layer_rain">Rain forecast</string>
+    <string name="mg_map_offline">Map unavailable: Windy needs a connection.</string>
 </resources>
