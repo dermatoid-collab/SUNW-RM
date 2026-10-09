@@ -41,7 +41,7 @@
                 android:layout_weight="1"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textSize="14sp" />
+                android:textSize="17sp" />
 
             <!-- Place and date share the text baseline; the button is centred on its own. -->
             <ImageButton
