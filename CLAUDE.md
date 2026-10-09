@@ -12,5 +12,5 @@
 ## Progetto
 
 - App e widget Android «Alba · Tramonto» (Kotlin, solo API di sistema, minSdk 26). Vedi `README.md`.
-- Funzioni concordate ma non ancora sviluppate (allerte meteo): `ROADMAP.md`. Pagina Sole e Luna per data (`SunMoonActivity`) e radar Windy + meteogramma (`MeteogramActivity`) hanno una prima versione.
+- Roadmap e stato delle funzioni: `ROADMAP.md`. Prime versioni sviluppate: pagina Sole e Luna per data (`SunMoonActivity`), radar Windy + meteogramma (`MeteogramActivity`), allerte della Protezione Civile (`alerts/`).
 - In questo ambiente cloud gli artefatti Google (Android SDK, AGP) non sono scaricabili: la build completa e i test Robolectric girano su GitHub Actions (`.github/workflows/android.yml`). I calcoli di Sole e Luna si possono verificare localmente su JVM.

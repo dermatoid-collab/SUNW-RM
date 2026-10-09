@@ -1,7 +1,7 @@
 # Roadmap — funzioni in attesa
 
 Idee concordate ma non ancora sviluppate, ispirate all'app Meteoblue. Ordine proposto:
-meteogramma → allerte → radar. Ogni funzione in un commit separato, da provare sul telefono.
+meteogramma → allerte → radar (prime versioni sviluppate). Ogni funzione in un commit separato, da provare sul telefono.
 
 ## 1. Meteogramma 7 giorni — prima versione sviluppata
 
@@ -15,14 +15,19 @@ nella tile meteo della pagina principale (a sinistra delle pillole max/min).
   barre della pioggia, velocità e frecce del vento, linea dell'ora attuale.
 - **Dove:** pulsante sulla card meteo → pagina dedicata; tocco su un giorno → pagina del giorno.
 
-## 2. Allerte meteo (severe weather warnings)
+## 2. Allerte meteo — prima versione sviluppata (Italia)
 
-- **Fonte:** Meteoalarm (EUMETNET), la stessa mostrata da Meteoblue. Gratuita con citazione
-  della fonte. Da verificare: formato del feed attuale (Atom/CAP) e condizioni d'uso.
-- **Punto delicato:** associare la località scelta alla zona di allerta (area/provincia).
-- **Dove:** badge colorato (giallo/arancio/rosso) sulle schede dei giorni interessati, riga
-  nella pagina del giorno, tocco → dettaglio con validità "dalle… alle…", descrizione e
-  istruzioni (italiano/inglese).
+- **Fonte scelta:** bollettino di criticità nazionale della Protezione Civile (dati aperti CC BY 4.0
+  su GitHub, `pcm-dpc/DPC-Bollettini-Criticita-Idrogeologica-Idraulica`): ogni giorno entro le 16
+  le allerte gialla/arancione/rossa per rischio idrogeologico, temporali e idraulico su 156 zone,
+  per oggi e domani. Raggiungibile e verificato anche da qui, a differenza di Meteoalarm.
+- **Zona della località:** contorni delle zone inclusi nell'app (`assets/alert_zones.json`, generato
+  da `tools/make_alert_zones.py`), ricerca punto-in-poligono senza rete.
+- **Dove:** striscia colorata nella tile meteo (oggi, altrimenti domani), striscia nella pagina del
+  giorno e segno colorato sulla scheda del giorno; tocco → dettaglio con zona, rischi, ora del
+  bollettino e fonte.
+- **Da fare in seguito:** Meteoalarm (EUMETNET) per le località fuori Italia (feed da verificare);
+  bollettino di vigilanza meteorologica (vento, neve…, repo `DPC-Bollettini-Vigilanza-Meteorologica`).
 
 ## 3. Radar — prima versione con Windy
 

@@ -14,6 +14,8 @@ import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.ScrollView
 import android.widget.TextView
+import it.sunw.widget.alerts.AlertRepository
+import it.sunw.widget.alerts.AlertUi
 import it.sunw.widget.weather.WeatherCard
 import it.sunw.widget.weather.WeatherRepository
 import java.time.Instant
@@ -148,6 +150,35 @@ class MainActivity : Activity() {
 
         showMoon(palette, place, now, zone)
         showWeather(palette, place, now)
+        showAlerts(place, now, zone)
+    }
+
+    private var alertsInFlight = false
+    private var lastAlertsFailure: Instant? = null
+
+    /** Civil Protection alert strip (Italy only): cached bulletin at once, refreshed hourly. */
+    private fun showAlerts(place: Place, now: Instant, zone: ZoneId) {
+        val strip = findViewById<TextView>(R.id.weather_alert)
+        val repository = AlertRepository(this)
+        // Outside Italy there is nothing to show or download.
+        if (AlertUi.zone(this, place) == null) {
+            strip.visibility = android.view.View.GONE
+            return
+        }
+        AlertUi.bind(strip, this, place, repository.cached(), now.atZone(zone).toLocalDate())
+        val recentlyFailed = lastAlertsFailure?.let { now.isBefore(it.plusSeconds(RETRY_AFTER_FAILURE_S)) } == true
+        if (repository.isFresh(now) || alertsInFlight || recentlyFailed) return
+        alertsInFlight = true
+        repository.refresh { result ->
+            runOnUiThread {
+                alertsInFlight = false
+                if (isDestroyed) return@runOnUiThread
+                result.onSuccess {
+                    lastAlertsFailure = null
+                    AlertUi.bind(strip, this, LocationStore(this).current(), it, java.time.LocalDate.now(zone))
+                }.onFailure { lastAlertsFailure = Instant.now() }
+            }
+        }
     }
 
     private var weatherInFlight = false

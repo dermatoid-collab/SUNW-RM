@@ -140,6 +140,19 @@
                     android:orientation="vertical" />
             </LinearLayout>
 
+            <!-- Civil Protection alert for today (or tomorrow): coloured strip, tap for details. -->
+            <TextView
+                android:id="@+id/weather_alert"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
             <View
                 android:id="@+id/weather_divider"
                 android:layout_width="match_parent"

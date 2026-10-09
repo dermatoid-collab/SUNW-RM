@@ -29,6 +29,9 @@ import it.sunw.widget.MoonCalculator
 import it.sunw.widget.Palette
 import it.sunw.widget.R
 import it.sunw.widget.SunCalculator
+import it.sunw.widget.alerts.AlertRepository
+import it.sunw.widget.alerts.Bulletin
+import it.sunw.widget.alerts.AlertUi
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -197,6 +200,13 @@ class WeatherDayActivity : Activity() {
                     WeatherIcons.show(this, day.condition, night = false, color = if (isSelected) palette.text else palette.textSecondary)
                 })
                 addView(text(dateFormat.format(day.date), 12f, palette.textSecondary, Gravity.CENTER_HORIZONTAL))
+                // Alert colour under the date, when the bulletin has one for the day.
+                alertsFor(day.date).maxOfOrNull { it.level }?.let { level ->
+                    addView(View(this@WeatherDayActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(dp(20), dp(4)).apply { topMargin = dp(3) }
+                        background = GradientDrawable().apply { cornerRadius = dp(2).toFloat(); setColor(AlertUi.color(level)) }
+                    })
+                }
             })
         }
         val index = forecast.days.indexOfFirst { it.date == selected }
@@ -263,6 +273,7 @@ class WeatherDayActivity : Activity() {
         val wind = getString(R.string.detail_wind, WeatherCard.windArrow(day.windDirection), day.windSpeedMax.roundToInt())
         text.append((lines + wind).joinToString("\n", prefix = "\n"))
         info.text = text
+        showAlert(day.date)
         info.setTextColor(palette.text)
         val spot = day.rainspot
         findViewById<View>(R.id.day_rainspot_box).visibility = if (spot != null) View.VISIBLE else View.GONE
@@ -270,6 +281,33 @@ class WeatherDayActivity : Activity() {
             findViewById<ImageView>(R.id.day_rainspot).setImageBitmap(Rainspot.draw(dp(64), spot))
             findViewById<TextView>(R.id.day_rainspot_label).setTextColor(palette.textSecondary)
         }
+    }
+
+    /** Cached Civil Protection bulletin and the place's alert zone (Italy only). */
+    private val bulletin by lazy { AlertRepository(this).cached() }
+    private val alertZone by lazy { bulletin?.let { AlertUi.zone(this, LocationStore(this).current()) } }
+
+    private fun alertsFor(date: LocalDate): List<Bulletin.Warning> =
+        alertZone?.let { zone -> bulletin?.forZone(zone, date) }.orEmpty()
+
+    /** Alert strip for this day (the bulletin covers today and tomorrow), tap for details. */
+    private fun showAlert(date: LocalDate) {
+        val strip = findViewById<TextView>(R.id.day_alert)
+        val warnings = alertsFor(date)
+        val b = bulletin
+        val z = alertZone
+        if (b == null || z == null || warnings.isEmpty()) {
+            strip.visibility = View.GONE
+            return
+        }
+        strip.visibility = View.VISIBLE
+        strip.text = "⚠ " + AlertUi.summary(this, warnings)
+        strip.setTextColor(AlertUi.TEXT_ON_COLOR)
+        strip.background = GradientDrawable().apply {
+            cornerRadius = dp(10).toFloat()
+            setColor(AlertUi.color(warnings.maxOf { it.level }))
+        }
+        strip.setOnClickListener { AlertUi.showDetails(this, b, z, LocalDate.now(zone)) }
     }
 
     /** Appends [res] as an inline icon of [sizePx], sitting on the text baseline. */

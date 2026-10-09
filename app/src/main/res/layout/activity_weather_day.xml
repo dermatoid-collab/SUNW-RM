@@ -94,6 +94,18 @@
                 android:orientation="vertical" />
         </LinearLayout>
 
+        <!-- Civil Protection alert for this day (today or tomorrow), tap for details. -->
+        <TextView
+            android:id="@+id/day_alert"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="14dp"
+            android:layout_marginTop="12dp"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="8dp"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
         <LinearLayout
             android:id="@+id/day_info_card"
             android:layout_width="match_parent"

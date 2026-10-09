@@ -125,7 +125,7 @@
     <string name="section_about">Informazioni</string>
     <string name="build_info">Versione %1$s\nBuild GitHub n. %2$d del %3$s\nCommit %4$s</string>
     <string name="data_sources">Fonti dei dati</string>
-    <string name="sources">• Sole: equazioni del NOAA Solar Calculator (J. Meeus, «Astronomical Algorithms»), calcolate sul telefono.\n• Luna: algoritmo di Paul Schlyter («How to compute planetary positions»), calcolato sul telefono e verificato con PyEphem.\n• Meteo: meteoblue AG (pacchetto basic-1h / basic-day). Dati meteo © meteoblue.\n• Ricerca località: servizio di geocoding di Android (Google).\n• Icone meteo: Material Symbols di Google, licenza Apache 2.0.\n• Mappa radar e pioggia: mappa incorporata di Windy.com (mostrata così come la fornisce Windy, logo compreso).</string>
+    <string name="sources">• Sole: equazioni del NOAA Solar Calculator (J. Meeus, «Astronomical Algorithms»), calcolate sul telefono.\n• Luna: algoritmo di Paul Schlyter («How to compute planetary positions»), calcolato sul telefono e verificato con PyEphem.\n• Meteo: meteoblue AG (pacchetto basic-1h / basic-day). Dati meteo © meteoblue.\n• Ricerca località: servizio di geocoding di Android (Google).\n• Icone meteo: Material Symbols di Google, licenza Apache 2.0.\n• Mappa radar e pioggia: mappa incorporata di Windy.com (mostrata così come la fornisce Windy, logo compreso).\n• Allerte meteo (Italia): Dipartimento della Protezione Civile, bollettino di criticità nazionale e zone di allerta, CC BY 4.0.</string>
     <string name="detail_back">%1$s</string>
     <string name="detail_hourly">Ora per ora</string>
     <string name="detail_step_1h">Ogni ora ▾</string>
@@ -195,4 +195,19 @@
     <string name="mg_layer_radar">Radar</string>
     <string name="mg_layer_rain">Pioggia prevista</string>
     <string name="mg_map_offline">Mappa non disponibile: Windy richiede la connessione.</string>
+    <string name="alert_yellow">Allerta gialla</string>
+    <string name="alert_orange">Allerta arancione</string>
+    <string name="alert_red">Allerta rossa</string>
+    <string name="risk_hydrogeological">idrogeologico</string>
+    <string name="risk_thunderstorms">temporali</string>
+    <string name="risk_hydraulic">idraulico (fiumi)</string>
+    <string name="alert_summary">%1$s · %2$s</string>
+    <string name="alert_today">Oggi: %1$s</string>
+    <string name="alert_tomorrow">Domani: %1$s</string>
+    <string name="alert_title">Allerta Protezione Civile</string>
+    <string name="alert_zone">Zona di allerta: %1$s</string>
+    <string name="alert_none">nessuna allerta</string>
+    <string name="alert_issued">Bollettino del %1$s</string>
+    <string name="alert_source">Fonte: Dipartimento della Protezione Civile, bollettino di criticità nazionale (CC BY 4.0). Rischio idrogeologico, temporali e idraulico; solo Italia. Per le indicazioni ufficiali segui la tua Regione e il tuo Comune.</string>
+    <string name="alert_open">Apri la mappa</string>
 </resources>
