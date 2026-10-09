@@ -31,7 +31,8 @@
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-light"
                 android:maxLines="1"
-                android:textSize="28sp" />
+                android:textSize="28sp"
+                android:translationY="-4dp" />
 
             <TextView
                 android:id="@+id/date"
@@ -46,8 +47,9 @@
                 android:translationY="-3dp" />
 
             <!-- Place, date (right-aligned beside the button) and the button share the
-                 vertical centre line; the date sits 3 dp higher so it lines up visually with
-                 the cog (the text box has more room below the letters than above). -->
+                 vertical centre line; place and date sit a little higher (4 and 3 dp) so they
+                 line up visually with the cog (a text box has more room below the letters
+                 than above). -->
             <ImageButton
                 android:id="@+id/settings"
                 android:layout_width="48dp"
