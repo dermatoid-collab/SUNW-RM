@@ -33,6 +33,23 @@ meteogramma → allerte → radar. Ogni funzione in un commit separato, da prova
     (solo Italia, dati aperti), con mappa di base OpenStreetMap.
 - **Dove:** pulsante sulla card meteo → pagina radar animata, centrata sulla località.
 
+## 4. Pagina «Sole e Luna per data»
+
+- **Prototipo:** artifact «Alba · Tramonto — schermate», tavola «Sole e Luna per data (proposta)»
+  (https://claude.ai/artifact/KJjPBhHAyGoU2EYyyfjg7L), approvato dall'utente.
+- **Apertura:** tocco sulla tile del sole o della luna nella pagina principale.
+- **Barra in alto:** freccia indietro + data scelta per esteso; sotto, località e distanza da
+  oggi ("today", "in 12 days", "30 days ago").
+- **Tile del sole** per la data scelta: curva colorata per elevazione, alba, tramonto, durata e
+  differenza col giorno prima, mezzogiorno solare con altezza massima, ora d'oro; pallino del
+  Sole solo per oggi.
+- **Tile della luna** per la data scelta: fase disegnata, %, nome, sorge/tramonta, prossime fasi.
+- **Sotto le tile:** schede dei giorni nello stile della pagina meteo (7 giorni centrati sulla
+  data scelta, puntino su oggi) e **cursore** per scorrere la data dinamicamente (±6 mesi,
+  ampiezza da confermare), con pulsante "Today".
+- **Calcoli:** quelli già verificati dell'app (SunCalculator, MoonCalculator), non le formule
+  semplificate del prototipo.
+
 ## Note
 
 - Dall'ambiente cloud di sviluppo questi servizi non sono raggiungibili (proxy): indirizzi
