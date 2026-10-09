@@ -96,6 +96,8 @@ class SunMoonActivityTest {
         val target = LocalDate.now().plusDays(40)
         dialog.updateDate(target.year, target.monthValue - 1, target.dayOfMonth)
         dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+        // Dialog buttons report their click through a message on the main thread.
+        shadowOf(android.os.Looper.getMainLooper()).idle()
         assertEquals(40, activity.offset)
     }
 
