@@ -77,14 +77,19 @@ class SunMoonActivity : Activity() {
         render()
     }
 
-    /** A fling from left to right goes back, as on the weather day page's swipe between days. */
-    private val swipeBack by lazy {
+    /** Horizontal flings move a day, as on the weather day page: left → next day, right → previous. */
+    private val swipe by lazy {
         GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
                 val start = e1 ?: return false
                 val dx = e2.x - start.x
                 val dy = e2.y - start.y
-                return dx >= dp(SWIPE_MIN_DP) && dx >= 1.5f * abs(dy) && velocityX >= SWIPE_MIN_VELOCITY && !startsOnControl(start)
+                if (abs(dx) < dp(SWIPE_MIN_DP) || abs(dx) < 1.5f * abs(dy) || abs(velocityX) < SWIPE_MIN_VELOCITY) return false
+                if (startsOnControl(start)) return false
+                val target = offset + if (dx < 0) 1 else -1
+                if (target !in -RANGE_DAYS..RANGE_DAYS) return false
+                select(target)
+                return true
             }
         })
     }
@@ -96,12 +101,9 @@ class SunMoonActivity : Activity() {
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (swipeBack.onTouchEvent(ev)) {
-            // Let the page know the gesture ended, then leave with the usual "back" animation.
+        if (swipe.onTouchEvent(ev)) {
+            // Let the page know the gesture ended so it doesn't keep a half-finished scroll.
             ev.action = MotionEvent.ACTION_CANCEL
-            super.dispatchTouchEvent(ev)
-            finish()
-            return true
         }
         return super.dispatchTouchEvent(ev)
     }

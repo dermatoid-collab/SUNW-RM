@@ -115,19 +115,26 @@ class SunMoonActivityTest {
         assertTrue(!inside(R.id.sm_slider))
     }
 
-    @Test
-    fun swipingRightGoesBack() {
-        val controller = Robolectric.buildActivity(SunMoonActivity::class.java).setup()
-        val activity = controller.get()
-        // Start on the Moon card, away from the curve, the year strip and the slider.
+    /** A quick horizontal fling of [dxDp] across the Moon card (negative: to the left). */
+    private fun fling(activity: SunMoonActivity, dxDp: Float) {
         val r = android.graphics.Rect().also { activity.findViewById<android.view.View>(R.id.sm_moon_card).getGlobalVisibleRect(it) }
         val y = r.exactCenterY()
         val density = activity.resources.displayMetrics.density
-        val x0 = 10 * density
-        fun event(action: Int, x: Float, t: Long) = android.view.MotionEvent.obtain(0, t, action, x, y, 0).also { it.setLocation(x, y) }
+        val x0 = r.exactCenterX() - dxDp / 2 * density
+        fun event(action: Int, x: Float, t: Long) = android.view.MotionEvent.obtain(0, t, action, x, y, 0)
         activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_DOWN, x0, 0))
-        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_MOVE, x0 + 80 * density, 40))
-        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_UP, x0 + 160 * density, 80))
-        assertTrue(activity.isFinishing)
+        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_MOVE, x0 + dxDp / 2 * density, 40))
+        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_UP, x0 + dxDp * density, 80))
+    }
+
+    @Test
+    fun swipingMovesADay() {
+        val activity = open()
+        fling(activity, -160f) // to the left: next day
+        assertEquals(1, activity.offset)
+        fling(activity, 160f)  // to the right: back to today
+        fling(activity, 160f)  // and the day before
+        assertEquals(-1, activity.offset)
+        assertTrue(!activity.isFinishing)
     }
 }
