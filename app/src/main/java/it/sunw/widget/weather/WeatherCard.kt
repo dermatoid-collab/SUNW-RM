@@ -69,12 +69,12 @@ class WeatherCard(private val activity: Activity) {
             )
             setTextColor(palette.textSecondary)
         }
-        // Min and max side by side, to the right.
+        // Max (yellow) above min (light blue), to the right.
         find<LinearLayout>(R.id.weather_today_pills).apply {
             removeAllViews()
-            addView(temperaturePill(activity, today.temperatureMin, 15f, 40))
-            addView(temperaturePill(activity, today.temperatureMax, 15f, 40).apply {
-                (layoutParams as LinearLayout.LayoutParams).marginStart = dp(5)
+            addView(temperaturePill(activity, today.temperatureMax, 15f, 40, MAX_PILL))
+            addView(temperaturePill(activity, today.temperatureMin, 15f, 40, MIN_PILL).apply {
+                (layoutParams as LinearLayout.LayoutParams).topMargin = dp(5)
             })
         }
 
@@ -153,7 +153,12 @@ class WeatherCard(private val activity: Activity) {
         }
 
         /** Temperature "pill" coloured like Meteoblue's: blue (cold) → green → yellow → red (hot). */
-        fun temperaturePill(context: Context, celsius: Double, sizeSp: Float, widthDp: Int): TextView {
+        /** Fixed pill colours for today's max and min on the main page. */
+        const val MAX_PILL = 0xFFFFE27A.toInt()
+        const val MIN_PILL = 0xFF9FD4FF.toInt()
+
+        /** [color] overrides the temperature scale (null: coloured by temperature). */
+        fun temperaturePill(context: Context, celsius: Double, sizeSp: Float, widthDp: Int, color: Int? = null): TextView {
             val density = context.resources.displayMetrics.density
             return TextView(context).apply {
                 text = deg(celsius)
@@ -161,7 +166,7 @@ class WeatherCard(private val activity: Activity) {
                 gravity = Gravity.CENTER
                 setTextColor(PILL_TEXT)
                 setPadding(0, (2 * density).roundToInt(), 0, (2 * density).roundToInt())
-                background = GradientDrawable().apply { cornerRadius = 7 * density; setColor(temperatureColor(celsius)) }
+                background = GradientDrawable().apply { cornerRadius = 7 * density; setColor(color ?: temperatureColor(celsius)) }
                 layoutParams = LinearLayout.LayoutParams((widthDp * density).roundToInt(), LinearLayout.LayoutParams.WRAP_CONTENT)
             }
         }
