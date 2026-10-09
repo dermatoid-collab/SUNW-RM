@@ -204,7 +204,7 @@ class FavoritesFlowTest {
     /** Galaxy S25 at default zoom: 384 × 832 dp, minus about 60 dp of status and navigation bars. */
     @Test
     @Config(qualifiers = "w384dp-h772dp")
-    fun mainPageIsSunWeatherMoonAndFitsOneScreen() {
+    fun mainPageIsWeatherSunMoonAndFitsOneScreen() {
         LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
         File(context.cacheDir, "meteoblue.json").writeText(WeatherTest.sampleJson())
         context.getSharedPreferences("weather", Context.MODE_PRIVATE).edit()
@@ -216,7 +216,7 @@ class FavoritesFlowTest {
         ShadowLooper.idleMainLooper()
 
         val column = activity.findViewById<View>(R.id.weather_card).parent as ViewGroup
-        val order = listOf(R.id.header, R.id.widget_container, R.id.weather_card, R.id.moon_card)
+        val order = listOf(R.id.header, R.id.weather_card, R.id.widget_container, R.id.moon_card)
             .map { column.indexOfChild(activity.findViewById(it)) }
         assertEquals(order.sorted(), order)
 
