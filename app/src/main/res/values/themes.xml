@@ -4,6 +4,16 @@
     <style name="Theme.SunW" parent="android:Theme.Material.NoActionBar">
         <item name="android:colorAccent">#FFB547</item>
         <item name="android:windowBackground">@color/page_background</item>
+        <item name="android:windowAnimationStyle">@style/PageTransitions</item>
+    </style>
+
+    <!-- One movement for every page change ("shared axis" X): forward slides left, back
+         slides right, both with a short fade. The day page uses the same motion between days. -->
+    <style name="PageTransitions" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/page_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/page_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/page_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/page_close_exit</item>
     </style>
 
     <style name="SectionHeader">

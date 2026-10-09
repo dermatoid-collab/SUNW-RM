@@ -15,7 +15,7 @@ import android.view.MotionEvent
 import android.view.Gravity
 import android.view.View
 import android.view.ViewTreeObserver
-import android.view.animation.DecelerateInterpolator
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
@@ -127,8 +127,8 @@ class WeatherDayActivity : Activity() {
     }
 
     /**
-     * Slides the new day in from the side it comes from (from the right for a later day), like
-     * turning a page; [delta] 0 means no movement.
+     * Slides the new day in from the side it comes from (from the right for a later day), with
+     * the same motion, duration and curve as the page transitions; [delta] 0 means no movement.
      */
     private fun slideIn(delta: Int) {
         if (delta == 0) return
@@ -136,8 +136,10 @@ class WeatherDayActivity : Activity() {
         content.animate().cancel()
         content.translationX = delta * content.width * SLIDE_FRACTION
         content.alpha = 0f
-        content.animate().translationX(0f).alpha(1f).setDuration(SLIDE_MS)
-            .setInterpolator(DecelerateInterpolator()).start()
+        content.animate().translationX(0f).alpha(1f)
+            .setDuration(resources.getInteger(R.integer.page_transition_ms).toLong())
+            .setInterpolator(AnimationUtils.loadInterpolator(this, android.R.interpolator.fast_out_slow_in))
+            .start()
     }
 
     /** Moves [delta] days (±1); false at either end of the forecast. */
@@ -403,10 +405,8 @@ class WeatherDayActivity : Activity() {
         private const val STATE_STEP = "step"
         private const val RAIN_TEXT = 0xFF8FB8F2.toInt()
         private const val SWIPE_MIN_DP = 80
-        private const val SLIDE_MS = 260L
-
-        /** How far (share of the width) the new day starts from. */
-        private const val SLIDE_FRACTION = 0.6f
+        /** How far (share of the width) the new day starts from; the pages use 12 %. */
+        private const val SLIDE_FRACTION = 0.25f
         private const val SWIPE_MIN_VELOCITY = 600f
     }
 }

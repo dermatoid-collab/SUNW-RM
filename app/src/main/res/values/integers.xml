@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Duration of page changes and of the slide between days on the day page. -->
+    <integer name="page_transition_ms">300</integer>
+</resources>
