@@ -23,8 +23,8 @@ nella tile meteo della pagina principale (a sinistra delle pillole max/min).
   per oggi e domani. Raggiungibile e verificato anche da qui, a differenza di Meteoalarm.
 - **Zona della località:** contorni delle zone inclusi nell'app (`assets/alert_zones.json`, generato
   da `tools/make_alert_zones.py`), ricerca punto-in-poligono senza rete.
-- **Dove:** striscia colorata nella tile meteo (oggi, altrimenti domani), striscia nella pagina del
-  giorno e segno colorato sulla scheda del giorno; tocco → dettaglio con zona, rischi, ora del
+- **Dove:** icona ⚠ colorata accanto alla descrizione del tempo nella tile meteo (oggi, altrimenti
+  domani; assente senza allerte), striscia nella pagina del giorno e segno colorato sulla scheda; tocco → dettaglio con zona, rischi, ora del
   bollettino e fonte.
 - **Da fare in seguito:** Meteoalarm (EUMETNET) per le località fuori Italia (feed da verificare);
   bollettino di vigilanza meteorologica (vento, neve…, repo `DPC-Bollettini-Vigilanza-Meteorologica`).

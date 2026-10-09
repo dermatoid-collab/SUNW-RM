@@ -4,9 +4,8 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.GradientDrawable
 import android.net.Uri
-import android.widget.TextView
+import android.widget.ImageView
 import it.sunw.widget.Place
 import it.sunw.widget.R
 import java.time.LocalDate
@@ -53,10 +52,10 @@ object AlertUi {
     fun zone(context: Context, place: Place): String? = AlertZones.get(context).zoneAt(place.latitude, place.longitude)
 
     /**
-     * Fills [view] with the place's alert for today (or else tomorrow) and makes it open the
-     * details; hides it when there is none. Returns whether it is shown.
+     * Shows the alert icon in the colour of the place's highest alert for today (or else
+     * tomorrow), opening the details on tap; hides it when there is none. Returns whether shown.
      */
-    fun bind(view: TextView, activity: Activity, place: Place, bulletin: Bulletin?, today: LocalDate): Boolean {
+    fun bind(icon: ImageView, activity: Activity, place: Place, bulletin: Bulletin?, today: LocalDate): Boolean {
         val zone = if (bulletin != null) zone(activity, place) else null
         val day = if (bulletin != null && zone != null) {
             listOf(today, today.plusDays(1)).firstOrNull { bulletin.forZone(zone, it).isNotEmpty() }
@@ -64,21 +63,17 @@ object AlertUi {
             null
         }
         if (bulletin == null || zone == null || day == null) {
-            view.visibility = android.view.View.GONE
+            icon.visibility = android.view.View.GONE
             return false
         }
         val warnings = bulletin.forZone(zone, day)
-        view.text = "⚠ " + activity.getString(
+        icon.setColorFilter(color(warnings.maxOf { it.level }))
+        icon.contentDescription = activity.getString(
             if (day == today) R.string.alert_today else R.string.alert_tomorrow,
             summary(activity, warnings),
         )
-        view.setTextColor(TEXT_ON_COLOR)
-        view.background = GradientDrawable().apply {
-            cornerRadius = 10 * activity.resources.displayMetrics.density
-            setColor(color(warnings.maxOf { it.level }))
-        }
-        view.visibility = android.view.View.VISIBLE
-        view.setOnClickListener { showDetails(activity, bulletin, zone, today) }
+        icon.visibility = android.view.View.VISIBLE
+        icon.setOnClickListener { showDetails(activity, bulletin, zone, today) }
         return true
     }
 

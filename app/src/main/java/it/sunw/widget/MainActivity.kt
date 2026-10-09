@@ -64,12 +64,13 @@ class MainActivity : Activity() {
         fitToScreen()
     }
 
-    /** Extra vertical padding given to the sun tile so the page fills the screen exactly. */
+    /** Extra height given to the sun tile so the page fills the screen exactly. */
     private var sunExtraPx = 0
 
     /**
-     * Whenever the page is laid out, the space left below the last tile goes into the sun tile's
-     * top and bottom padding (up to [MAX_SUN_EXTRA_DP] each), so the page ends at the screen edge.
+     * Whenever the page is laid out, the space left below the last tile goes to the sun tile (up
+     * to [MAX_SUN_EXTRA_DP] above and below): a quarter to its margins, the rest to the curve, so
+     * the page ends at the screen edge.
      */
     private fun fitToScreen() {
         val page = findViewById<ScrollView>(R.id.page)
@@ -81,18 +82,32 @@ class MainActivity : Activity() {
             val extra = (free / 2).coerceIn(0, dp(MAX_SUN_EXTRA_DP))
             if (extra != sunExtraPx) {
                 sunExtraPx = extra
-                applySunPadding()
+                // The curve is a bitmap drawn for its size: draw the tile again at the new height.
+                showSun(AppearanceStore(this).palette(), LocationStore(this).current(), Instant.now(), ZoneId.systemDefault())
             }
         }
     }
 
-    private fun applySunPadding() {
+    private val sunPaddingPx get() = dp(EMBEDDED_PADDING_V_DP) + sunExtraPx / 4
+
+    /**
+     * The same RemoteViews the 4×2 widget shows, sized to the page width and to the tile's height
+     * minus its margins (the widget's own 14 dp padding is replaced by the tile's).
+     */
+    private fun showSun(palette: Palette, place: Place, now: Instant, zone: ZoneId) {
         val container = findViewById<FrameLayout>(R.id.widget_container)
-        container.layoutParams = container.layoutParams.apply { height = dp(SUN_TILE_DP) + 2 * sunExtraPx }
-        container.getChildAt(0)?.let {
-            val pad = dp(EMBEDDED_PADDING_V_DP) + sunExtraPx
-            it.setPadding(it.paddingLeft, pad, it.paddingRight, pad)
-        }
+        val metrics = resources.displayMetrics
+        val widthDp = (metrics.widthPixels / metrics.density).toInt() - 28
+        val tilePx = dp(SUN_TILE_DP) + 2 * sunExtraPx
+        val contentDp = ((tilePx - 2 * sunPaddingPx) / metrics.density).toInt()
+        val renderDp = contentDp + 2 * WIDGET_PADDING_DP - COUNTDOWN_ROW_DP
+        val views = WidgetRenderer(this, palette).render(WidgetRenderer.Size(widthDp, renderDp), place, now, zone, clickable = false)
+        container.removeAllViews()
+        val widget = views.apply(this, container)
+        container.addView(widget)
+        container.layoutParams = container.layoutParams.apply { height = tilePx }
+        widget.setPadding(widget.paddingLeft, sunPaddingPx, widget.paddingRight, sunPaddingPx)
+        setUpCountdowns(widget, palette, place, now, zone)
     }
 
     override fun onResume() {
@@ -137,16 +152,7 @@ class MainActivity : Activity() {
         }
         findViewById<ImageButton>(R.id.settings).setColorFilter(palette.text)
 
-        // The same RemoteViews the 4×2 widget shows, sized to the page width.
-        val container = findViewById<FrameLayout>(R.id.widget_container)
-        val metrics = resources.displayMetrics
-        val widthDp = (metrics.widthPixels / metrics.density).toInt() - 28
-        val views = WidgetRenderer(this, palette).render(WidgetRenderer.Size(widthDp, WIDGET_HEIGHT_DP - COUNTDOWN_ROW_DP), place, now, zone, clickable = false)
-        container.removeAllViews()
-        val widget = views.apply(this, container)
-        container.addView(widget)
-        applySunPadding()
-        setUpCountdowns(widget, palette, place, now, zone)
+        showSun(palette, place, now, zone)
 
         showMoon(palette, place, now, zone)
         showWeather(palette, place, now)
@@ -156,16 +162,16 @@ class MainActivity : Activity() {
     private var alertsInFlight = false
     private var lastAlertsFailure: Instant? = null
 
-    /** Civil Protection alert strip (Italy only): cached bulletin at once, refreshed hourly. */
+    /** Civil Protection alert icon (Italy only): cached bulletin at once, refreshed hourly. */
     private fun showAlerts(place: Place, now: Instant, zone: ZoneId) {
-        val strip = findViewById<TextView>(R.id.weather_alert)
+        val icon = findViewById<ImageView>(R.id.weather_alert)
         val repository = AlertRepository(this)
         // Outside Italy there is nothing to show or download.
         if (AlertUi.zone(this, place) == null) {
-            strip.visibility = android.view.View.GONE
+            icon.visibility = android.view.View.GONE
             return
         }
-        AlertUi.bind(strip, this, place, repository.cached(), now.atZone(zone).toLocalDate())
+        AlertUi.bind(icon, this, place, repository.cached(), now.atZone(zone).toLocalDate())
         val recentlyFailed = lastAlertsFailure?.let { now.isBefore(it.plusSeconds(RETRY_AFTER_FAILURE_S)) } == true
         if (repository.isFresh(now) || alertsInFlight || recentlyFailed) return
         alertsInFlight = true
@@ -175,7 +181,7 @@ class MainActivity : Activity() {
                 if (isDestroyed) return@runOnUiThread
                 result.onSuccess {
                     lastAlertsFailure = null
-                    AlertUi.bind(strip, this, LocationStore(this).current(), it, java.time.LocalDate.now(zone))
+                    AlertUi.bind(icon, this, LocationStore(this).current(), it, java.time.LocalDate.now(zone))
                 }.onFailure { lastAlertsFailure = Instant.now() }
             }
         }
@@ -359,12 +365,12 @@ class MainActivity : Activity() {
     companion object {
         private const val REFRESH_MS = 60_000L
         private const val RETRY_AFTER_FAILURE_S = 300L
-        /** Size the widget is rendered at (home-screen padding 14 dp). */
-        private const val WIDGET_HEIGHT_DP = 192
+        /** The widget's own padding on the home screen, replaced on the page by the tile's. */
+        private const val WIDGET_PADDING_DP = 14
 
-        /** On the page: 188 dp tall with 12 dp padding (same drawing area), plus the fit-to-screen extra. */
+        /** On the page: 188 dp tall with 8 dp margins, plus the fit-to-screen extra. */
         private const val SUN_TILE_DP = 188
-        private const val EMBEDDED_PADDING_V_DP = 12
+        private const val EMBEDDED_PADDING_V_DP = 8
         private const val MAX_SUN_EXTRA_DP = 40
 
         /** The countdown row takes this much of the widget height; the curve gets the rest. */

@@ -104,4 +104,22 @@ class AlertsTest {
         activity.findViewById<android.widget.LinearLayout>(R.id.day_tabs).getChildAt(1).performClick()
         assertEquals(View.GONE, strip.visibility)
     }
+
+    @Test
+    fun mainPageShowsAColouredIconOnlyWhenThereIsAnAlert() {
+        LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
+        val today = LocalDate.now()
+        File(context.cacheDir, "dpc_bulletin.xml").writeText(parmaCap(today))
+        val main = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+        val icon = main.findViewById<android.widget.ImageView>(R.id.weather_alert)
+        assertEquals(View.VISIBLE, icon.visibility)
+        assertTrue(icon.contentDescription.contains(context.getString(R.string.alert_orange)))
+
+        // A bulletin with nothing for Parma: no icon.
+        File(context.cacheDir, "dpc_bulletin.xml").writeText(parmaCap(today).replace("Pianura piacentino-parmense", "Bacini di Roma"))
+        val again = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+        assertEquals(View.GONE, again.findViewById<android.widget.ImageView>(R.id.weather_alert).visibility)
+    }
 }
