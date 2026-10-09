@@ -6,6 +6,7 @@ import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
+import it.sunw.widget.CrashLog
 
 /**
  * About once an hour, with a network, checks the Civil Protection bulletin even when the app is
@@ -15,7 +16,9 @@ class AlertJobService : JobService() {
 
     override fun onStartJob(params: JobParameters): Boolean {
         AlertRepository(this).refresh { result ->
-            result.onSuccess { AlertNotifier.check(applicationContext, it) }
+            result.onSuccess {
+                runCatching { AlertNotifier.check(applicationContext, it) }.onFailure { e -> CrashLog.record(applicationContext, e) }
+            }
             jobFinished(params, false)
         }
         return true // work continues on the repository's thread

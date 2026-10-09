@@ -212,4 +212,8 @@
     <string name="alert_notify_title">%1$s · %2$s</string>
     <string name="alert_notify_text">%1$s · zone %2$s</string>
     <string name="alert_notify_today">Today</string>
+    <string name="crash_title">The app closed unexpectedly</string>
+    <string name="crash_message">This is the error of the last time, to send to the developer. Copy it, then continue.</string>
+    <string name="crash_continue">Continue</string>
+    <string name="crash_copy">Copy and continue</string>
 </resources>

@@ -52,8 +52,16 @@ class MainActivity : Activity() {
         }
     }
 
+    /** False while the last crash is on screen instead of the page. */
+    private var ready = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // If the app closed unexpectedly last time, say why before anything else can fail again.
+        CrashLog.pending(this)?.let {
+            showCrash(it)
+            return
+        }
         setContentView(R.layout.activity_main)
         findViewById<ImageButton>(R.id.settings).setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
@@ -64,7 +72,27 @@ class MainActivity : Activity() {
             findViewById<android.view.View>(id).setOnClickListener { startActivity(Intent(this, SunMoonActivity::class.java)) }
         }
         fitToScreen()
-        setUpAlertNotifications()
+        // A background check that can't start must never stop the page from opening.
+        runCatching { setUpAlertNotifications() }.onFailure { CrashLog.record(this, it) }
+        ready = true
+    }
+
+    private fun showCrash(report: String) {
+        android.app.AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+            .setTitle(R.string.crash_title)
+            .setMessage(getString(R.string.crash_message) + "\n\n" + report)
+            .setCancelable(false)
+            .setPositiveButton(R.string.crash_continue) { _, _ ->
+                CrashLog.clear(this)
+                recreate()
+            }
+            .setNeutralButton(R.string.crash_copy) { _, _ ->
+                getSystemService(android.content.ClipboardManager::class.java)
+                    .setPrimaryClip(android.content.ClipData.newPlainText("crash", report))
+                CrashLog.clear(this)
+                recreate()
+            }
+            .show()
     }
 
     /**
@@ -129,6 +157,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        if (!ready) return
         handler.post(tick)
         handler.post(secondTick)
     }
@@ -200,7 +229,7 @@ class MainActivity : Activity() {
                     lastAlertsFailure = null
                     AlertUi.bind(icon, this, LocationStore(this).current(), it, java.time.LocalDate.now(zone))
                     // Already on screen: no notification for what the icon shows.
-                    AlertNotifier.check(this, it, post = false)
+                    runCatching { AlertNotifier.check(this, it, post = false) }.onFailure { e -> CrashLog.record(this, e) }
                 }.onFailure { lastAlertsFailure = Instant.now() }
             }
         }

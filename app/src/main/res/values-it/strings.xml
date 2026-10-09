@@ -213,4 +213,8 @@
     <string name="alert_notify_title">%1$s · %2$s</string>
     <string name="alert_notify_text">%1$s · zona %2$s</string>
     <string name="alert_notify_today">Oggi</string>
+    <string name="crash_title">L\'app si è chiusa all\'improvviso</string>
+    <string name="crash_message">Ecco l\'errore dell\'ultima volta, da mandare allo sviluppatore. Copialo e poi continua.</string>
+    <string name="crash_continue">Continua</string>
+    <string name="crash_copy">Copia e continua</string>
 </resources>
