@@ -5,6 +5,8 @@
     <!-- Weather forecast from MeteoBlue. Sun and Moon are still computed on the device. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Civil Protection alert notifications, checked hourly in the background (also after a reboot). -->
+    <!-- Android requires it for a job that waits for a network (the hourly alert check). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 

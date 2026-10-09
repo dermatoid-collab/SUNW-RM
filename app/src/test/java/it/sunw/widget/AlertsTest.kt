@@ -169,4 +169,15 @@ class AlertsTest {
         Robolectric.buildActivity(MainActivity::class.java).setup()
         assertTrue(AlertJobService.isScheduled(context))
     }
+
+    @Test
+    fun manifestDeclaresWhatTheHourlyJobNeeds() {
+        // Android 16 refuses the job (and used to close the app) without ACCESS_NETWORK_STATE.
+        val info = context.packageManager.getPackageInfo(context.packageName, android.content.pm.PackageManager.GET_PERMISSIONS)
+        val requested = info.requestedPermissions!!.toSet()
+        for (permission in listOf(
+            "android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE",
+            "android.permission.RECEIVE_BOOT_COMPLETED", "android.permission.POST_NOTIFICATIONS",
+        )) assertTrue("$permission is declared", permission in requested)
+    }
 }
