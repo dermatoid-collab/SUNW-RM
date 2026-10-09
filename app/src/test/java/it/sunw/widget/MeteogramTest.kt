@@ -64,6 +64,20 @@ class MeteogramTest {
     }
 
     @Test
+    fun withoutARainspotARadarIconTakesItsPlace() {
+        val main = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        val forecast = Forecast.parse(WeatherTest.sampleJson(today), Instant.now())
+        WeatherCard(main).show(AppearanceStore(main).palette(), forecast, Instant.now())
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+        val spot = main.findViewById<ImageView>(R.id.weather_today_spot)
+        assertEquals(View.VISIBLE, spot.visibility)
+        // The vector radar icon, not a drawn rainspot bitmap.
+        assertTrue(spot.drawable != null && spot.drawable !is android.graphics.drawable.BitmapDrawable)
+        spot.performClick()
+        assertEquals(MeteogramActivity::class.java.name, shadowOf(main).nextStartedActivity.component?.className)
+    }
+
+    @Test
     fun meteogramIsWiderThanTheScreenAndOpensDays() {
         val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
         val chart = activity.findViewById<MeteogramView>(R.id.mg_chart)

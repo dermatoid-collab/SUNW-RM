@@ -78,24 +78,32 @@ class WeatherCard(private val activity: Activity) {
             })
         }
 
-        showTodaySpot(today.rainspot)
+        showTodaySpot(palette, today.rainspot)
         showWeek(palette, forecast.days.filter { it.date.isAfter(today.date) }.take(DAYS))
     }
 
-    /** Today's rainspot beside the pills, sized to their height; tap → radar and meteogram. */
-    private fun showTodaySpot(spot: String?) {
+    /**
+     * Today's rainspot beside the pills, sized to their height (a radar icon when MeteoBlue sends
+     * none); tap → radar and meteogram.
+     */
+    private fun showTodaySpot(palette: Palette, spot: String?) {
         val view = find<ImageView>(R.id.weather_today_spot)
-        if (spot == null) {
-            view.visibility = View.GONE
-            return
-        }
         view.visibility = View.VISIBLE
         view.setOnClickListener { activity.startActivity(Intent(activity, MeteogramActivity::class.java)) }
         val pills = find<View>(R.id.weather_today_pills)
         pills.post {
             val size = pills.height.takeIf { it > 0 } ?: dp(52)
             view.layoutParams = view.layoutParams.apply { width = size; height = size }
-            view.setImageBitmap(Rainspot.draw(size, spot))
+            if (spot != null) {
+                view.clearColorFilter()
+                view.setPadding(0, 0, 0, 0)
+                view.setImageBitmap(Rainspot.draw(size, spot))
+            } else {
+                view.setPadding(size / 10, size / 10, size / 10, size / 10)
+                view.scaleType = ImageView.ScaleType.FIT_CENTER
+                view.setImageResource(R.drawable.ic_radar)
+                view.setColorFilter(palette.text)
+            }
         }
     }
 
