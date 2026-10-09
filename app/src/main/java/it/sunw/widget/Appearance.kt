@@ -27,7 +27,14 @@ enum class Accent(val key: String, val label: Int, private val color: Int?) {
     CORAL("coral", R.string.accent_coral, 0xFFFF8A7A.toInt()),
     WHITE("white", R.string.accent_white, 0xFFEDEDED.toInt()),
     TOKYO_YELLOW("tokyo_yellow", R.string.accent_tokyo_yellow, 0xFFE0AF68.toInt()),
-    TOKYO_BLUE("tokyo_blue", R.string.accent_tokyo_blue, 0xFF7AA2F7.toInt());
+    TOKYO_BLUE("tokyo_blue", R.string.accent_tokyo_blue, 0xFF7AA2F7.toInt()),
+    CATPPUCCIN_MAUVE("catppuccin_mauve", R.string.accent_catppuccin_mauve, 0xFFCBA6F7.toInt()),
+    NORD_FROST("nord_frost", R.string.accent_nord_frost, 0xFF88C0D0.toInt()),
+    DRACULA_PINK("dracula_pink", R.string.accent_dracula_pink, 0xFFFF79C6.toInt()),
+    ROSE_PINE("rose_pine", R.string.accent_rose_pine, 0xFFEBBCBA.toInt()),
+
+    /** Pantone colour of the year 2024. */
+    PEACH_FUZZ("peach_fuzz", R.string.accent_peach_fuzz, 0xFFFFBE98.toInt());
 
     fun resolve(context: Context): Int = color
         ?: if (Build.VERSION.SDK_INT >= 31) context.getColor(android.R.color.system_accent1_200) else AMBER.color!!
@@ -39,7 +46,11 @@ enum class Theme(val key: String, val label: Int) {
     BLACK("black", R.string.theme_black),
     GLASS("glass", R.string.theme_glass),
     MATERIAL_YOU("material_you", R.string.material_you),
-    TOKYO_NIGHT("tokyo_night", R.string.theme_tokyo_night);
+    TOKYO_NIGHT("tokyo_night", R.string.theme_tokyo_night),
+    CATPPUCCIN("catppuccin", R.string.theme_catppuccin),
+    NORD("nord", R.string.theme_nord),
+    DRACULA("dracula", R.string.theme_dracula),
+    ROSE_PINE("rose_pine", R.string.theme_rose_pine);
 
     /** Rounded (system radius) and square-ish (1×1 "big") background drawables. */
     val background: Int
@@ -49,6 +60,10 @@ enum class Theme(val key: String, val label: Int) {
             GLASS -> R.drawable.widget_bg_glass
             MATERIAL_YOU -> R.drawable.widget_background
             TOKYO_NIGHT -> R.drawable.widget_bg_tokyo
+            CATPPUCCIN -> R.drawable.widget_bg_catppuccin
+            NORD -> R.drawable.widget_bg_nord
+            DRACULA -> R.drawable.widget_bg_dracula
+            ROSE_PINE -> R.drawable.widget_bg_rose_pine
         }
     val backgroundSquare: Int
         get() = when (this) {
@@ -57,6 +72,10 @@ enum class Theme(val key: String, val label: Int) {
             GLASS -> R.drawable.widget_bg_square_glass
             MATERIAL_YOU -> R.drawable.widget_background_tiny
             TOKYO_NIGHT -> R.drawable.widget_bg_square_tokyo
+            CATPPUCCIN -> R.drawable.widget_bg_square_catppuccin
+            NORD -> R.drawable.widget_bg_square_nord
+            DRACULA -> R.drawable.widget_bg_square_dracula
+            ROSE_PINE -> R.drawable.widget_bg_square_rose_pine
         }
 }
 
@@ -145,6 +164,41 @@ class AppearanceStore(private val context: Context) {
                 sky = TOKYO_SKY, blueHour = 0xFF7AA2F7.toInt(), goldenHour = 0xFFFF9E64.toInt(),
                 highSun = 0xFFE0AF68.toInt(), twilightBand = 0xFF7AA2F7.toInt(),
             )
+            // Catppuccin Mocha: crust page, mantle widget, base cards.
+            Theme.CATPPUCCIN -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF181825.toInt(), text = 0xFFCDD6F4.toInt(), textSecondary = 0xFFA6ADC8.toInt(),
+                dim = 0xFF6C7086.toInt(), pageBackground = 0xFF11111B.toInt(), cardBackground = 0xFF1E1E2E.toInt(),
+                sky = sky(0xFF313244, 0xFF45475A, 0xFF89B4FA, 0xFFCBA6F7, 0xFFF38BA8, 0xFFFAB387, 0xFFF9E2AF, 0xFFF5E0DC),
+                blueHour = 0xFF89B4FA.toInt(), goldenHour = 0xFFFAB387.toInt(),
+                highSun = 0xFFF9E2AF.toInt(), twilightBand = 0xFFB4BEFE.toInt(),
+            )
+            // Nord: Polar Night backgrounds, Snow Storm text, Frost and Aurora for the sky.
+            Theme.NORD -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF2E3440.toInt(), text = 0xFFECEFF4.toInt(), textSecondary = 0xFFB4BCCB.toInt(),
+                dim = 0xFF4C566A.toInt(), pageBackground = 0xFF242933.toInt(), cardBackground = 0xFF3B4252.toInt(),
+                sky = sky(0xFF3B4252, 0xFF434C5E, 0xFF5E81AC, 0xFFB48EAD, 0xFFBF616A, 0xFFD08770, 0xFFEBCB8B, 0xFFECEFF4),
+                blueHour = 0xFF81A1C1.toInt(), goldenHour = 0xFFD08770.toInt(),
+                highSun = 0xFFEBCB8B.toInt(), twilightBand = 0xFF88C0D0.toInt(),
+            )
+            Theme.DRACULA -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF282A36.toInt(), text = 0xFFF8F8F2.toInt(), textSecondary = 0xFFBFC1D3.toInt(),
+                dim = 0xFF6272A4.toInt(), pageBackground = 0xFF21222C.toInt(), cardBackground = 0xFF2F3241.toInt(),
+                sky = sky(0xFF343746, 0xFF44475A, 0xFF6272A4, 0xFFBD93F9, 0xFFFF79C6, 0xFFFFB86C, 0xFFF1FA8C, 0xFFF8F8F2),
+                blueHour = 0xFF8BE9FD.toInt(), goldenHour = 0xFFFFB86C.toInt(),
+                highSun = 0xFFF1FA8C.toInt(), twilightBand = 0xFFBD93F9.toInt(),
+            )
+            // Rosé Pine (main variant).
+            Theme.ROSE_PINE -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF191724.toInt(), text = 0xFFE0DEF4.toInt(), textSecondary = 0xFF908CAA.toInt(),
+                dim = 0xFF6E6A86.toInt(), pageBackground = 0xFF12101B.toInt(), cardBackground = 0xFF1F1D2E.toInt(),
+                sky = sky(0xFF26233A, 0xFF31748F, 0xFF9CCFD8, 0xFFC4A7E7, 0xFFEB6F92, 0xFFEBBCBA, 0xFFF6C177, 0xFFE0DEF4),
+                blueHour = 0xFF9CCFD8.toInt(), goldenHour = 0xFFEB6F92.toInt(),
+                highSun = 0xFFF6C177.toInt(), twilightBand = 0xFFC4A7E7.toInt(),
+            )
             else -> {
                 val (bg, text, secondary) = when (theme) {
                     Theme.MATERIAL_YOU -> Triple(
@@ -182,6 +236,10 @@ class AppearanceStore(private val context: Context) {
             -2.0 to 0xFFD0578A.toInt(), 1.0 to 0xFFFF6A3D.toInt(), 6.0 to 0xFFFF9A3C.toInt(),
             15.0 to 0xFFFFC85A.toInt(), 30.0 to 0xFFFFE9A8.toInt(),
         )
+
+        /** Sky ramp at the usual elevations (−18° … 30°) from eight theme colours. */
+        private fun sky(vararg colors: Long): List<Pair<Double, Int>> =
+            listOf(-18.0, -12.0, -6.0, -2.0, 1.0, 6.0, 15.0, 30.0).zip(colors.map { it.toInt() })
 
         /** The same progression drawn from the Tokyo Night palette. */
         private val TOKYO_SKY = listOf(
