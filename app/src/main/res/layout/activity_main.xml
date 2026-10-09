@@ -42,10 +42,12 @@
                 android:ellipsize="end"
                 android:gravity="end|center_vertical"
                 android:maxLines="1"
-                android:textSize="17sp" />
+                android:textSize="17sp"
+                android:translationY="-3dp" />
 
             <!-- Place, date (right-aligned beside the button) and the button share the
-                 vertical centre line. -->
+                 vertical centre line; the date sits 3 dp higher so it lines up visually with
+                 the cog (the text box has more room below the letters than above). -->
             <ImageButton
                 android:id="@+id/settings"
                 android:layout_width="48dp"
