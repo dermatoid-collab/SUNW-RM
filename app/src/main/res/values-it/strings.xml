@@ -139,4 +139,53 @@
     <string name="detail_no_hours">Nessun dato orario per questo giorno.</string>
     <string name="detail_no_data">Previsioni non ancora scaricate: apri la pagina principale con la connessione attiva.</string>
     <string name="rainspot_label">Pioggia nei dintorni</string>
+    <string name="sm_back">Indietro</string>
+    <string name="sm_subtitle">%1$s · %2$s</string>
+    <string name="sm_today">Oggi</string>
+    <string name="sm_today_lower">oggi</string>
+    <plurals name="sm_in_days">
+        <item quantity="one">tra %d giorno</item>
+        <item quantity="many">tra %d giorni</item>
+        <item quantity="other">tra %d giorni</item>
+    </plurals>
+    <plurals name="sm_days_ago">
+        <item quantity="one">%d giorno fa</item>
+        <item quantity="many">%d giorni fa</item>
+        <item quantity="other">%d giorni fa</item>
+    </plurals>
+    <string name="sm_useful">Luce utile</string>
+    <string name="sm_dawn">Mattino</string>
+    <string name="sm_dusk">Sera</string>
+    <string name="sm_civil">Civile</string>
+    <string name="sm_nautical">Nautico</string>
+    <string name="sm_astronomical">Astron.</string>
+    <string name="sm_noon">Mezzodì</string>
+    <string name="sm_noon_value">%1$s · alto %2$d°</string>
+    <string name="sm_morning">Mattina</string>
+    <string name="sm_evening">Sera</string>
+    <string name="sm_blue">Blu %1$s</string>
+    <string name="sm_golden">Oro %1$s</string>
+    <string name="sm_vs">vs %1$s %2$s</string>
+    <string name="sm_cursor_hint">Tocca la curva per leggere il Sole a ogni ora</string>
+    <string name="sm_now">(ora)</string>
+    <string name="sm_shadow">ombra ×%1$s</string>
+    <string name="sm_below_horizon">sotto l\'orizzonte</string>
+    <string name="sm_moon_no_events">Nessun sorgere o tramonto della Luna in questo giorno</string>
+    <string name="sm_spring_equinox">Equinozio di primavera</string>
+    <string name="sm_summer_solstice">Solstizio d\'estate</string>
+    <string name="sm_autumn_equinox">Equinozio d\'autunno</string>
+    <string name="sm_winter_solstice">Solstizio d\'inverno</string>
+    <string name="sm_mark_march">eq. mar</string>
+    <string name="sm_mark_june">sol. giu</string>
+    <string name="sm_mark_september">eq. set</string>
+    <string name="sm_mark_december">sol. dic</string>
+    <string name="sm_next_event">%1$s %2$s · %3$s · %4$s di luce</string>
+    <string name="sm_year_description">Durata del giorno nell\'anno; tocca per scegliere una data</string>
+    <string name="sm_slider_hint">Trascina per muoverti nell\'anno</string>
+    <string-array name="compass_points">
+        <item>N</item><item>NNE</item><item>NE</item><item>ENE</item>
+        <item>E</item><item>ESE</item><item>SE</item><item>SSE</item>
+        <item>S</item><item>SSO</item><item>SO</item><item>OSO</item>
+        <item>O</item><item>ONO</item><item>NO</item><item>NNO</item>
+    </string-array>
 </resources>

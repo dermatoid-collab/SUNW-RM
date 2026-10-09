@@ -24,6 +24,8 @@ Toccando un widget (o dall'icona) si apre la **pagina principale**:
 - la **Luna**: disegno della fase, percentuale illuminata, nome della fase, levata e tramonto lunare, date di luna nuova, primo quarto e piena, e una riga con i prossimi 7 giorni;
 - il **meteo** (MeteoBlue): in alto oggi (icona, temperatura, percepita, UV, massima/minima, pioggia, vento), sotto una riga con i giorni successivi (icona, massima/minima, giorno, data). Toccando oggi o un giorno si apre il **dettaglio** in stile Meteoblue: giorni selezionabili, riepilogo, alba/tramonto, Luna, pioggia, vento e tabella ora per ora (ogni ora o ogni 3 ore). I dati sono tenuti in cache e aggiornati al massimo ogni ora; offline si vede l'ultimo aggiornamento.
 
+Toccando la tile del Sole o della Luna si apre **Sole e Luna per data**: qualsiasi giorno entro ±6 mesi, scelto con le schede dei giorni, il cursore (con «Oggi») o toccando la striscia dell'anno. Per la data scelta: curva con fasce dei crepuscoli e barrette di ora blu e d'oro (toccandola si leggono ora, altezza, direzione e lunghezza dell'ombra), alba e tramonto con azimut, durata e differenza col giorno prima, luce utile, crepuscoli civile/nautico/astronomico, mezzogiorno con altezza massima, bussola, confronto con oggi e con i solstizi; la Luna; la durata del giorno lungo l'anno con equinozi e solstizi.
+
 L'icona ⚙ apre le **impostazioni**:
 
 - **Posizione**: dispositivo, ricerca per nome o coordinate a mano;
@@ -82,7 +84,8 @@ Ogni push su GitHub esegue la workflow **Android build**, che lancia i test e al
 
 | File | Ruolo |
 |---|---|
-| `SunCalculator.kt` | posizione del Sole, alba/tramonto/mezzogiorno solare |
+| `SunCalculator.kt` | posizione del Sole (altezza, azimut), alba/tramonto/mezzogiorno, crepuscoli, equinozi e solstizi |
+| `SunDayFacts.kt`, `SunMoonActivity.kt`, `SunMoonViews.kt` | pagina «Sole e Luna per data»: dati del giorno, pagina, curva/bussola/striscia dell'anno |
 | `WidgetRenderer.kt` | `RemoteViews` e disegno della curva |
 | `SunWidgetProvider.kt` | ciclo di vita del widget e pianificazione degli aggiornamenti |
 | `SunWidgetProviderSmall.kt`, `SunWidgetProviderSmallCurve.kt` | le due voci 1×1 nel selettore dei widget |

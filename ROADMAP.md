@@ -33,7 +33,9 @@ meteogramma → allerte → radar. Ogni funzione in un commit separato, da prova
     (solo Italia, dati aperti), con mappa di base OpenStreetMap.
 - **Dove:** pulsante sulla card meteo → pagina radar animata, centrata sulla località.
 
-## 4. Pagina «Sole e Luna per data»
+## 4. Pagina «Sole e Luna per data» — prima versione sviluppata
+
+Implementata in `SunMoonActivity` (cursore ±6 mesi confermato). Da provare sul telefono e rifinire.
 
 - **Prototipo:** artifact «Alba · Tramonto — schermate», tavola «Sole e Luna per data (proposta)»
   (https://claude.ai/artifact/KJjPBhHAyGoU2EYyyfjg7L), approvato dall'utente.

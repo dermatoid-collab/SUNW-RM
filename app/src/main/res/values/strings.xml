@@ -139,4 +139,51 @@
     <string name="detail_no_hours">No hourly data for this day.</string>
     <string name="detail_no_data">No forecast downloaded yet: open the main page while online.</string>
     <string name="rainspot_label">Rain around</string>
+    <string name="sm_back">Back</string>
+    <string name="sm_subtitle">%1$s · %2$s</string>
+    <string name="sm_today">Today</string>
+    <string name="sm_today_lower">today</string>
+    <plurals name="sm_in_days">
+        <item quantity="one">in %d day</item>
+        <item quantity="other">in %d days</item>
+    </plurals>
+    <plurals name="sm_days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <string name="sm_useful">Useful light</string>
+    <string name="sm_dawn">Dawn</string>
+    <string name="sm_dusk">Dusk</string>
+    <string name="sm_civil">Civil</string>
+    <string name="sm_nautical">Nautical</string>
+    <string name="sm_astronomical">Astron.</string>
+    <string name="sm_noon">Noon</string>
+    <string name="sm_noon_value">%1$s · %2$d° high</string>
+    <string name="sm_morning">Morning</string>
+    <string name="sm_evening">Evening</string>
+    <string name="sm_blue">Blue %1$s</string>
+    <string name="sm_golden">Golden %1$s</string>
+    <string name="sm_vs">vs %1$s %2$s</string>
+    <string name="sm_cursor_hint">Touch the curve to read the Sun at any time</string>
+    <string name="sm_now">(now)</string>
+    <string name="sm_shadow">shadow ×%1$s</string>
+    <string name="sm_below_horizon">below the horizon</string>
+    <string name="sm_moon_no_events">No moonrise or moonset this day</string>
+    <string name="sm_spring_equinox">Spring equinox</string>
+    <string name="sm_summer_solstice">Summer solstice</string>
+    <string name="sm_autumn_equinox">Autumn equinox</string>
+    <string name="sm_winter_solstice">Winter solstice</string>
+    <string name="sm_mark_march">Mar eq.</string>
+    <string name="sm_mark_june">Jun sol.</string>
+    <string name="sm_mark_september">Sep eq.</string>
+    <string name="sm_mark_december">Dec sol.</string>
+    <string name="sm_next_event">%1$s %2$s · %3$s · %4$s of daylight</string>
+    <string name="sm_year_description">Day length over the year; touch to pick a date</string>
+    <string name="sm_slider_hint">Drag to move through the year</string>
+    <string-array name="compass_points">
+        <item>N</item><item>NNE</item><item>NE</item><item>ENE</item>
+        <item>E</item><item>ESE</item><item>SE</item><item>SSE</item>
+        <item>S</item><item>SSW</item><item>SW</item><item>WSW</item>
+        <item>W</item><item>WNW</item><item>NW</item><item>NNW</item>
+    </string-array>
 </resources>

@@ -55,6 +55,10 @@ class MainActivity : Activity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
         findViewById<TextView>(R.id.place).setOnClickListener { showPlaces(it) }
+        // Sun or Moon tile → the same two on any date.
+        for (id in listOf(R.id.widget_container, R.id.moon_card)) {
+            findViewById<android.view.View>(id).setOnClickListener { startActivity(Intent(this, SunMoonActivity::class.java)) }
+        }
         fitToScreen()
     }
 
@@ -354,6 +358,9 @@ class MainActivity : Activity() {
             MoonCalculator.Quarter.FULL to R.string.next_full,
             MoonCalculator.Quarter.LAST_QUARTER to R.string.next_last_quarter,
         )
+
+        fun phaseName(name: MoonCalculator.Name): Int = PHASE_NAMES.getValue(name)
+        fun quarterName(quarter: MoonCalculator.Quarter): Int = QUARTER_NAMES.getValue(quarter)
 
         /** "Parma", "Device location" or "44.8015, 10.3279". */
         fun placeLabel(activity: Activity, place: Place): String = when {
