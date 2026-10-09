@@ -26,8 +26,8 @@ import kotlin.math.sin
 
 /**
  * Seven days hour by hour, in the spirit of Meteoblue's meteogram but drawn in the app's style:
- * day headers (weekday, max/min), temperature curve coloured like the pills over day/night
- * shading, rain bars (stronger when more likely), wind speed with arrows, and the current hour.
+ * day headers (weekday, max/min), weather icons and wind (direction, km/h) every 3 hours, temperature curve coloured like the pills over day/night
+ * shading, rain bars (stronger when more likely) and the current hour.
  * Wider than the screen: it sits in a horizontal scroll view. Tapping a day opens it.
  */
 class MeteogramView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
@@ -68,7 +68,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = (2 * left + max(hours.size, 24) * hourWidth).roundToInt()
-        setMeasuredDimension(w, dp(HEADER_DP + TEMP_DP + RAIN_DP + WIND_DP + AXIS_DP).roundToInt())
+        setMeasuredDimension(w, dp(HEADER_DP + ICON_DP + TEMP_DP + RAIN_DP + WIND_DP + AXIS_DP).roundToInt())
     }
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -77,7 +77,8 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         val p = palette ?: return
         if (hours.isEmpty()) return
         val header = dp(HEADER_DP)
-        val tempTop = header
+        val iconTop = header
+        val tempTop = iconTop + dp(ICON_DP)
         val tempBottom = tempTop + dp(TEMP_DP)
         val rainTop = tempBottom
         val rainBottom = rainTop + dp(RAIN_DP)
@@ -89,7 +90,20 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.style = Paint.Style.FILL
         paint.color = Palette.blend(p.cardBackground, Color.BLACK, 0.35f)
         for ((i, h) in hours.withIndex()) {
-            if (!h.isDaylight) canvas.drawRect(x(i.toDouble()), tempTop, x(i + 1.0), windBottom, paint)
+            if (!h.isDaylight) canvas.drawRect(x(i.toDouble()), iconTop, x(i + 1.0), windBottom, paint)
+        }
+
+        // What the weather does, every 3 hours: the most significant condition of the three.
+        val iconPx = dp(ICON_SIZE_DP).roundToInt()
+        for (i in hours.indices step 3) {
+            val block = hours.subList(i, minOf(i + 3, hours.size))
+            val mid = block[block.size / 2]
+            val condition = block.maxBy { it.condition.severity }.condition
+            val d = icon(WeatherIcons.icon(condition, !mid.isDaylight), p.text) ?: continue
+            val cx = x(i + block.size / 2.0).roundToInt()
+            val top = (iconTop + (dp(ICON_DP) - iconPx) / 2).roundToInt()
+            d.setBounds(cx - iconPx / 2, top, cx + iconPx / 2, top + iconPx)
+            d.draw(canvas)
         }
 
         // Midnight separators and day headers.
@@ -181,23 +195,19 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.15f)
         canvas.drawLine(0f, rainBottom, width.toFloat(), rainBottom, paint)
 
-        // Wind: speed line and an arrow (where it blows to) every 3 hours, km/h every 6.
-        val maxWind = max(20.0, hours.maxOf { it.windSpeed })
-        fun wy(v: Double) = (windBottom - dp(4f) - v / maxWind * (windBottom - windTop - dp(18f))).toFloat()
-        paint.color = p.textSecondary
-        paint.strokeWidth = dp(1.5f)
-        for (i in 0 until n - 1) canvas.drawLine(cxOf(i), wy(hours[i].windSpeed), cxOf(i + 1), wy(hours[i + 1].windSpeed), paint)
-        for ((i, h) in hours.withIndex()) {
-            if (h.time.hour % 3 != 1) continue
-            drawArrow(canvas, cxOf(i), windTop + dp(8f), h.windDirection, p.text)
-            if (h.time.hour % 6 == 1) {
-                paint.style = Paint.Style.FILL
-                paint.color = p.textSecondary
-                paint.textSize = sp(9.5f)
-                canvas.drawText("${h.windSpeed.roundToInt()}", cxOf(i), windBottom - dp(2f), paint)
-                paint.style = Paint.Style.STROKE
-                paint.color = p.textSecondary
-            }
+        // Wind every 3 hours: an arrow where it blows to, km/h below, stronger winds brighter.
+        for (i in hours.indices step 3) {
+            val block = hours.subList(i, minOf(i + 3, hours.size))
+            val mid = block[block.size / 2]
+            val speed = block.maxOf { it.windSpeed }
+            val cx = x(i + block.size / 2.0)
+            val color = windColor(speed, p)
+            drawArrow(canvas, cx, windTop + dp(11f), mid.windDirection, color)
+            paint.style = Paint.Style.FILL
+            paint.color = color
+            paint.textSize = sp(10.5f)
+            paint.textAlign = Paint.Align.CENTER
+            canvas.drawText("${speed.roundToInt()}", cx, windBottom - dp(5f), paint)
         }
 
         // Hour axis.
@@ -219,6 +229,19 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             }
         }
     }
+
+    /** Calm winds dim, fresh ones in the text colour, strong ones orange, gales red. */
+    private fun windColor(kmh: Double, p: Palette): Int = when {
+        kmh >= 60 -> 0xFFFF6B6B.toInt()
+        kmh >= 35 -> 0xFFFFB36B.toInt()
+        kmh >= 15 -> p.text
+        else -> p.textSecondary
+    }
+
+    private val icons = HashMap<Int, android.graphics.drawable.Drawable>()
+
+    private fun icon(res: Int, color: Int): android.graphics.drawable.Drawable? =
+        icons.getOrPut(res) { context.getDrawable(res)?.mutate() ?: return null }.apply { setTint(color) }
 
     private fun drawArrow(canvas: Canvas, cx: Float, cy: Float, fromDegrees: Int, color: Int) {
         // MeteoBlue gives where the wind comes from; the arrow points where it goes.
@@ -268,7 +291,9 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         private const val HOUR_DP = 6f
         private const val MAX_HOURS = 7 * 24
         private const val HEADER_DP = 38f
-        private const val TEMP_DP = 120f
+        private const val ICON_DP = 26f
+        private const val ICON_SIZE_DP = 18f
+        private const val TEMP_DP = 112f
         private const val RAIN_DP = 46f
         private const val WIND_DP = 40f
         private const val AXIS_DP = 18f

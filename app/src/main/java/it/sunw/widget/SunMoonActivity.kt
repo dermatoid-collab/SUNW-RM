@@ -1,6 +1,7 @@
 package it.sunw.widget
 
 import android.app.Activity
+import android.app.DatePickerDialog
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -103,7 +104,7 @@ class SunMoonActivity : Activity() {
             R.id.sm_compare to palette.textSecondary,
             R.id.sm_moon_pct to palette.text, R.id.sm_moon_name to palette.textSecondary,
             R.id.sm_moon_times to palette.text, R.id.sm_moon_next to palette.textSecondary,
-            R.id.sm_next_event to palette.text, R.id.sm_slider_hint to palette.textSecondary,
+            R.id.sm_next_event to palette.text,
             R.id.sm_min to palette.textSecondary, R.id.sm_max to palette.textSecondary,
             R.id.sm_today to palette.accent,
         )) findViewById<TextView>(id).setTextColor(color)
@@ -116,6 +117,7 @@ class SunMoonActivity : Activity() {
             showCursor(SunDayFacts(date, place.latitude, place.longitude, zone))
         }
         findViewById<TextView>(R.id.sm_today).setOnClickListener { select(0) }
+        findViewById<View>(R.id.sm_date).setOnClickListener { pickDate() }
     }
 
     /** Daylight over the whole range, the equinoxes and solstices in it: computed once. */
@@ -154,6 +156,19 @@ class SunMoonActivity : Activity() {
         findViewById<TextView>(R.id.sm_max).text = short.format(today.plusDays(RANGE_DAYS.toLong())).replace(".", "")
     }
 
+    /** The system date picker, limited to the slider's range. */
+    internal fun pickDate(): DatePickerDialog {
+        val d = date
+        val dialog = DatePickerDialog(this, { _, year, month, day ->
+            select(ChronoUnit.DAYS.between(today, LocalDate.of(year, month + 1, day)).toInt())
+        }, d.year, d.monthValue - 1, d.dayOfMonth)
+        fun millis(day: LocalDate) = day.atStartOfDay(zone).toInstant().toEpochMilli()
+        dialog.datePicker.minDate = millis(today.minusDays(RANGE_DAYS.toLong()))
+        dialog.datePicker.maxDate = millis(today.plusDays(RANGE_DAYS.toLong()))
+        dialog.show()
+        return dialog
+    }
+
     /** Shows the date [newOffset] days from today; tabs and the Today button slide the content in. */
     internal fun select(newOffset: Int, animate: Boolean = true) {
         val target = newOffset.coerceIn(-RANGE_DAYS, RANGE_DAYS)
@@ -189,7 +204,8 @@ class SunMoonActivity : Activity() {
 
     private fun showHeader() {
         findViewById<TextView>(R.id.sm_title).text =
-            DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.getDefault()).format(date).replaceFirstChar { it.titlecase() }
+            // ▾: tapping the date opens the date picker.
+            DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.getDefault()).format(date).replaceFirstChar { it.titlecase() } + " ▾"
         findViewById<TextView>(R.id.sm_subtitle).text =
             getString(R.string.sm_subtitle, MainActivity.placeLabel(this, place), relative(offset))
     }

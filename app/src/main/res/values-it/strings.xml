@@ -190,7 +190,7 @@
     </string-array>
     <string name="mg_title">Meteogramma</string>
     <string name="mg_subtitle">%1$s · prossimi 7 giorni</string>
-    <string name="mg_legend">Temperatura su giorno/notte · pioggia mm/h (più intensa = più probabile) · vento km/h e direzione · tocca un giorno per aprirlo</string>
+    <string name="mg_legend">Tempo e vento (direzione, km/h) ogni 3 ore · temperatura su giorno/notte · pioggia mm/h (più intensa = più probabile) · tocca un giorno per aprirlo</string>
     <string name="mg_open">Radar e meteogramma</string>
     <string name="mg_layer_radar">Radar</string>
     <string name="mg_layer_rain">Pioggia prevista</string>

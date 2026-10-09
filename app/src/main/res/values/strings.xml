@@ -188,7 +188,7 @@
     </string-array>
     <string name="mg_title">Meteogram</string>
     <string name="mg_subtitle">%1$s · next 7 days</string>
-    <string name="mg_legend">Temperature over day/night · rain mm/h (stronger = more likely) · wind km/h and direction · tap a day to open it</string>
+    <string name="mg_legend">Weather and wind (direction, km/h) every 3 hours · temperature over day/night · rain mm/h (stronger = more likely) · tap a day to open it</string>
     <string name="mg_open">Radar and meteogram</string>
     <string name="mg_layer_radar">Radar</string>
     <string name="mg_layer_rain">Rain forecast</string>

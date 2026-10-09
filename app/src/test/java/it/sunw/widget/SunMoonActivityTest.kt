@@ -84,4 +84,32 @@ class SunMoonActivityTest {
         assertEquals(10, open(LocalDate.now().plusDays(10)).offset)
         assertEquals(-SunMoonActivity.RANGE_DAYS, open(LocalDate.now().minusYears(2)).offset)
     }
+
+    @Test
+    fun tappingTheDateOpensAPickerLimitedToTheRange() {
+        val activity = open()
+        activity.findViewById<android.view.View>(R.id.sm_date).performClick()
+        val dialog = org.robolectric.shadows.ShadowDialog.getLatestDialog() as android.app.DatePickerDialog
+        val picker = dialog.datePicker
+        val zone = java.time.ZoneId.systemDefault()
+        assertEquals(LocalDate.now().minusDays(182L), java.time.Instant.ofEpochMilli(picker.minDate).atZone(zone).toLocalDate())
+        val target = LocalDate.now().plusDays(40)
+        dialog.updateDate(target.year, target.monthValue - 1, target.dayOfMonth)
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+        assertEquals(40, activity.offset)
+    }
+
+    @Test
+    fun dateBarAndSliderStayOutsideTheScrollingPart() {
+        val activity = open()
+        val page = activity.findViewById<android.widget.ScrollView>(R.id.sm_page)
+        fun inside(id: Int): Boolean {
+            var v: android.view.View? = activity.findViewById(id)
+            while (v != null) { if (v === page) return true; v = v.parent as? android.view.View }
+            return false
+        }
+        assertTrue(inside(R.id.sm_sun_card))
+        assertTrue(!inside(R.id.sm_title))
+        assertTrue(!inside(R.id.sm_slider))
+    }
 }
