@@ -176,6 +176,26 @@
                 android:orientation="horizontal" />
         </HorizontalScrollView>
 
+        <!-- Weather alerts -->
+        <TextView
+            style="@style/SectionHeader"
+            android:text="@string/section_alerts" />
+
+        <Switch
+            android:id="@+id/alert_notifications"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/alert_notifications"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.6"
+            android:text="@string/alert_notifications_hint"
+            android:textSize="12sp" />
+
         <!-- Backup -->
         <TextView
             style="@style/SectionHeader"

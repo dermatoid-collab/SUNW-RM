@@ -118,7 +118,7 @@
     <string name="section_backup">Backup</string>
     <string name="export_settings">Export settings</string>
     <string name="import_settings">Import settings</string>
-    <string name="backup_hint">Save place, favourites and appearance to a file (e.g. on Drive or in Downloads) and restore them after a reinstall or on another phone.</string>
+    <string name="backup_hint">Save place, favourites, appearance and alert notifications to a file (e.g. on Drive or in Downloads) and restore them after a reinstall or on another phone.</string>
     <string name="settings_exported">Settings exported</string>
     <string name="settings_imported">Settings restored</string>
     <string name="backup_failed">That didn\'t work: %1$s</string>
@@ -203,4 +203,13 @@
     <string name="alert_issued">Bulletin of %1$s</string>
     <string name="alert_source">Source: Italian Civil Protection Department, national criticality bulletin (CC BY 4.0). Hydrogeological, thunderstorm and hydraulic risk; Italy only. Follow your Region and Municipality for official instructions.</string>
     <string name="alert_open">Open the map</string>
+    <string name="section_alerts">Weather alerts</string>
+    <string name="alert_notifications">Notify yellow, orange and red alerts</string>
+    <string name="alert_notifications_hint">Italy only: the Civil Protection bulletin for the alert zone of the place in use, checked about every hour, also with the app closed. One notification per day and level.</string>
+    <string name="alert_notifications_denied">Notifications are off for this app: allow them in Android settings.</string>
+    <string name="alert_channel">Weather alerts</string>
+    <string name="alert_channel_description">Civil Protection alerts for the place in use</string>
+    <string name="alert_notify_title">%1$s · %2$s</string>
+    <string name="alert_notify_text">%1$s · zone %2$s</string>
+    <string name="alert_notify_today">Today</string>
 </resources>

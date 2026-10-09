@@ -26,6 +26,9 @@ nella tile meteo della pagina principale (a sinistra delle pillole max/min).
 - **Dove:** icona ⚠ colorata accanto alla descrizione del tempo nella tile meteo (oggi, altrimenti
   domani; assente senza allerte), striscia nella pagina del giorno e segno colorato sulla scheda; tocco → dettaglio con zona, rischi, ora del
   bollettino e fonte.
+- **Notifiche:** controllo orario in background (JobScheduler) e notifica per allerta gialla,
+  arancione o rossa nella zona della località in uso, una per giorno e livello; interruttore in
+  Impostazioni › Allerte meteo, incluso nel backup.
 - **Da fare in seguito:** Meteoalarm (EUMETNET) per le località fuori Italia (feed da verificare);
   bollettino di vigilanza meteorologica (vento, neve…, repo `DPC-Bollettini-Vigilanza-Meteorologica`).
 

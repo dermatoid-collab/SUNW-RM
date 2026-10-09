@@ -1,5 +1,6 @@
 package it.sunw.widget
 
+import it.sunw.widget.alerts.AlertNotifier
 import android.content.Context
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,7 +17,7 @@ class SettingsBackupTest {
 
     private val context: Context get() = RuntimeEnvironment.getApplication()
 
-    private fun clear() = listOf("place", "favorites", "appearance").forEach {
+    private fun clear() = listOf("place", "favorites", "appearance", "alert_notifications").forEach {
         context.getSharedPreferences(it, Context.MODE_PRIVATE).edit().clear().commit()
     }
 
@@ -33,6 +34,7 @@ class SettingsBackupTest {
             accent = Accent.TOKYO_BLUE
             theme = Theme.TOKYO_NIGHT
         }
+        AlertNotifier.setEnabled(context, false)
         val json = SettingsBackup.export(context)
 
         clear() // as after a reinstall
@@ -48,6 +50,7 @@ class SettingsBackupTest {
             assertEquals(Accent.TOKYO_BLUE, it.accent)
             assertEquals(Theme.TOKYO_NIGHT, it.theme)
         }
+        assertFalse(AlertNotifier.isEnabled(context))
     }
 
     @Test(expected = IllegalArgumentException::class)

@@ -14,6 +14,8 @@ import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.ScrollView
 import android.widget.TextView
+import it.sunw.widget.alerts.AlertJobService
+import it.sunw.widget.alerts.AlertNotifier
 import it.sunw.widget.alerts.AlertRepository
 import it.sunw.widget.alerts.AlertUi
 import it.sunw.widget.weather.WeatherCard
@@ -62,6 +64,21 @@ class MainActivity : Activity() {
             findViewById<android.view.View>(id).setOnClickListener { startActivity(Intent(this, SunMoonActivity::class.java)) }
         }
         fitToScreen()
+        setUpAlertNotifications()
+    }
+
+    /**
+     * Starts the hourly background check of the alerts and, on Android 13+, asks once for the
+     * permission to notify (it can be changed later in Settings).
+     */
+    private fun setUpAlertNotifications() {
+        if (!AlertNotifier.isEnabled(this)) return
+        AlertJobService.schedule(this)
+        val prefs = getSharedPreferences("alert_notifications", MODE_PRIVATE)
+        if (!AlertNotifier.hasPermission(this) && !prefs.getBoolean("asked", false)) {
+            prefs.edit().putBoolean("asked", true).apply()
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+        }
     }
 
     /** Extra height given to the sun tile so the page fills the screen exactly. */
@@ -182,6 +199,8 @@ class MainActivity : Activity() {
                 result.onSuccess {
                     lastAlertsFailure = null
                     AlertUi.bind(icon, this, LocationStore(this).current(), it, java.time.LocalDate.now(zone))
+                    // Already on screen: no notification for what the icon shows.
+                    AlertNotifier.check(this, it, post = false)
                 }.onFailure { lastAlertsFailure = Instant.now() }
             }
         }
@@ -375,6 +394,7 @@ class MainActivity : Activity() {
 
         /** The countdown row takes this much of the widget height; the curve gets the rest. */
         private const val COUNTDOWN_ROW_DP = 20
+        private const val REQUEST_NOTIFICATIONS = 3
         private const val DEVICE_ITEM = 10_000
         private const val SETTINGS_ITEM = 10_001
         private const val MOON_LIT = 0xFFECE6D2.toInt()

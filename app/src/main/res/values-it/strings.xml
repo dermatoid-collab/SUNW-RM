@@ -118,7 +118,7 @@
     <string name="section_backup">Backup</string>
     <string name="export_settings">Esporta impostazioni</string>
     <string name="import_settings">Importa impostazioni</string>
-    <string name="backup_hint">Salva località, preferiti e aspetto in un file (es. su Drive o in Download) e ripristinali dopo una reinstallazione o su un altro telefono.</string>
+    <string name="backup_hint">Salva località, preferiti, aspetto e notifiche delle allerte in un file (es. su Drive o in Download) e ripristinali dopo una reinstallazione o su un altro telefono.</string>
     <string name="settings_exported">Impostazioni esportate</string>
     <string name="settings_imported">Impostazioni ripristinate</string>
     <string name="backup_failed">Operazione non riuscita: %1$s</string>
@@ -204,4 +204,13 @@
     <string name="alert_issued">Bollettino del %1$s</string>
     <string name="alert_source">Fonte: Dipartimento della Protezione Civile, bollettino di criticità nazionale (CC BY 4.0). Rischio idrogeologico, temporali e idraulico; solo Italia. Per le indicazioni ufficiali segui la tua Regione e il tuo Comune.</string>
     <string name="alert_open">Apri la mappa</string>
+    <string name="section_alerts">Allerte meteo</string>
+    <string name="alert_notifications">Notifica allerte gialle, arancioni e rosse</string>
+    <string name="alert_notifications_hint">Solo Italia: bollettino della Protezione Civile per la zona di allerta della località in uso, controllato circa ogni ora, anche ad app chiusa. Una notifica per giorno e livello.</string>
+    <string name="alert_notifications_denied">Le notifiche sono disattivate per questa app: consentile nelle impostazioni di Android.</string>
+    <string name="alert_channel">Allerte meteo</string>
+    <string name="alert_channel_description">Allerte della Protezione Civile per la località in uso</string>
+    <string name="alert_notify_title">%1$s · %2$s</string>
+    <string name="alert_notify_text">%1$s · zona %2$s</string>
+    <string name="alert_notify_today">Oggi</string>
 </resources>

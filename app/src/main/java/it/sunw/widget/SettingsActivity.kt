@@ -24,6 +24,7 @@ import android.widget.RadioGroup
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import it.sunw.widget.alerts.AlertNotifier
 import java.time.LocalDate
 import java.time.ZoneId
 import java.io.IOException
@@ -88,6 +89,15 @@ class SettingsActivity : Activity() {
                 REQUEST_IMPORT,
             )
         }
+        findViewById<Switch>(R.id.alert_notifications).apply {
+            isChecked = AlertNotifier.isEnabled(this@SettingsActivity)
+            setOnCheckedChangeListener { _, checked ->
+                AlertNotifier.setEnabled(this@SettingsActivity, checked)
+                if (checked && !AlertNotifier.hasPermission(this@SettingsActivity)) {
+                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+                }
+            }
+        }
         findViewById<Button>(R.id.save).setOnClickListener { save() }
         findViewById<Button>(R.id.search).setOnClickListener { search() }
         searchQuery.setOnEditorActionListener { _, actionId, _ ->
@@ -144,6 +154,12 @@ class SettingsActivity : Activity() {
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode == REQUEST_NOTIFICATIONS) {
+            if (grantResults.firstOrNull() != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, R.string.alert_notifications_denied, Toast.LENGTH_LONG).show()
+            }
+            return
+        }
         if (requestCode != REQUEST_LOCATION) return
         if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
             applyAutomatic()
@@ -486,6 +502,7 @@ class SettingsActivity : Activity() {
         private const val SELECTED_ROW = 0x33FFB547
         private const val REQUEST_EXPORT = 2
         private const val REQUEST_IMPORT = 3
+        private const val REQUEST_NOTIFICATIONS = 4
         private const val BACKUP_FILE_NAME = "alba-tramonto-impostazioni.json"
     }
 }

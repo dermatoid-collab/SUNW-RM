@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.view.View
 import android.widget.TextView
+import it.sunw.widget.alerts.AlertJobService
+import it.sunw.widget.alerts.AlertNotifier
 import it.sunw.widget.alerts.AlertRepository
 import it.sunw.widget.alerts.AlertZones
 import it.sunw.widget.alerts.Bulletin
@@ -121,5 +123,50 @@ class AlertsTest {
         val again = Robolectric.buildActivity(MainActivity::class.java).setup().get()
         org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
         assertEquals(View.GONE, again.findViewById<android.widget.ImageView>(R.id.weather_alert).visibility)
+    }
+
+    private fun notifications() =
+        org.robolectric.Shadows.shadowOf(context.getSystemService(android.app.NotificationManager::class.java)).allNotifications
+
+    @Test
+    fun notifiesOncePerDayAndLevelForThePlacesZoneOnly() {
+        org.robolectric.Shadows.shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(android.Manifest.permission.POST_NOTIFICATIONS)
+        val today = LocalDate.now()
+        val parma = Place(44.80, 10.33, automatic = false, name = "Parma")
+        val orange = Bulletin.parse(parmaCap(today))
+        assertEquals(1, AlertNotifier.check(context, orange, parma, today))
+        assertEquals(1, notifications().size)
+        assertTrue(notifications()[0].extras.getCharSequence(android.app.Notification.EXTRA_TITLE)!!.contains("Parma"))
+        // The same alert in a later bulletin: nothing new.
+        assertEquals(0, AlertNotifier.check(context, orange, parma, today))
+        // Raised to red: notified again.
+        val red = Bulletin.parse(parmaCap(today).replace("MODERATA", "ELEVATA").replace("ARANCIONE", "ROSSA"))
+        assertEquals(1, AlertNotifier.check(context, red, parma, today))
+        // Rome is in another zone: the Parma bulletin says nothing about it.
+        val rome = Place(41.9028, 12.4964, automatic = false, name = "Roma")
+        assertEquals(0, AlertNotifier.check(context, red, rome, today))
+    }
+
+    @Test
+    fun noNotificationWhenTurnedOffOrAlreadyOnScreen() {
+        org.robolectric.Shadows.shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(android.Manifest.permission.POST_NOTIFICATIONS)
+        val today = LocalDate.now()
+        val parma = Place(44.80, 10.33, automatic = false, name = "Parma")
+        val bulletin = Bulletin.parse(parmaCap(today))
+        // Seen in the app: marked, not notified, and not notified later either.
+        assertEquals(0, AlertNotifier.check(context, bulletin, parma, today, post = false))
+        assertEquals(0, AlertNotifier.check(context, bulletin, parma, today))
+        AlertNotifier.setEnabled(context, false)
+        val red = Bulletin.parse(parmaCap(today).replace("MODERATA", "ELEVATA").replace("ARANCIONE", "ROSSA"))
+        assertEquals(0, AlertNotifier.check(context, red, parma, today))
+        assertTrue(notifications().isEmpty())
+        assertTrue(!AlertJobService.isScheduled(context))
+    }
+
+    @Test
+    fun openingTheAppSchedulesTheBackgroundCheck() {
+        LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
+        Robolectric.buildActivity(MainActivity::class.java).setup()
+        assertTrue(AlertJobService.isScheduled(context))
     }
 }

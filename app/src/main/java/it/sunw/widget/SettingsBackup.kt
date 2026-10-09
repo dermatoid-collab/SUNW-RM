@@ -1,11 +1,12 @@
 package it.sunw.widget
 
 import android.content.Context
+import it.sunw.widget.alerts.AlertNotifier
 import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * All user settings as one JSON document: place, favourites and appearance. Used by
+ * All user settings as one JSON document: place, favourites, appearance and alert notifications. Used by
  * "Export / Import settings" so they survive a reinstall or a new phone.
  */
 object SettingsBackup {
@@ -32,6 +33,7 @@ object SettingsBackup {
                 .put("curve", appearance.curveStyle.key)
                 .put("accent", appearance.accent.key)
                 .put("theme", appearance.theme.key))
+            .put("alerts", JSONObject().put("notify", AlertNotifier.isEnabled(context)))
             .toString(2)
     }
 
@@ -60,5 +62,6 @@ object SettingsBackup {
             Accent.values().firstOrNull { it.key == a.optString("accent") }?.let { store.accent = it }
             Theme.values().firstOrNull { it.key == a.optString("theme") }?.let { store.theme = it }
         }
+        root.optJSONObject("alerts")?.let { AlertNotifier.setEnabled(context, it.optBoolean("notify", true)) }
     }
 }
