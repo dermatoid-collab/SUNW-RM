@@ -40,11 +40,11 @@
                 android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:ellipsize="end"
-                android:gravity="center"
+                android:gravity="end|center_vertical"
                 android:maxLines="1"
                 android:textSize="17sp" />
 
-            <!-- Place, short date (centred in the space between) and the button share the
+            <!-- Place, date (right-aligned beside the button) and the button share the
                  vertical centre line. -->
             <ImageButton
                 android:id="@+id/settings"
