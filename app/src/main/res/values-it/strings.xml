@@ -140,18 +140,12 @@
     <string name="detail_no_data">Previsioni non ancora scaricate: apri la pagina principale con la connessione attiva.</string>
     <string name="rainspot_label">Pioggia nei dintorni</string>
     <string name="sm_back">Indietro</string>
-    <string name="sm_subtitle">%1$s · %2$s</string>
     <string name="sm_today">Oggi</string>
     <string name="sm_today_lower">oggi</string>
     <plurals name="sm_in_days">
         <item quantity="one">tra %d giorno</item>
         <item quantity="many">tra %d giorni</item>
         <item quantity="other">tra %d giorni</item>
-    </plurals>
-    <plurals name="sm_days_ago">
-        <item quantity="one">%d giorno fa</item>
-        <item quantity="many">%d giorni fa</item>
-        <item quantity="other">%d giorni fa</item>
     </plurals>
     <string name="sm_useful">Luce utile</string>
     <string name="sm_dawn">Mattino</string>

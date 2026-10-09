@@ -48,7 +48,8 @@ class SunMoonActivityTest {
     fun todayShowsEverySectionAndTheNowCursor() {
         val activity = open()
         assertEquals(0, activity.offset)
-        assertTrue(activity.findViewById<TextView>(R.id.sm_subtitle).text.startsWith("Parma"))
+        assertEquals("Parma", activity.findViewById<TextView>(R.id.sm_place).text.toString())
+        assertTrue(activity.findViewById<TextView>(R.id.sm_date).text.isNotEmpty())
         assertTrue(activity.findViewById<TextView>(R.id.sm_sunrise).text.contains(":"))
         assertTrue(activity.findViewById<TextView>(R.id.sm_rise_az).text.contains("°"))
         assertTrue(activity.findViewById<TextView>(R.id.sm_useful).text.contains("–"))
@@ -68,7 +69,6 @@ class SunMoonActivityTest {
         // Tabs are centred on the chosen day: the last one is three days ahead.
         activity.findViewById<LinearLayout>(R.id.sm_tabs).getChildAt(6).performClick()
         assertEquals(3, activity.offset)
-        assertTrue(activity.findViewById<TextView>(R.id.sm_subtitle).text.contains("3"))
 
         activity.select(-182)
         assertEquals(0, activity.findViewById<SeekBar>(R.id.sm_slider).progress)
@@ -109,7 +109,23 @@ class SunMoonActivityTest {
             return false
         }
         assertTrue(inside(R.id.sm_sun_card))
-        assertTrue(!inside(R.id.sm_title))
+        assertTrue(!inside(R.id.sm_date))
         assertTrue(!inside(R.id.sm_slider))
+    }
+
+    @Test
+    fun swipingRightGoesBack() {
+        val controller = Robolectric.buildActivity(SunMoonActivity::class.java).setup()
+        val activity = controller.get()
+        // Start on the Moon card, away from the curve, the year strip and the slider.
+        val r = android.graphics.Rect().also { activity.findViewById<android.view.View>(R.id.sm_moon_card).getGlobalVisibleRect(it) }
+        val y = r.exactCenterY()
+        val density = activity.resources.displayMetrics.density
+        val x0 = 10 * density
+        fun event(action: Int, x: Float, t: Long) = android.view.MotionEvent.obtain(0, t, action, x, y, 0).also { it.setLocation(x, y) }
+        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_DOWN, x0, 0))
+        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_MOVE, x0 + 80 * density, 40))
+        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_UP, x0 + 160 * density, 80))
+        assertTrue(activity.isFinishing)
     }
 }

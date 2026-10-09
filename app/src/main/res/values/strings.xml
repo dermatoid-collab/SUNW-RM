@@ -140,16 +140,11 @@
     <string name="detail_no_data">No forecast downloaded yet: open the main page while online.</string>
     <string name="rainspot_label">Rain around</string>
     <string name="sm_back">Back</string>
-    <string name="sm_subtitle">%1$s · %2$s</string>
     <string name="sm_today">Today</string>
     <string name="sm_today_lower">today</string>
     <plurals name="sm_in_days">
         <item quantity="one">in %d day</item>
         <item quantity="other">in %d days</item>
-    </plurals>
-    <plurals name="sm_days_ago">
-        <item quantity="one">%d day ago</item>
-        <item quantity="other">%d days ago</item>
     </plurals>
     <string name="sm_useful">Useful light</string>
     <string name="sm_dawn">Dawn</string>

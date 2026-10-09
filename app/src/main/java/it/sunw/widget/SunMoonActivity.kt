@@ -10,7 +10,10 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.util.TypedValue
+import android.graphics.Rect
+import android.view.GestureDetector
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.ImageButton
@@ -25,6 +28,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.tan
 
@@ -73,6 +77,35 @@ class SunMoonActivity : Activity() {
         render()
     }
 
+    /** A fling from left to right goes back, as on the weather day page's swipe between days. */
+    private val swipeBack by lazy {
+        GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+                val start = e1 ?: return false
+                val dx = e2.x - start.x
+                val dy = e2.y - start.y
+                return dx >= dp(SWIPE_MIN_DP) && dx >= 1.5f * abs(dy) && velocityX >= SWIPE_MIN_VELOCITY && !startsOnControl(start)
+            }
+        })
+    }
+
+    /** The curve, the year strip and the slider use horizontal drags themselves. */
+    private fun startsOnControl(e: MotionEvent): Boolean = listOf(R.id.sm_curve, R.id.sm_year, R.id.sm_slider).any { id ->
+        val r = Rect()
+        findViewById<View>(id).getGlobalVisibleRect(r) && r.contains(e.rawX.toInt(), e.rawY.toInt())
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (swipeBack.onTouchEvent(ev)) {
+            // Let the page know the gesture ended, then leave with the usual "back" animation.
+            ev.action = MotionEvent.ACTION_CANCEL
+            super.dispatchTouchEvent(ev)
+            finish()
+            return true
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(STATE_OFFSET, offset)
@@ -86,8 +119,13 @@ class SunMoonActivity : Activity() {
             setColorFilter(palette.text)
             setOnClickListener { finish() }
         }
-        findViewById<TextView>(R.id.sm_title).setTextColor(palette.text)
-        findViewById<TextView>(R.id.sm_subtitle).setTextColor(palette.textSecondary)
+        findViewById<TextView>(R.id.sm_place).apply {
+            text = MainActivity.placeLabel(this@SunMoonActivity, place)
+            setTextColor(palette.text)
+            // Leave room for the date beside a long place name.
+            maxWidth = (resources.displayMetrics.widthPixels * 0.5f).toInt()
+        }
+        findViewById<TextView>(R.id.sm_date).setTextColor(palette.textSecondary)
         // Same background as the sun tile on the main page.
         findViewById<View>(R.id.sm_sun_card).setBackgroundResource(palette.theme.background)
         findViewById<View>(R.id.sm_moon_card).background = card(palette.cardBackground)
@@ -202,19 +240,11 @@ class SunMoonActivity : Activity() {
         findViewById<TextView>(R.id.sm_today).visibility = if (offset == 0) View.INVISIBLE else View.VISIBLE
     }
 
+    /** "Fri 9 Oct" as on the main page; the year only when it isn't this year's. */
     private fun showHeader() {
-        findViewById<TextView>(R.id.sm_title).text =
-            // ▾: tapping the date opens the date picker.
-            DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.getDefault()).format(date).replaceFirstChar { it.titlecase() } + " ▾"
-        findViewById<TextView>(R.id.sm_subtitle).text =
-            getString(R.string.sm_subtitle, MainActivity.placeLabel(this, place), relative(offset))
-    }
-
-    /** "today", "in 12 days", "30 days ago". */
-    private fun relative(days: Int): String = when {
-        days == 0 -> getString(R.string.sm_today_lower)
-        days > 0 -> resources.getQuantityString(R.plurals.sm_in_days, days, days)
-        else -> resources.getQuantityString(R.plurals.sm_days_ago, -days, -days)
+        val pattern = if (date.year == today.year) "EEE d MMM" else "EEE d MMM yyyy"
+        findViewById<TextView>(R.id.sm_date).text = DateTimeFormatter.ofPattern(pattern, Locale.getDefault()).format(date)
+            .replace(".", "").replaceFirstChar { it.titlecase() }
     }
 
     private fun time(t: Instant?) = t?.let { Formatters.time(this, it, zone) } ?: DASH
@@ -435,6 +465,8 @@ class SunMoonActivity : Activity() {
         const val RANGE_DAYS = 182
         private const val STATE_OFFSET = "offset"
         private const val SLIDE_FRACTION = 0.25f
+        private const val SWIPE_MIN_DP = 80
+        private const val SWIPE_MIN_VELOCITY = 600f
         private const val DASH = "—"
         private const val MOON_LIT = 0xFFECE6D2.toInt()
     }

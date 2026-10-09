@@ -7,13 +7,15 @@
     android:fitsSystemWindows="true"
     android:orientation="vertical">
 
+        <!-- Same look as the main page: place on the left, short date on the right (tap it to
+             pick another date). -->
         <LinearLayout
             android:id="@+id/sm_header"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="56dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="8dp"
+            android:paddingStart="4dp"
             android:paddingEnd="12dp">
 
             <ImageButton
@@ -24,36 +26,29 @@
                 android:contentDescription="@string/sm_back"
                 android:src="@drawable/ic_arrow_back" />
 
-            <!-- Tap the date to pick another one. -->
-            <LinearLayout
+            <TextView
+                android:id="@+id/sm_place"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-light"
+                android:maxLines="1"
+                android:textSize="28sp"
+                android:translationY="-4dp" />
+
+            <TextView
                 android:id="@+id/sm_date"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:background="?android:attr/selectableItemBackground"
-                android:gravity="center_vertical"
-                android:orientation="vertical"
-                android:paddingHorizontal="4dp">
-
-                <TextView
-                    android:id="@+id/sm_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:fontFamily="sans-serif-light"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:textSize="19sp" />
-
-                <TextView
-                    android:id="@+id/sm_subtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                android:gravity="end|center_vertical"
+                android:maxLines="1"
+                android:paddingHorizontal="4dp"
+                android:textSize="17sp"
+                android:translationY="-3dp" />
         </LinearLayout>
 
         <ScrollView
