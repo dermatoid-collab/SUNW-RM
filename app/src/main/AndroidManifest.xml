@@ -28,6 +28,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".weather.MeteogramActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".SunMoonActivity"
             android:exported="false" />
 

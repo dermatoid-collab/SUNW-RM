@@ -78,7 +78,25 @@ class WeatherCard(private val activity: Activity) {
             })
         }
 
+        showTodaySpot(today.rainspot)
         showWeek(palette, forecast.days.filter { it.date.isAfter(today.date) }.take(DAYS))
+    }
+
+    /** Today's rainspot beside the pills, sized to their height; tap → radar and meteogram. */
+    private fun showTodaySpot(spot: String?) {
+        val view = find<ImageView>(R.id.weather_today_spot)
+        if (spot == null) {
+            view.visibility = View.GONE
+            return
+        }
+        view.visibility = View.VISIBLE
+        view.setOnClickListener { activity.startActivity(Intent(activity, MeteogramActivity::class.java)) }
+        val pills = find<View>(R.id.weather_today_pills)
+        pills.post {
+            val size = pills.height.takeIf { it > 0 } ?: dp(52)
+            view.layoutParams = view.layoutParams.apply { width = size; height = size }
+            view.setImageBitmap(Rainspot.draw(size, spot))
+        }
     }
 
     /** Following days on one row: icon, max/min, weekday, dd/MM. Each column opens the day. */

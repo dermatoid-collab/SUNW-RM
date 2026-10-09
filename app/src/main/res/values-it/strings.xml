@@ -188,4 +188,8 @@
         <item>S</item><item>SSO</item><item>SO</item><item>OSO</item>
         <item>O</item><item>ONO</item><item>NO</item><item>NNO</item>
     </string-array>
+    <string name="mg_title">Meteogramma</string>
+    <string name="mg_subtitle">%1$s · prossimi 7 giorni</string>
+    <string name="mg_legend">Temperatura su giorno/notte · pioggia mm/h (più intensa = più probabile) · vento km/h e direzione · tocca un giorno per aprirlo</string>
+    <string name="mg_open">Radar e meteogramma</string>
 </resources>

@@ -186,4 +186,8 @@
         <item>S</item><item>SSW</item><item>SW</item><item>WSW</item>
         <item>W</item><item>WNW</item><item>NW</item><item>NNW</item>
     </string-array>
+    <string name="mg_title">Meteogram</string>
+    <string name="mg_subtitle">%1$s · next 7 days</string>
+    <string name="mg_legend">Temperature over day/night · rain mm/h (stronger = more likely) · wind km/h and direction · tap a day to open it</string>
+    <string name="mg_open">Radar and meteogram</string>
 </resources>

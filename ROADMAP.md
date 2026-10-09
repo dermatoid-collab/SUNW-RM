@@ -3,7 +3,10 @@
 Idee concordate ma non ancora sviluppate, ispirate all'app Meteoblue. Ordine proposto:
 meteogramma → allerte → radar. Ogni funzione in un commit separato, da provare sul telefono.
 
-## 1. Meteogramma 7 giorni
+## 1. Meteogramma 7 giorni — prima versione sviluppata
+
+Implementato in `MeteogramActivity`/`MeteogramView`: si apre toccando il mirino rainSPOT di oggi
+nella tile meteo della pagina principale (a sinistra delle pillole max/min).
 
 - **Dati:** già presenti nel pacchetto MeteoBlue `basic-1h` che scarichiamo ogni ora
   (temperatura, precipitazione, vento ora per ora). Nessun servizio nuovo.
@@ -31,7 +34,8 @@ meteogramma → allerte → radar. Ogni funzione in un commit separato, da prova
   - Alternative gratuite: RainViewer (radar mondiale, ultime ~2 h + previsione 30 min;
     condizioni del servizio gratuito cambiate di recente) o radar della Protezione Civile
     (solo Italia, dati aperti), con mappa di base OpenStreetMap.
-- **Dove:** pulsante sulla card meteo → pagina radar animata, centrata sulla località.
+- **Dove:** nella stessa pagina del meteogramma (mirino di oggi → radar + meteogramma), sopra il
+  meteogramma. Fonte ancora da scegliere con l'utente.
 
 ## 4. Pagina «Sole e Luna per data» — prima versione sviluppata
 
