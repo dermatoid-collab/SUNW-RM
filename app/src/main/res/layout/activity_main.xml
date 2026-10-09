@@ -54,6 +54,14 @@
                 android:src="@drawable/ic_settings" />
         </LinearLayout>
 
+        <!-- The real 4×2 widget, rendered from the same RemoteViews. -->
+        <FrameLayout
+            android:id="@+id/widget_container"
+            android:layout_width="match_parent"
+            android:layout_height="188dp"
+            android:layout_marginHorizontal="14dp"
+            android:layout_marginTop="12dp" />
+
         <!-- Weather (MeteoBlue): today on top, the next days below. Rows are filled in code.
              The status line is shown only while loading or on errors. -->
         <LinearLayout
@@ -61,6 +69,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="14dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/card_background"
             android:orientation="vertical"
             android:paddingHorizontal="18dp"
@@ -145,14 +154,6 @@
                 android:gravity="center_horizontal"
                 android:textSize="11sp" />
         </LinearLayout>
-
-        <!-- The real 4×2 widget, rendered from the same RemoteViews. -->
-        <FrameLayout
-            android:id="@+id/widget_container"
-            android:layout_width="match_parent"
-            android:layout_height="188dp"
-            android:layout_marginHorizontal="14dp"
-            android:layout_marginTop="12dp" />
 
         <LinearLayout
             android:id="@+id/moon_card"

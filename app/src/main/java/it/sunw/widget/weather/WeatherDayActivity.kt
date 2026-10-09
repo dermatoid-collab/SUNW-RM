@@ -267,7 +267,7 @@ class WeatherDayActivity : Activity() {
         val spot = day.rainspot
         findViewById<View>(R.id.day_rainspot_box).visibility = if (spot != null) View.VISIBLE else View.GONE
         if (spot != null) {
-            findViewById<ImageView>(R.id.day_rainspot).setImageBitmap(Rainspot.draw(dp(84), spot))
+            findViewById<ImageView>(R.id.day_rainspot).setImageBitmap(Rainspot.draw(dp(64), spot))
             findViewById<TextView>(R.id.day_rainspot_label).setTextColor(palette.textSecondary)
         }
     }
