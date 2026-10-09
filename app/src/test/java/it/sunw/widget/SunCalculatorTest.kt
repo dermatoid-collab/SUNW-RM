@@ -65,4 +65,63 @@ class SunCalculatorTest {
         val el = SunCalculator.elevation(day.solarNoon, 44.8015, 10.3279)
         assertEquals(45.2, el, 0.5)
     }
+
+    @Test
+    fun azimuthPointsEastAtEquinoxSunriseAndSouthAtNoon() {
+        val zone = ZoneId.of("Europe/Rome")
+        val day = normal("2026-03-20", 44.8015, 10.3279, zone)
+        assertEquals(90.0, SunCalculator.azimuth(day.sunrise, 44.8015, 10.3279), 2.0)
+        assertEquals(180.0, SunCalculator.azimuth(day.solarNoon, 44.8015, 10.3279), 0.5)
+        assertEquals(270.0, SunCalculator.azimuth(day.sunset, 44.8015, 10.3279), 2.0)
+        // Summer: rises well north of east (Parma, June: cos Az ≈ sin δ / cos φ → about 55°).
+        val june = normal("2026-06-21", 44.8015, 10.3279, zone)
+        assertEquals(55.0, SunCalculator.azimuth(june.sunrise, 44.8015, 10.3279), 2.0)
+    }
+
+    @Test
+    fun crossingsMatchTheirAltitudeAndOrder() {
+        val zone = ZoneId.of("Europe/Rome")
+        val date = LocalDate.parse("2026-10-09")
+        val lat = 44.8015
+        val lon = 10.3279
+        val day = SunCalculator.day(date, lat, lon, zone) as SunCalculator.Day.Normal
+        val horizon = SunCalculator.crossing(date, lat, lon, zone, SunCalculator.HORIZON_DEG)
+        assertEquals(day.sunrise.epochSecond.toDouble(), horizon.morning!!.epochSecond.toDouble(), 5.0)
+        val altitudes = listOf(-18.0, -12.0, -6.0, -4.0, 6.0)
+        for (alt in altitudes) {
+            val c = SunCalculator.crossing(date, lat, lon, zone, alt)
+            assertEquals(alt, SunCalculator.elevation(c.morning!!, lat, lon), 0.05)
+            assertEquals(alt, SunCalculator.elevation(c.evening!!, lat, lon), 0.05)
+        }
+        val mornings = altitudes.map { SunCalculator.crossing(date, lat, lon, zone, it).morning!! }
+        assertEquals(mornings.sorted(), mornings)
+        // Civil twilight lasts about half an hour at this latitude in October.
+        val civil = SunCalculator.crossing(date, lat, lon, zone, -6.0)
+        val minutes = java.time.Duration.between(civil.morning, day.sunrise).toMinutes()
+        assertTrue("civil twilight $minutes min", minutes in 26..36)
+    }
+
+    @Test
+    fun noAstronomicalNightInLondonAtMidsummer() {
+        val zone = ZoneId.of("Europe/London")
+        val astro = SunCalculator.crossing(LocalDate.parse("2024-06-21"), 51.4769, 0.0, zone, -18.0)
+        assertEquals(null, astro.morning)
+        assertEquals(null, astro.evening)
+        val nautical = SunCalculator.crossing(LocalDate.parse("2024-06-21"), 51.4769, 0.0, zone, -12.0)
+        assertTrue(nautical.morning != null && nautical.evening != null)
+    }
+
+    @Test
+    fun seasons2026() {
+        // USNO: equinoxes and solstices of 2026 (UTC).
+        val from = Instant.parse("2026-01-01T00:00:00Z")
+        fun check(expected: String, season: SunCalculator.Season) {
+            val diff = ChronoUnit.MINUTES.between(Instant.parse(expected), SunCalculator.nextSeason(season, from))
+            assertTrue("$season off by $diff min", kotlin.math.abs(diff) <= 15)
+        }
+        check("2026-03-20T14:46:00Z", SunCalculator.Season.MARCH_EQUINOX)
+        check("2026-06-21T08:24:00Z", SunCalculator.Season.JUNE_SOLSTICE)
+        check("2026-09-23T00:05:00Z", SunCalculator.Season.SEPTEMBER_EQUINOX)
+        check("2026-12-21T20:50:00Z", SunCalculator.Season.DECEMBER_SOLSTICE)
+    }
 }

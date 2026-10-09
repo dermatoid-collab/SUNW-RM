@@ -50,17 +50,63 @@ object SunCalculator {
         val noon = solarNoon(localNoon, longitude)
         val latRad = Math.toRadians(latitude)
 
-        val cosH0AtNoon = cosHourAngle(latRad, solarState(noon).declinationRad)
+        val cosH0AtNoon = cosHourAngle(latRad, solarState(noon).declinationRad, HORIZON_DEG)
         if (cosH0AtNoon > 1) return Day.PolarNight(date, noon)
         if (cosH0AtNoon < -1) return Day.PolarDay(date, noon)
 
-        val rise = refineEvent(noon, latRad, longitude, rising = true)
-        val set = refineEvent(noon, latRad, longitude, rising = false)
+        val rise = refineEvent(noon, latRad, longitude, rising = true, HORIZON_DEG)
+        val set = refineEvent(noon, latRad, longitude, rising = false, HORIZON_DEG)
         if (rise == null || set == null) {
             // Borderline polar case: the event vanishes while refining.
             return if (cosH0AtNoon > 0) Day.PolarNight(date, noon) else Day.PolarDay(date, noon)
         }
         return Day.Normal(date, noon, rise, set)
+    }
+
+    /** Morning and evening times the Sun's centre crosses [altitudeDeg]; null when it doesn't that day. */
+    data class Crossing(val morning: Instant?, val evening: Instant?)
+
+    /**
+     * When the Sun passes [altitudeDeg] on [date]: −6/−12/−18 for the civil/nautical/astronomical
+     * twilights, −4 and +6 for the blue and golden hours.
+     */
+    fun crossing(date: LocalDate, latitude: Double, longitude: Double, zone: ZoneId, altitudeDeg: Double): Crossing {
+        val localNoon = date.atTime(LocalTime.NOON).atZone(zone).toInstant()
+        val noon = solarNoon(localNoon, longitude)
+        val latRad = Math.toRadians(latitude)
+        if (cosHourAngle(latRad, solarState(noon).declinationRad, altitudeDeg) !in -1.0..1.0) return Crossing(null, null)
+        return Crossing(
+            refineEvent(noon, latRad, longitude, rising = true, altitudeDeg),
+            refineEvent(noon, latRad, longitude, rising = false, altitudeDeg),
+        )
+    }
+
+    /** Solar azimuth in degrees clockwise from north (90 = east), at [instant]. */
+    fun azimuth(instant: Instant, latitude: Double, longitude: Double): Double {
+        val s = solarState(instant)
+        val latRad = Math.toRadians(latitude)
+        val ha = Math.toRadians(hourAngleDeg(instant, longitude, s))
+        val az = Math.toDegrees(
+            kotlin.math.atan2(sin(ha), cos(ha) * sin(latRad) - tan(s.declinationRad) * cos(latRad))
+        )
+        return norm360(az + 180)
+    }
+
+    /** Equinoxes and solstices, by the Sun's apparent ecliptic longitude. */
+    enum class Season(val longitude: Double) { MARCH_EQUINOX(0.0), JUNE_SOLSTICE(90.0), SEPTEMBER_EQUINOX(180.0), DECEMBER_SOLSTICE(270.0) }
+
+    /** The first time after [from] the Sun reaches [season]'s longitude (within a minute). */
+    fun nextSeason(season: Season, from: Instant): Instant {
+        fun offset(t: Long) = wrap180(apparentLongitude(Instant.ofEpochSecond(t)) - season.longitude)
+        var a = from.epochSecond
+        // About 1°/day: step a day at a time until the target is passed from below.
+        while (!(offset(a) < 0 && offset(a + DAY_S) >= 0)) a += DAY_S
+        var b = a + DAY_S
+        while (b - a > 30) {
+            val m = (a + b) / 2
+            if (offset(m) < 0) a = m else b = m
+        }
+        return Instant.ofEpochSecond(b)
     }
 
     /** Geometric solar elevation (degrees, no refraction) at [instant]. */
@@ -81,11 +127,11 @@ object SunCalculator {
         return t
     }
 
-    private fun refineEvent(noon: Instant, latRad: Double, longitude: Double, rising: Boolean): Instant? {
+    private fun refineEvent(noon: Instant, latRad: Double, longitude: Double, rising: Boolean, altitudeDeg: Double): Instant? {
         var t = noon.plusSeconds(if (rising) -6 * 3600L else 6 * 3600L)
         repeat(5) {
             val s = solarState(t)
-            val cosH0 = cosHourAngle(latRad, s.declinationRad)
+            val cosH0 = cosHourAngle(latRad, s.declinationRad, altitudeDeg)
             if (cosH0 !in -1.0..1.0) return null
             val h0 = Math.toDegrees(acos(cosH0))
             val target = if (rising) -h0 else h0
@@ -96,8 +142,8 @@ object SunCalculator {
         return t
     }
 
-    private fun cosHourAngle(latRad: Double, declRad: Double): Double =
-        (sin(Math.toRadians(HORIZON_DEG)) - sin(latRad) * sin(declRad)) / (cos(latRad) * cos(declRad))
+    private fun cosHourAngle(latRad: Double, declRad: Double, altitudeDeg: Double): Double =
+        (sin(Math.toRadians(altitudeDeg)) - sin(latRad) * sin(declRad)) / (cos(latRad) * cos(declRad))
 
     /** Local hour angle in degrees, wrapped to [-180, 180). */
     private fun hourAngleDeg(instant: Instant, longitude: Double, s: SolarState): Double {
@@ -105,6 +151,17 @@ object SunCalculator {
         val trueSolarMinutes = utcMinutes + s.equationOfTimeMin + 4 * longitude
         return wrap180(trueSolarMinutes / 4 - 180)
     }
+
+    private fun apparentLongitude(instant: Instant): Double {
+        val t = julianCenturies(instant)
+        val l0 = norm360(280.46646 + t * (36_000.76983 + t * 0.0003032))
+        val m = Math.toRadians(357.52911 + t * (35_999.05029 - 0.0001537 * t))
+        val center = sin(m) * (1.914602 - t * (0.004817 + 0.000014 * t)) + sin(2 * m) * (0.019993 - 0.000101 * t) + sin(3 * m) * 0.000289
+        return norm360(l0 + center - 0.00569 - 0.00478 * sin(Math.toRadians(125.04 - 1934.136 * t)))
+    }
+
+    private fun julianCenturies(instant: Instant): Double =
+        (instant.epochSecond / 86_400.0 + 2_440_587.5 - 2_451_545.0) / 36_525.0
 
     private fun solarState(instant: Instant): SolarState {
         val jd = instant.epochSecond / 86_400.0 + 2_440_587.5
@@ -132,6 +189,8 @@ object SunCalculator {
         )
         return SolarState(declination, eqTime)
     }
+
+    private const val DAY_S = 86_400L
 
     private fun norm360(x: Double) = x - 360 * floor(x / 360)
     private fun wrap180(x: Double) = norm360(x + 180) - 180
