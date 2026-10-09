@@ -40,9 +40,16 @@ meteogramma → allerte → radar. Ogni funzione in un commit separato, da prova
 - **Apertura:** tocco sulla tile del sole o della luna nella pagina principale.
 - **Barra in alto:** freccia indietro + data scelta per esteso; sotto, località e distanza da
   oggi ("today", "in 12 days", "30 days ago").
-- **Tile del sole** per la data scelta: curva colorata per elevazione, alba, tramonto, durata e
-  differenza col giorno prima, mezzogiorno solare con altezza massima, ora d'oro; pallino del
-  Sole solo per oggi.
+- **Tile del sole** per la data scelta: curva colorata per elevazione con fasce dei crepuscoli
+  sotto l'orizzonte e barrette di ora blu/d'oro; alba e tramonto con azimut (es. "101° ESE");
+  durata e differenza col giorno prima; "luce utile" (alba–tramonto civile); tabella dei
+  crepuscoli civile/nautico/astronomico + mezzogiorno con altezza massima; bussola con le
+  direzioni di alba e tramonto; ora blu e ora d'oro di mattina e sera; confronto con oggi e
+  con i solstizi. Curva interattiva: toccando/trascinando mostra ora, altezza, direzione e
+  lunghezza dell'ombra; per oggi il cursore parte da "adesso".
+- **Striscia dell'anno** (tra la luna e il selettore): durata del giorno lungo l'intervallo del
+  cursore, segni di solstizi/equinozi, punto sulla data scelta, prossimo evento
+  ("Winter solstice 21/12 · in 73 days · −1h 25m of daylight").
 - **Tile della luna** per la data scelta: fase disegnata, %, nome, sorge/tramonta, prossime fasi.
 - **Sotto le tile:** schede dei giorni nello stile della pagina meteo (7 giorni centrati sulla
   data scelta, puntino su oggi) e **cursore** per scorrere la data dinamicamente (±6 mesi,
