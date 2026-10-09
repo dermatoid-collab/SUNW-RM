@@ -12,6 +12,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
+import android.widget.ScrollView
 import android.widget.TextView
 import it.sunw.widget.weather.WeatherCard
 import it.sunw.widget.weather.WeatherRepository
@@ -54,6 +55,38 @@ class MainActivity : Activity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
         findViewById<TextView>(R.id.place).setOnClickListener { showPlaces(it) }
+        fitToScreen()
+    }
+
+    /** Extra vertical padding given to the sun tile so the page fills the screen exactly. */
+    private var sunExtraPx = 0
+
+    /**
+     * Whenever the page is laid out, the space left below the last tile goes into the sun tile's
+     * top and bottom padding (up to [MAX_SUN_EXTRA_DP] each), so the page ends at the screen edge.
+     */
+    private fun fitToScreen() {
+        val page = findViewById<ScrollView>(R.id.page)
+        page.viewTreeObserver.addOnGlobalLayoutListener {
+            val content = page.getChildAt(0) ?: return@addOnGlobalLayoutListener
+            if (page.height == 0) return@addOnGlobalLayoutListener
+            val natural = content.height - 2 * sunExtraPx
+            val free = page.height - page.paddingTop - page.paddingBottom - natural
+            val extra = (free / 2).coerceIn(0, dp(MAX_SUN_EXTRA_DP))
+            if (extra != sunExtraPx) {
+                sunExtraPx = extra
+                applySunPadding()
+            }
+        }
+    }
+
+    private fun applySunPadding() {
+        val container = findViewById<FrameLayout>(R.id.widget_container)
+        container.layoutParams = container.layoutParams.apply { height = dp(SUN_TILE_DP) + 2 * sunExtraPx }
+        container.getChildAt(0)?.let {
+            val pad = dp(EMBEDDED_PADDING_V_DP) + sunExtraPx
+            it.setPadding(it.paddingLeft, pad, it.paddingRight, pad)
+        }
     }
 
     override fun onResume() {
@@ -97,9 +130,8 @@ class MainActivity : Activity() {
         val views = WidgetRenderer(this, palette).render(WidgetRenderer.Size(widthDp, WIDGET_HEIGHT_DP - COUNTDOWN_ROW_DP), place, now, zone, clickable = false)
         container.removeAllViews()
         val widget = views.apply(this, container)
-        // Less vertical padding than on the home screen, so the page fits on one screen.
-        widget.setPadding(widget.paddingLeft, dp(EMBEDDED_PADDING_V_DP), widget.paddingRight, dp(EMBEDDED_PADDING_V_DP))
         container.addView(widget)
+        applySunPadding()
         setUpCountdowns(widget, palette, place, now, zone)
 
         showMoon(palette, place, now, zone)
@@ -284,9 +316,13 @@ class MainActivity : Activity() {
     companion object {
         private const val REFRESH_MS = 60_000L
         private const val RETRY_AFTER_FAILURE_S = 300L
-        /** Size the widget is rendered at (home-screen padding 14 dp); shown 188 dp tall with 12 dp padding. */
+        /** Size the widget is rendered at (home-screen padding 14 dp). */
         private const val WIDGET_HEIGHT_DP = 192
+
+        /** On the page: 188 dp tall with 12 dp padding (same drawing area), plus the fit-to-screen extra. */
+        private const val SUN_TILE_DP = 188
         private const val EMBEDDED_PADDING_V_DP = 12
+        private const val MAX_SUN_EXTRA_DP = 40
 
         /** The countdown row takes this much of the widget height; the curve gets the rest. */
         private const val COUNTDOWN_ROW_DP = 20
