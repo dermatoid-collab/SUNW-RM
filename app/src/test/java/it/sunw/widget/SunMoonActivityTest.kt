@@ -137,4 +137,18 @@ class SunMoonActivityTest {
         assertEquals(-1, activity.offset)
         assertTrue(!activity.isFinishing)
     }
+
+    @Test
+    fun draggingOnTheYearStripChangesTheWholePage() {
+        val activity = open()
+        val strip = activity.findViewById<YearStripView>(R.id.sm_year)
+        // The same call the strip makes while a finger moves along it.
+        strip.onPick!!.invoke(60)
+        assertEquals(60, activity.offset)
+        assertEquals(SunMoonActivity.RANGE_DAYS + 60, activity.findViewById<SeekBar>(R.id.sm_slider).progress)
+        val title = activity.findViewById<TextView>(R.id.sm_date).text.toString()
+        strip.onPick!!.invoke(-100)
+        assertEquals(-100, activity.offset)
+        assertTrue("the date in the bar follows", activity.findViewById<TextView>(R.id.sm_date).text.toString() != title)
+    }
 }

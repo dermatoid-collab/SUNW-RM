@@ -173,7 +173,8 @@ class SunMoonActivity : Activity() {
         }
         findViewById<YearStripView>(R.id.sm_year).apply {
             show(palette, minutes, marks, RANGE_DAYS)
-            onPick = { select(it) }
+            // Not the strip's own select(), which only moves its dot: the page must change date.
+            onPick = { this@SunMoonActivity.select(it) }
         }
     }
 
