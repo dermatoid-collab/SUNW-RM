@@ -107,15 +107,24 @@ class MeteogramTest {
         assertEquals("rain", android.net.Uri.parse(shadowOf(map).lastLoadedUrl).getQueryParameter("overlay"))
     }
 
-    /** Open-Meteo style response for yesterday and today (local time), 10 °C at midnight rising 0.5 °C an hour. */
+    /** Open-Meteo style response for yesterday and today (local time): hourly and every 15 minutes. */
     private fun pastJson(): String {
         val times = JSONArray()
         val temps = JSONArray()
+        val fineTimes = JSONArray()
+        val fineTemps = JSONArray()
         for (d in 0..1) for (h in 0 until 24) {
             times.put(today.minusDays(1L - d).atTime(h, 0).toString().take(16))
-            temps.put(10.0 + 0.5 * (d * 24 + h) % 24.0)
+            temps.put(10.0 + (0.5 * (d * 24 + h)) % 24.0)
+            for (q in 0 until 4) {
+                fineTimes.put(today.minusDays(1L - d).atTime(h, q * 15).toString().take(16))
+                fineTemps.put(10.0 + (0.5 * (d * 24 + h) + 0.125 * q) % 24.0)
+            }
         }
-        return JSONObject().put("hourly", JSONObject().put("time", times).put("temperature_2m", temps)).toString()
+        return JSONObject()
+            .put("hourly", JSONObject().put("time", times).put("temperature_2m", temps))
+            .put("minutely_15", JSONObject().put("time", fineTimes).put("temperature_2m", fineTemps))
+            .toString()
     }
 
     private fun seedPast() {
@@ -128,24 +137,58 @@ class MeteogramTest {
     }
 
     @Test
-    fun pastTemperaturesGiveTheExtremesOfTheLast24Hours() {
+    fun pastTemperaturesAreEvery15MinutesWhenAvailable() {
         val past = PastTemperatures.parse(pastJson())
         val now = today.atTime(14, 5)
-        val (min, max) = past.extremes(now)!!
-        assertTrue(min.value <= max.value)
-        assertTrue(past.last24h(now).size == 25) // from 14:00 yesterday to 14:00 today, both included
-        assertTrue(!min.time.isBefore(now.minusHours(25)) && !max.time.isAfter(now))
-        assertEquals(null, PastTemperatures.parse("""{"hourly":{"time":[],"temperature_2m":[]}}""").extremes(now))
+        val fine = past.last24h(now)
+        assertTrue(past.hasFine)
+        // From 14:05 yesterday to 14:00 today every 15 minutes: 14:15 .. 14:00 = 96 points.
+        assertEquals(96, fine.size)
+        assertEquals(today.minusDays(1).atTime(14, 15), fine.first().first)
+        assertEquals(today.atTime(14, 0), fine.last().first)
+        // Without the 15-minute series the hours are used (14:00 yesterday to 14:00 today).
+        val hourly = PastTemperatures.parse("""{"hourly":{"time":["${today.atTime(13, 0).toString().take(16)}","${today.atTime(14, 0).toString().take(16)}"],"temperature_2m":[12.5,13.0]}}""")
+        assertTrue(!hourly.hasFine)
+        assertEquals(2, hourly.last24h(now).size)
+        assertTrue(it.sunw.widget.weather.PastTemperatureRepository.url(44.8, 10.33).contains("minutely_15=temperature_2m"))
     }
 
     @Test
-    fun meteogramShowsTheLast24HoursAndTheirExtremes() {
+    fun meteogramShowsTheLast24HoursAndACardWithTheirChart() {
         seedPast()
         val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
         val chart = activity.findViewById<MeteogramView>(R.id.mg_chart)
         assertTrue(chart.leadingSlots in 1..24)
-        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.mg_stats).visibility)
-        assertTrue(activity.findViewById<android.widget.TextView>(R.id.mg_stats).text.contains("°"))
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.mg_last24).visibility)
+        val last24 = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_last24_chart)
+        assertTrue(last24.pointCount in 96..97) // 24 hours every 15 minutes
+        assertTrue(last24.minIndex >= 0 && last24.maxIndex >= 0)
+    }
+
+    @Test
+    fun withoutPastDataTheLast24HoursCardStaysHidden() {
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.mg_last24).visibility)
+    }
+
+    @Test
+    fun longPressOnTheLast24HoursChartMovesItsCursor() {
+        seedPast()
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        val chart = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_last24_chart)
+        chart.measure(View.MeasureSpec.makeMeasureSpec(1000, View.MeasureSpec.EXACTLY), View.MeasureSpec.UNSPECIFIED)
+        chart.layout(0, 0, chart.measuredWidth, chart.measuredHeight)
+        fun event(action: Int, x: Float) = android.view.MotionEvent.obtain(0, 0, action, x, 100f, 0)
+        chart.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_DOWN, 100f))
+        assertEquals(-1, chart.cursorIndex)
+        shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(1500))
+        assertTrue(chart.cursorIndex >= 0)
+        val first = chart.cursorIndex
+        chart.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_MOVE, 700f))
+        assertTrue(chart.cursorIndex > first)
+        assertTrue(chart.cursorLabel(chart.cursorIndex).second.contains("°"))
+        chart.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_UP, 700f))
+        assertEquals(-1, chart.cursorIndex)
     }
 
     @Test

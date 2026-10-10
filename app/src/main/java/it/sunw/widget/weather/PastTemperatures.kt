@@ -16,49 +16,61 @@ import java.util.concurrent.Executors
 import kotlin.math.abs
 
 /**
- * Hourly 2 m temperature of yesterday and today from Open-Meteo (no key needed), in local time at
- * the place. These are model values for the place, not a weather-station reading; the meteogram
+ * Hourly (and, where available, 15-minute) 2 m temperature of yesterday and today from Open-Meteo
+ * (no key needed), in local time at the place. These are model values for the place, not a weather-station reading; the meteogram
  * shows them dimmed to the left of "now".
  */
-class PastTemperatures(private val values: Map<LocalDateTime, Double>) {
-
-    data class Extreme(val time: LocalDateTime, val value: Double)
+class PastTemperatures(
+    private val values: Map<LocalDateTime, Double>,
+    /** The same temperatures every 15 minutes, when Open-Meteo gives them. */
+    private val fine: Map<LocalDateTime, Double> = emptyMap(),
+) {
 
     operator fun get(time: LocalDateTime): Double? = values[time]
 
     val isEmpty: Boolean get() = values.isEmpty()
 
-    /** Hours of the 24 hours up to the current one (included), oldest first. */
+    /** True when the 15-minute series is there. */
+    val hasFine: Boolean get() = fine.isNotEmpty()
+
+    /**
+     * The last 24 hours up to [now], oldest first: every 15 minutes when available, otherwise
+     * every hour (the current hour included).
+     */
     fun last24h(now: LocalDateTime): List<Pair<LocalDateTime, Double>> {
+        if (fine.isNotEmpty()) {
+            val start = now.minusHours(24)
+            return fine.entries.filter { !it.key.isBefore(start) && !it.key.isAfter(now) }
+                .sortedBy { it.key }.map { it.key to it.value }
+        }
         val end = now.truncatedTo(ChronoUnit.HOURS)
         val start = end.minusHours(24)
         return values.entries.filter { !it.key.isBefore(start) && !it.key.isAfter(end) }
             .sortedBy { it.key }.map { it.key to it.value }
     }
 
-    /** Coldest and warmest hour of the last 24 hours (the earliest one when equal), or null without data. */
-    fun extremes(now: LocalDateTime): Pair<Extreme, Extreme>? {
-        val hours = last24h(now)
-        if (hours.isEmpty()) return null
-        val min = hours.minBy { it.second }
-        val max = hours.maxBy { it.second }
-        return Extreme(min.first, min.second) to Extreme(max.first, max.second)
-    }
-
     companion object {
-        /** Parses an Open-Meteo response with `hourly=temperature_2m&timezone=auto`; throws on anything else. */
-        fun parse(json: String): PastTemperatures {
-            val root = JSONObject(json)
-            root.optString("reason").takeIf { root.optBoolean("error") && it.isNotEmpty() }?.let { throw IOException(it) }
-            val hourly = root.optJSONObject("hourly") ?: throw IOException("hourly missing")
-            val times = hourly.getJSONArray("time")
-            val temps = hourly.getJSONArray("temperature_2m")
+        private fun series(root: JSONObject, name: String): Map<LocalDateTime, Double> {
+            val block = root.optJSONObject(name) ?: return emptyMap()
+            val times = block.optJSONArray("time") ?: return emptyMap()
+            val temps = block.optJSONArray("temperature_2m") ?: return emptyMap()
             val map = LinkedHashMap<LocalDateTime, Double>()
             for (i in 0 until minOf(times.length(), temps.length())) {
                 if (temps.isNull(i)) continue
                 map[LocalDateTime.parse(times.getString(i))] = temps.getDouble(i)
             }
-            return PastTemperatures(map)
+            return map
+        }
+
+        /**
+         * Parses an Open-Meteo response with `hourly=temperature_2m` (required) and
+         * `minutely_15=temperature_2m` (optional) in the place's time zone; throws on anything else.
+         */
+        fun parse(json: String): PastTemperatures {
+            val root = JSONObject(json)
+            root.optString("reason").takeIf { root.optBoolean("error") && it.isNotEmpty() }?.let { throw IOException(it) }
+            if (root.optJSONObject("hourly") == null) throw IOException("hourly missing")
+            return PastTemperatures(series(root, "hourly"), series(root, "minutely_15"))
         }
     }
 }
@@ -129,7 +141,8 @@ class PastTemperatureRepository(context: Context) {
         fun url(latitude: Double, longitude: Double): String = String.format(
             Locale.ROOT,
             "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f" +
-                "&hourly=temperature_2m&past_days=1&forecast_days=1&timezone=auto",
+                "&hourly=temperature_2m&minutely_15=temperature_2m&past_days=1&past_minutely_15=96" +
+                "&forecast_days=1&timezone=auto",
             latitude, longitude,
         )
     }

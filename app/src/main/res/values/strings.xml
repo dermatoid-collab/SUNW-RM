@@ -185,7 +185,6 @@
     <string name="mg_subtitle">%1$s · next 7 days</string>
     <string name="mg_legend">Weather and wind (direction, km/h) every 3 hours · temperature over day/night (dimmed: the last 24 hours) · rain mm/h (stronger = more likely) · touch and hold, then drag, for the temperature at that time · tap a day to open it</string>
     <string name="weather_source_past">MeteoBlue data · updated at %1$s · last 24 h from Open-Meteo</string>
-    <string name="mg_stats">Last 24 h · min %1$s at %2$s · max %3$s at %4$s</string>
     <string name="mg_cursor_past">Open-Meteo</string>
     <string name="mg_cursor_forecast">forecast</string>
     <string name="mg_cursor_now">now</string>
@@ -283,4 +282,15 @@
     <string name="wc_open_browser">Open in browser</string>
     <string name="wc_section_note">Webcams provided by windy.com</string>
     <string name="wc_section_none">Open the full list for the nearby webcams and your own.</string>
+    <string name="l24_title">Last 24 hours</string>
+    <string name="l24_step_15">every 15 minutes</string>
+    <string name="l24_step_hour">every hour</string>
+    <string name="l24_min">Min</string>
+    <string name="l24_max">Max</string>
+    <string name="l24_range">Range</string>
+    <string name="l24_hour">Last hour</string>
+    <string name="l24_in_24h">in 24 h</string>
+    <string name="l24_now">now %1$s</string>
+    <string name="l24_now_axis">now</string>
+    <string name="l24_legend">Touch and hold, then drag: a cursor gives the temperature at that time. Values from Open-Meteo for the place (model, not a station reading).</string>
 </resources>
