@@ -23,6 +23,7 @@ import it.sunw.widget.Palette
 import it.sunw.widget.Place
 import it.sunw.widget.R
 import it.sunw.widget.webcams.ImageLoader
+import it.sunw.widget.webcams.OwnWebcamStore
 import it.sunw.widget.webcams.WebcamViewActivity
 import it.sunw.widget.webcams.WebcamsActivity
 import it.sunw.widget.webcams.WindyWebcams
@@ -134,8 +135,40 @@ class MeteogramActivity : Activity() {
             }
             setOnClickListener { startActivity(Intent(this@MeteogramActivity, WebcamsActivity::class.java)) }
         }
+        val d = resources.displayMetrics.density
+
+        // First row: the user's own webcams. They are pages, not pictures, so a tile shows the name.
+        val mineLabel = findViewById<TextView>(R.id.mg_webcams_mine_label).apply { setTextColor(palette.textSecondary) }
+        val mine = findViewById<LinearLayout>(R.id.mg_webcams_mine)
+        val own = OwnWebcamStore(this).all().take(4)
+        mineLabel.visibility = if (own.isEmpty()) View.GONE else View.VISIBLE
+        for (cam in own) {
+            mine.addView(TextView(this).apply {
+                tag = cam.url
+                text = cam.name
+                textSize = 11.5f
+                maxLines = 2
+                ellipsize = android.text.TextUtils.TruncateAt.END
+                gravity = android.view.Gravity.CENTER
+                setTextColor(palette.text)
+                setPadding((4 * d).toInt(), 0, (4 * d).toInt(), 0)
+                background = GradientDrawable().apply {
+                    cornerRadius = 10 * d
+                    setColor(Palette.blend(palette.cardBackground, android.graphics.Color.WHITE, 0.08f))
+                }
+                setOnClickListener {
+                    startActivity(Intent(context, WebcamViewActivity::class.java)
+                        .putExtra(WebcamViewActivity.EXTRA_TITLE, cam.name)
+                        .putExtra(WebcamViewActivity.EXTRA_URL, cam.url))
+                }
+            }, LinearLayout.LayoutParams(0, (52 * d).toInt(), 1f).apply { marginEnd = (8 * d).toInt() })
+        }
+
+        // Second row: the nearest Windy webcams, with their current picture.
+        val nearLabel = findViewById<TextView>(R.id.mg_webcams_near_label).apply { setTextColor(palette.textSecondary) }
         val windy = WindyWebcams()
         if (!windy.hasKey) {
+            nearLabel.visibility = View.GONE
             note.text = getString(R.string.wc_section_none)
             return
         }
@@ -145,11 +178,11 @@ class MeteogramActivity : Activity() {
                 if (isDestroyed) return@runOnUiThread
                 val cams = result.getOrNull()?.take(4).orEmpty()
                 if (cams.isEmpty()) {
+                    nearLabel.visibility = View.GONE
                     note.text = getString(R.string.wc_section_none)
                     return@runOnUiThread
                 }
                 note.text = getString(R.string.wc_section_note)
-                val d = resources.displayMetrics.density
                 for (cam in cams) {
                     row.addView(LinearLayout(this).apply {
                         orientation = LinearLayout.VERTICAL

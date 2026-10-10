@@ -104,6 +104,21 @@ class WebcamsTest {
     }
 
     @Test
+    fun theRadarPageShowsMyWebcamsAboveTheNearbyOnes() {
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        val mine = activity.findViewById<ViewGroup>(R.id.mg_webcams_mine)
+        assertEquals(4, mine.childCount)
+        assertEquals(OwnWebcamStore.DEFAULTS.map { it.url }, (0 until 4).map { mine.getChildAt(it).tag })
+        val order = listOf(R.id.mg_webcams_mine_label, R.id.mg_webcams_mine, R.id.mg_webcams_near_label, R.id.mg_webcams_row, R.id.mg_webcams_all)
+            .map { id -> activity.findViewById<View>(id).let { v -> IntArray(2).also { v.getLocationOnScreen(it) }[1] } }
+        assertEquals(order, order.sorted())
+        mine.getChildAt(1).performClick()
+        val next = shadowOf(activity).nextStartedActivity
+        assertEquals(WebcamViewActivity::class.java.name, next.component?.className)
+        assertEquals(OwnWebcamStore.DEFAULTS[1].url, next.getStringExtra(WebcamViewActivity.EXTRA_URL))
+    }
+
+    @Test
     fun withoutAWindyKeyTheNearbyTabSaysSo() {
         val activity = Robolectric.buildActivity(WebcamsActivity::class.java).setup().get()
         assertEquals(WebcamsActivity.Tab.NEAR, activity.tab)

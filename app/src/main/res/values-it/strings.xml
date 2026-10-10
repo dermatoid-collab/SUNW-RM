@@ -294,4 +294,6 @@
     <string name="l24_now">ora %1$s</string>
     <string name="l24_now_axis">ora</string>
     <string name="l24_legend">Tocco lungo e trascina: un cursore dà la temperatura in quel momento. Valori di Open-Meteo per il luogo (del modello, non di una stazione).</string>
+    <string name="wc_section_mine">Le mie webcam</string>
+    <string name="wc_section_near">Vicine</string>
 </resources>

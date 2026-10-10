@@ -293,4 +293,6 @@
     <string name="l24_now">now %1$s</string>
     <string name="l24_now_axis">now</string>
     <string name="l24_legend">Touch and hold, then drag: a cursor gives the temperature at that time. Values from Open-Meteo for the place (model, not a station reading).</string>
+    <string name="wc_section_mine">My webcams</string>
+    <string name="wc_section_near">Nearby</string>
 </resources>
