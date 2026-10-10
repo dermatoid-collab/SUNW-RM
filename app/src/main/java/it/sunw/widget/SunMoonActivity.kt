@@ -174,7 +174,8 @@ class SunMoonActivity : Activity() {
         findViewById<YearStripView>(R.id.sm_year).apply {
             show(palette, minutes, marks, RANGE_DAYS)
             // Not the strip's own select(), which only moves its dot: the page must change date.
-            onPick = { this@SunMoonActivity.select(it) }
+            // Without the slide-in, like the slider: while dragging, the page refreshes in place.
+            onPick = { this@SunMoonActivity.select(it, animate = false) }
         }
     }
 

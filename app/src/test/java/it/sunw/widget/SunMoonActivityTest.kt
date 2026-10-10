@@ -145,6 +145,8 @@ class SunMoonActivityTest {
         // The same call the strip makes while a finger moves along it.
         strip.onPick!!.invoke(60)
         assertEquals(60, activity.offset)
+        // The page stays visible while dragging: no slide-in that restarts from transparent.
+        assertEquals(1f, activity.findViewById<android.view.View>(R.id.sm_content).alpha, 0f)
         assertEquals(SunMoonActivity.RANGE_DAYS + 60, activity.findViewById<SeekBar>(R.id.sm_slider).progress)
         val title = activity.findViewById<TextView>(R.id.sm_date).text.toString()
         strip.onPick!!.invoke(-100)
