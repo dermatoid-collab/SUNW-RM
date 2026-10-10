@@ -87,6 +87,51 @@ object MoonCalculator {
         return RiseSet(rise, set)
     }
 
+    /** How long the Moon is above the horizon during a local day, and its highest point then. */
+    data class DayStats(val minutesAbove: Double, val maxAltitude: Double)
+
+    /**
+     * Scans the local day of [date] every [SCAN_STEP_S] s: minutes with the Moon above the
+     * rise/set threshold (crossings interpolated) and the highest topocentric altitude.
+     */
+    fun dayStats(date: LocalDate, latitude: Double, longitude: Double, zone: ZoneId): DayStats {
+        val start = date.atStartOfDay(zone).toInstant().epochSecond
+        val end = date.plusDays(1).atStartOfDay(zone).toInstant().epochSecond
+        var above = 0.0
+        var best = -90.0
+        var t = start
+        var f = horizonOffset(t, latitude, longitude)
+        while (t < end) {
+            val t2 = minOf(t + SCAN_STEP_S, end)
+            val f2 = horizonOffset(t2, latitude, longitude)
+            val span = (t2 - t).toDouble()
+            when {
+                (f < 0) != (f2 < 0) -> {
+                    val crossing = t + span * (-f) / (f2 - f)
+                    above += if (f < 0) t2 - crossing else crossing - t
+                }
+                f > 0 -> above += span
+            }
+            best = maxOf(best, altitude(Instant.ofEpochSecond(t2), latitude, longitude))
+            t = t2
+            f = f2
+        }
+        return DayStats(above / 60, best)
+    }
+
+    /** Every principal phase between [from] and [to], in chronological order. */
+    fun quartersBetween(from: Instant, to: Instant): List<Pair<Quarter, Instant>> {
+        val out = mutableListOf<Pair<Quarter, Instant>>()
+        var t = from
+        while (t.isBefore(to)) {
+            val next = nextQuarters(t).first()
+            if (!next.second.isBefore(to)) break
+            out += next
+            t = next.second.plusSeconds(3600)
+        }
+        return out
+    }
+
     /** The next occurrence of each principal phase after [from], in chronological order. */
     fun nextQuarters(from: Instant): List<Pair<Quarter, Instant>> =
         Quarter.values().map { it to nextQuarter(it, from) }.sortedBy { it.second }

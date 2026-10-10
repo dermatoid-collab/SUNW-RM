@@ -27,6 +27,8 @@ class SunMoonActivityTest {
     @Before
     fun place() {
         LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
+        // The Moon's year is computed on the calling thread, so the tests don't wait for a worker.
+        SunMoonActivity.moonExecutor = java.util.concurrent.Executor { it.run() }
     }
 
     private fun open(date: LocalDate? = null) = Robolectric.buildActivity(
@@ -35,12 +37,13 @@ class SunMoonActivityTest {
     ).setup().get()
 
     @Test
-    fun sunAndMoonTilesOpenThePage() {
-        for (id in listOf(R.id.widget_container, R.id.moon_card)) {
+    fun sunAndMoonTilesOpenThePageAtTheirEnd() {
+        for ((id, entry) in listOf(R.id.widget_container to SunMoonActivity.ENTRY_SUN, R.id.moon_card to SunMoonActivity.ENTRY_MOON)) {
             val main = Robolectric.buildActivity(MainActivity::class.java).setup().get()
             main.findViewById<android.view.View>(id).performClick()
             val next = shadowOf(main).nextStartedActivity
             assertEquals(SunMoonActivity::class.java.name, next.component?.className)
+            assertEquals(entry, next.getStringExtra(SunMoonActivity.EXTRA_ENTRY))
         }
     }
 
@@ -141,7 +144,7 @@ class SunMoonActivityTest {
     @Test
     fun draggingOnTheYearStripChangesTheWholePage() {
         val activity = open()
-        val strip = activity.findViewById<YearStripView>(R.id.sm_year)
+        val strip = activity.findViewById<YearChartView>(R.id.sm_year)
         // The same call the strip makes while a finger moves along it.
         strip.onPick!!.invoke(60)
         assertEquals(60, activity.offset)
@@ -152,5 +155,78 @@ class SunMoonActivityTest {
         strip.onPick!!.invoke(-100)
         assertEquals(-100, activity.offset)
         assertTrue("the date in the bar follows", activity.findViewById<TextView>(R.id.sm_date).text.toString() != title)
+    }
+
+    private fun openAt(entry: String) = Robolectric.buildActivity(
+        SunMoonActivity::class.java,
+        Intent(context, SunMoonActivity::class.java).putExtra(SunMoonActivity.EXTRA_ENTRY, entry),
+    ).setup().get()
+
+    @Test
+    fun theValuesAreStatedOutright() {
+        val a = open()
+        fun text(id: Int) = a.findViewById<TextView>(id).text.toString()
+        assertTrue(text(R.id.sm_kpi_day).matches(Regex("\\d+h \\d{2}m")))
+        assertTrue(text(R.id.sm_kpi_day_sub).contains("m"))
+        assertTrue(text(R.id.sm_kpi_sun_max).endsWith("°"))
+        assertTrue(text(R.id.sm_kpi_night).matches(Regex("\\d+h \\d{2}m")))
+        assertTrue(text(R.id.sm_kpi_moon_sky).matches(Regex("\\d+h \\d{2}m")))
+        assertTrue(text(R.id.sm_kpi_moon_max).endsWith("°"))
+        // Each chart says what it shows.
+        for (id in listOf(R.id.sm_day_legend, R.id.sm_times_legend, R.id.sm_moon_legend)) assertTrue(text(id).isNotEmpty())
+        assertTrue(text(R.id.sm_day_range).contains("–"))
+    }
+
+    @Test
+    fun theMoonChartHasASelectorBetweenNightAndMoonInTheSky() {
+        val a = open()
+        assertEquals(SunMoonActivity.Metric.NIGHT, a.metric)
+        val nightTitle = a.findViewById<TextView>(R.id.sm_moon_title).text.toString()
+        val nightNext = a.findViewById<TextView>(R.id.sm_moon_chart_next).text.toString()
+        a.findViewById<android.view.View>(R.id.sm_chip_sky).performClick()
+        assertEquals(SunMoonActivity.Metric.SKY, a.metric)
+        assertTrue(a.findViewById<TextView>(R.id.sm_moon_title).text.toString() != nightTitle)
+        // Moon in the sky: the next new and full moon, with the legend of the phase dots.
+        val next = a.findViewById<TextView>(R.id.sm_moon_chart_next).text.toString()
+        assertTrue(next != nightNext && next.contains("/"))
+        a.findViewById<android.view.View>(R.id.sm_chip_night).performClick()
+        assertEquals(SunMoonActivity.Metric.NIGHT, a.metric)
+    }
+
+    @Test
+    fun sunriseAndSunsetHaveTheirOwnChartWithTheChosenDatesTimes() {
+        val a = open()
+        val rise = a.findViewById<TextView>(R.id.sm_rise_label).text.toString()
+        val set = a.findViewById<TextView>(R.id.sm_set_label).text.toString()
+        assertTrue(rise.contains(":") && set.contains(":"))
+        a.select(100, animate = false)
+        assertTrue(a.findViewById<TextView>(R.id.sm_rise_label).text.toString() != rise)
+        // The three year charts and the Moon's all move to the chosen date together.
+        for (id in listOf(R.id.sm_year, R.id.sm_rise_chart, R.id.sm_set_chart, R.id.sm_moon_chart)) {
+            assertTrue(a.findViewById<YearChartView>(id).onPick != null)
+        }
+    }
+
+    @Test
+    fun theSunTileOpensAtTheTopAndTheMoonTileAtTheBottom() {
+        val sun = openAt(SunMoonActivity.ENTRY_SUN)
+        shadowOf(android.os.Looper.getMainLooper()).idle()
+        assertEquals(0, sun.findViewById<android.widget.ScrollView>(R.id.sm_page).scrollY)
+        val moon = openAt(SunMoonActivity.ENTRY_MOON)
+        shadowOf(android.os.Looper.getMainLooper()).idle()
+        val page = moon.findViewById<android.widget.ScrollView>(R.id.sm_page)
+        val content = page.getChildAt(0)
+        // At the end of the content when it is taller than the window (in tests it is laid out at a small size).
+        if (content.height > page.height) assertEquals(content.height - page.height, page.scrollY)
+    }
+
+    @Test
+    fun theDayTabsAreFixedAtTheBottomWithTheSlider() {
+        val a = open()
+        val page = a.findViewById<android.widget.ScrollView>(R.id.sm_page)
+        var v: android.view.View? = a.findViewById(R.id.sm_tabs)
+        var inside = false
+        while (v != null) { if (v === page) inside = true; v = v.parent as? android.view.View }
+        assertTrue(!inside)
     }
 }

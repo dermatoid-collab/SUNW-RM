@@ -13,6 +13,7 @@ import android.view.MotionEvent
 import android.view.View
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
@@ -247,28 +248,52 @@ class SunCompassView @JvmOverloads constructor(context: Context, attrs: Attribut
 }
 
 /**
- * Day length across the slider's range, with equinox/solstice marks, a line on today and a dot
- * on the chosen date. Touching it picks the date under the finger.
+ * One series over the slider's range (−[Chart.maxOffset]…+[Chart.maxOffset] days from today),
+ * as a filled line with optional dashed marks (solstices, clock changes), moon-phase dots, month
+ * ticks, a line on today and a dot on the chosen date. Touching or dragging it picks the date.
  */
-class YearStripView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+class YearChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
 
-    data class Mark(val offset: Int, val label: String)
+    /** A dashed vertical line, with a [label] under it (or at the top of the plot). */
+    class Mark(val offset: Int, val label: String? = null, val color: Int? = null, val labelOnTop: Boolean = false)
+
+    /** A moon-phase dot on the bottom row. */
+    class Dot(val offset: Double, val filled: Boolean)
+
+    class Chart(
+        /** One value per day, index = offset + maxOffset; NaN leaves a gap. */
+        val values: DoubleArray,
+        val maxOffset: Int,
+        val lineColor: Int,
+        /** A step between two days bigger than this starts a new segment (clock changes). */
+        val breakJump: Double = Double.MAX_VALUE,
+        val marks: List<Mark> = emptyList(),
+        val dots: List<Dot> = emptyList(),
+        /** Month ticks along the bottom: (offset, label). */
+        val ticks: List<Pair<Int, String>> = emptyList(),
+        /** Keep a bottom row for labels, ticks and dots. */
+        val bottomRow: Boolean = true,
+    )
 
     private var palette: Palette? = null
-    private var minutes = IntArray(0)
-    private var marks = emptyList<Mark>()
+    private var chart: Chart? = null
     private var selected = 0
-    private var maxOffset = 182
+    private var low = 0.0
+    private var high = 1.0
 
     /** Called with the day offset (from today) under the finger. */
     var onPick: ((Int) -> Unit)? = null
 
-    /** [minutes] holds the daylight for each offset −maxOffset..+maxOffset. */
-    fun show(palette: Palette, minutes: IntArray, marks: List<Mark>, maxOffset: Int) {
+    fun show(palette: Palette, chart: Chart) {
         this.palette = palette
-        this.minutes = minutes
-        this.marks = marks
-        this.maxOffset = maxOffset
+        this.chart = chart
+        // The scale is worked out once, not at every redraw while a finger drags along the chart.
+        var lo = Double.POSITIVE_INFINITY
+        var hi = Double.NEGATIVE_INFINITY
+        for (v in chart.values) if (!v.isNaN()) { lo = minOf(lo, v); hi = maxOf(hi, v) }
+        val pad = max((hi - lo) * 0.06, 0.5)
+        low = lo - pad
+        high = hi + pad
         invalidate()
     }
 
@@ -278,73 +303,113 @@ class YearStripView @JvmOverloads constructor(context: Context, attrs: Attribute
     }
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val labelRoom get() = dpf(13f)
-    private fun x(offset: Int) = dpf(5f) + (offset + maxOffset).toFloat() / (2 * maxOffset) * (width - dpf(10f))
+    private val labelRoom get() = if (chart?.bottomRow == false) dpf(4f) else dpf(15f)
+    private fun x(offset: Double, c: Chart) = dpf(5f) + ((offset + c.maxOffset) / (2 * c.maxOffset)).toFloat() * (width - dpf(10f))
 
     override fun onDraw(canvas: Canvas) {
         val p = palette ?: return
-        if (minutes.isEmpty()) return
-        val top = dpf(6f)
+        val c = chart ?: return
+        val top = dpf(8f)
         val bottom = height - labelRoom
-        val lo = minutes.min()
-        val hi = max(minutes.max(), lo + 30)
-        fun y(m: Int) = bottom - (m - lo).toFloat() / (hi - lo) * (bottom - top)
+        if (c.values.all { it.isNaN() }) return
+        val lo = low
+        val hi = high
+        fun y(v: Double) = bottom - ((v - lo) / (hi - lo)).toFloat() * (bottom - top)
 
         val line = Path()
-        minutes.forEachIndexed { i, m -> if (i == 0) line.moveTo(x(i - maxOffset), y(m)) else line.lineTo(x(i - maxOffset), y(m)) }
-        val area = Path(line).apply {
-            lineTo(x(maxOffset), bottom)
-            lineTo(x(-maxOffset), bottom)
-            close()
+        var started = false
+        var previous = Double.NaN
+        c.values.forEachIndexed { i, v ->
+            if (v.isNaN()) { started = false; return@forEachIndexed }
+            val px = x((i - c.maxOffset).toDouble(), c)
+            if (!started || abs(v - previous) > c.breakJump) line.moveTo(px, y(v)) else line.lineTo(px, y(v))
+            started = true
+            previous = v
         }
         paint.style = Paint.Style.FILL
-        paint.color = p.accent
-        paint.alpha = 30
-        canvas.drawPath(area, paint)
+        paint.color = c.lineColor
+        paint.alpha = 28
+        canvas.drawPath(Path(line).apply {
+            // Fill down to the base only for charts without clock jumps (a filled step looks wrong).
+            if (c.breakJump == Double.MAX_VALUE) {
+                lineTo(x(c.maxOffset.toDouble(), c), bottom)
+                lineTo(x(-c.maxOffset.toDouble(), c), bottom)
+                close()
+            }
+        }, paint)
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = dpf(1.5f)
-        paint.alpha = 180
+        paint.strokeWidth = dpf(1.8f)
+        paint.alpha = 220
         canvas.drawPath(line, paint)
 
-        paint.color = p.textSecondary
-        paint.strokeWidth = dpf(1f)
         paint.textSize = dpf(9.5f)
         paint.textAlign = Paint.Align.CENTER
-        for (mark in marks) {
-            val mx = x(mark.offset)
+        for (mark in c.marks) {
+            val mx = x(mark.offset.toDouble(), c)
             paint.style = Paint.Style.STROKE
-            paint.alpha = 90
+            paint.strokeWidth = dpf(1f)
+            paint.color = mark.color ?: p.textSecondary
+            paint.alpha = 100
             paint.pathEffect = DashPathEffect(floatArrayOf(dpf(2f), dpf(3f)), 0f)
             canvas.drawLine(mx, top, mx, bottom, paint)
             paint.pathEffect = null
+            mark.label?.let {
+                paint.style = Paint.Style.FILL
+                paint.alpha = 255
+                paint.textAlign = if (mark.labelOnTop) (if (mx < width / 2f) Paint.Align.LEFT else Paint.Align.RIGHT) else Paint.Align.CENTER
+                val tx = if (mark.labelOnTop) mx + (if (mx < width / 2f) dpf(4f) else -dpf(4f)) else mx.coerceIn(dpf(22f), width - dpf(22f))
+                canvas.drawText(it, tx, if (mark.labelOnTop) top + dpf(9f) else height - dpf(2f), paint)
+                paint.textAlign = Paint.Align.CENTER
+            }
+        }
+        paint.color = p.textSecondary
+        for ((offset, label) in c.ticks) {
+            val tx = x(offset.toDouble(), c)
+            paint.style = Paint.Style.STROKE
+            paint.alpha = 120
+            canvas.drawLine(tx, bottom, tx, bottom + dpf(3f), paint)
             paint.style = Paint.Style.FILL
             paint.alpha = 255
-            canvas.drawText(mark.label, mx.coerceIn(dpf(20f), width - dpf(20f)), height - dpf(2f), paint)
+            canvas.drawText(label, tx, height - dpf(2f), paint)
+        }
+        for (dot in c.dots) {
+            val dx = x(dot.offset, c)
+            paint.style = Paint.Style.FILL
+            paint.color = if (dot.filled) MOON_DOT else p.cardBackground
+            canvas.drawCircle(dx, height - dpf(5f), dpf(3.2f), paint)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = dpf(1f)
+            paint.color = MOON_DOT
+            canvas.drawCircle(dx, height - dpf(5f), dpf(3.2f), paint)
         }
 
         paint.style = Paint.Style.STROKE
+        paint.strokeWidth = dpf(1f)
         paint.color = p.text
         paint.alpha = 130
-        canvas.drawLine(x(0), top, x(0), bottom, paint)
+        canvas.drawLine(x(0.0, c), top, x(0.0, c), bottom, paint)
 
-        val sx = x(selected)
-        val sy = y(minutes[(selected + maxOffset).coerceIn(0, minutes.size - 1)])
-        paint.alpha = 255
-        paint.style = Paint.Style.FILL
-        paint.color = p.pageBackground
-        canvas.drawCircle(sx, sy, dpf(7f), paint)
-        paint.color = p.accent
-        canvas.drawCircle(sx, sy, dpf(5f), paint)
+        val index = (selected + c.maxOffset).coerceIn(0, c.values.size - 1)
+        val v = c.values[index]
+        if (!v.isNaN()) {
+            val sx = x(selected.toDouble(), c)
+            paint.alpha = 255
+            paint.style = Paint.Style.FILL
+            paint.color = p.cardBackground
+            canvas.drawCircle(sx, y(v), dpf(7f), paint)
+            paint.color = c.lineColor
+            canvas.drawCircle(sx, y(v), dpf(5f), paint)
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (minutes.isEmpty()) return false
+        val c = chart ?: return false
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
                 parent?.requestDisallowInterceptTouchEvent(true)
                 val fraction = ((event.x - dpf(5f)) / (width - dpf(10f))).coerceIn(0f, 1f)
-                val offset = Math.round(fraction * 2 * maxOffset) - maxOffset
+                val offset = Math.round(fraction * 2 * c.maxOffset) - c.maxOffset
                 if (offset != selected) onPick?.invoke(offset)
                 return true
             }
@@ -354,5 +419,9 @@ class YearStripView @JvmOverloads constructor(context: Context, attrs: Attribute
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    companion object {
+        private const val MOON_DOT = 0xFFECE6D2.toInt()
     }
 }

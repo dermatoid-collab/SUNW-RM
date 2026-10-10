@@ -67,9 +67,11 @@ class MainActivity : Activity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
         findViewById<TextView>(R.id.place).setOnClickListener { showPlaces(it) }
-        // Sun or Moon tile → the same two on any date.
-        for (id in listOf(R.id.widget_container, R.id.moon_card)) {
-            findViewById<android.view.View>(id).setOnClickListener { startActivity(Intent(this, SunMoonActivity::class.java)) }
+        // Sun or Moon tile → one page for both, at its top for the Sun and at its end for the Moon.
+        for ((id, entry) in listOf(R.id.widget_container to SunMoonActivity.ENTRY_SUN, R.id.moon_card to SunMoonActivity.ENTRY_MOON)) {
+            findViewById<android.view.View>(id).setOnClickListener {
+                startActivity(Intent(this, SunMoonActivity::class.java).putExtra(SunMoonActivity.EXTRA_ENTRY, entry))
+            }
         }
         fitToScreen()
         // A background check that can't start must never stop the page from opening.

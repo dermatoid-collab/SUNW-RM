@@ -11,12 +11,16 @@ import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.util.TypedValue
 import android.graphics.Rect
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.ImageButton
+import android.widget.ScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.SeekBar
@@ -33,9 +37,11 @@ import kotlin.math.roundToInt
 import kotlin.math.tan
 
 /**
- * Sun and Moon on any date within ±6 months of today: the sun tile in detail (curve with a
- * cursor, directions, twilights, blue and golden hours, comparisons), the Moon, the year's
- * day length, day tabs and a slider. Opened by tapping the sun or moon tile on the main page.
+ * Sun and Moon on any date within ±6 months of today, one page with three sections that scroll
+ * between a fixed date bar (top) and fixed day tabs and slider (bottom):
+ * the Sun (tile, day length and maximum height, day-length chart), sunrise and sunset through
+ * the year, and the Moon (tile, night, Moon in the sky and its maximum height, a chart with a
+ * selector). The Sun tile opens it at the top, the Moon tile at the bottom ([EXTRA_ENTRY]).
  */
 class SunMoonActivity : Activity() {
 
@@ -47,6 +53,18 @@ class SunMoonActivity : Activity() {
     /** Days from today, −[RANGE_DAYS]..+[RANGE_DAYS]. */
     internal var offset = 0
         private set
+
+    /** What the Moon chart shows. */
+    enum class Metric { NIGHT, SKY }
+
+    internal var metric = Metric.NIGHT
+        private set
+    private lateinit var sunYear: YearData.SunYear
+    private var moonYear: YearData.MoonYear? = null
+    private var seasonMarks = emptyList<YearChartView.Mark>()
+    private var clockMarks = emptyList<YearChartView.Mark>()
+    private var monthTicks = emptyList<Pair<Int, String>>()
+    private val charts get() = listOf(R.id.sm_year, R.id.sm_rise_chart, R.id.sm_set_chart, R.id.sm_moon_chart).map { findViewById<YearChartView>(it) }
 
     /** Moment the user touched on the curve; null shows "now" (today) or nothing. */
     private var touched: Instant? = null
@@ -67,6 +85,7 @@ class SunMoonActivity : Activity() {
                 ?.let { ChronoUnit.DAYS.between(today, it).toInt() }
             ?: 0
         offset = offset.coerceIn(-RANGE_DAYS, RANGE_DAYS)
+        metric = savedInstanceState?.getString(STATE_METRIC)?.let { runCatching { Metric.valueOf(it) }.getOrNull() } ?: Metric.NIGHT
 
         window.decorView.setBackgroundColor(palette.pageBackground)
         window.statusBarColor = palette.pageBackground
@@ -75,6 +94,18 @@ class SunMoonActivity : Activity() {
         setUpYear()
         setUpSlider()
         render()
+        if (savedInstanceState == null && intent.getStringExtra(EXTRA_ENTRY) == ENTRY_MOON) scrollToBottom()
+    }
+
+    /** Opened from the Moon tile: once laid out, the page starts at its end. */
+    private fun scrollToBottom() {
+        val page = findViewById<ScrollView>(R.id.sm_page)
+        page.viewTreeObserver.addOnGlobalLayoutListener(object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                page.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                page.scrollTo(0, ((page.getChildAt(0)?.height ?: 0) - page.height).coerceAtLeast(0))
+            }
+        })
     }
 
     /** Horizontal flings move a day, as on the weather day page: left → next day, right → previous. */
@@ -95,7 +126,7 @@ class SunMoonActivity : Activity() {
     }
 
     /** The curve, the year strip and the slider use horizontal drags themselves. */
-    private fun startsOnControl(e: MotionEvent): Boolean = listOf(R.id.sm_curve, R.id.sm_year, R.id.sm_slider).any { id ->
+    private fun startsOnControl(e: MotionEvent): Boolean = listOf(R.id.sm_curve, R.id.sm_year, R.id.sm_rise_chart, R.id.sm_set_chart, R.id.sm_moon_chart, R.id.sm_slider).any { id ->
         val r = Rect()
         findViewById<View>(id).getGlobalVisibleRect(r) && r.contains(e.rawX.toInt(), e.rawY.toInt())
     }
@@ -111,6 +142,7 @@ class SunMoonActivity : Activity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(STATE_OFFSET, offset)
+        outState.putString(STATE_METRIC, metric.name)
     }
 
     private fun card(color: Int, radiusDp: Int = 24) =
@@ -158,25 +190,151 @@ class SunMoonActivity : Activity() {
         }
         findViewById<TextView>(R.id.sm_today).setOnClickListener { select(0) }
         findViewById<View>(R.id.sm_date).setOnClickListener { pickDate() }
+        style(findViewById(R.id.sm_content))
+        findViewById<TextView>(R.id.sm_chip_night).setOnClickListener { setMetric(Metric.NIGHT) }
+        findViewById<TextView>(R.id.sm_chip_sky).setOnClickListener { setMetric(Metric.SKY) }
     }
 
-    /** Daylight over the whole range, the equinoxes and solstices in it: computed once. */
-    private fun setUpYear() {
-        val minutes = IntArray(2 * RANGE_DAYS + 1) { i ->
-            SunDayFacts.daylight(today.plusDays((i - RANGE_DAYS).toLong()), place.latitude, place.longitude, zone).toMinutes().toInt()
+    /** Colours the new blocks by their tag: card, cell, label, value, section, rule. */
+    private fun style(view: View) {
+        when (view.tag) {
+            "card" -> view.background = card(palette.cardBackground, 20)
+            "cell" -> view.background = card(palette.cardBackground, 16)
+            "rule" -> view.setBackgroundColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.12f))
+            "label" -> (view as TextView).setTextColor(palette.textSecondary)
+            "value" -> (view as TextView).setTextColor(palette.text)
+            "section" -> (view as TextView).setTextColor(palette.accent)
         }
+        if (view is ViewGroup) for (i in 0 until view.childCount) style(view.getChildAt(i))
+    }
+
+    /** The year's series (the Sun's at once, the Moon's on a worker thread) and the charts they feed. */
+    private fun setUpYear() {
+        sunYear = YearData.sun(today, place.latitude, place.longitude, zone, RANGE_DAYS)
         val from = today.minusDays(RANGE_DAYS.toLong()).atStartOfDay(zone).toInstant()
-        val marks = SunCalculator.Season.values().mapNotNull { season ->
+        seasonMarks = SunCalculator.Season.values().mapNotNull { season ->
             val day = SunCalculator.nextSeason(season, from).atZone(zone).toLocalDate()
             val o = ChronoUnit.DAYS.between(today, day).toInt()
-            if (o in -RANGE_DAYS..RANGE_DAYS) YearStripView.Mark(o, getString(seasonNames(season).second)) else null
+            if (o in -RANGE_DAYS..RANGE_DAYS) YearChartView.Mark(o, getString(seasonNames(season).second)) else null
         }
-        findViewById<YearStripView>(R.id.sm_year).apply {
-            show(palette, minutes, marks, RANGE_DAYS)
-            // Not the strip's own select(), which only moves its dot: the page must change date.
-            // Without the slide-in, like the slider: while dragging, the page refreshes in place.
-            onPick = { this@SunMoonActivity.select(it, animate = false) }
+        // A jump of the clock (daylight saving) shows as a step in the sunrise series.
+        clockMarks = (1 until sunYear.riseMinute.size).mapNotNull { i ->
+            val step = sunYear.riseMinute[i] - sunYear.riseMinute[i - 1]
+            if (abs(step) > CLOCK_JUMP_MIN) {
+                YearChartView.Mark(i - RANGE_DAYS, getString(if (step < 0) R.string.sm_clock_back else R.string.sm_clock_forward), CLOCK_BLUE, labelOnTop = true)
+            } else null
         }
+        val month = DateTimeFormatter.ofPattern("MMM", Locale.getDefault())
+        monthTicks = (-RANGE_DAYS..RANGE_DAYS).filter { today.plusDays(it.toLong()).dayOfMonth == 1 }
+            .map { it to month.format(today.plusDays(it.toLong())).replace(".", "").replaceFirstChar { c -> c.titlecase() } }
+
+        for (view in charts) view.onPick = { this@SunMoonActivity.select(it, animate = false) }
+        buildCharts()
+        moonExecutor.execute {
+            val moon = runCatching { YearData.moon(today, place.latitude, place.longitude, zone, RANGE_DAYS) }.getOrNull()
+            runOnUiThread {
+                if (isDestroyed) return@runOnUiThread
+                moonYear = moon
+                buildMoonChart()
+            }
+        }
+    }
+
+    private fun buildCharts() {
+        val day = findViewById<YearChartView>(R.id.sm_year)
+        day.show(palette, YearChartView.Chart(sunYear.dayMinutes, RANGE_DAYS, palette.accent, marks = seasonMarks))
+        findViewById<TextView>(R.id.sm_day_range).text = range(sunYear.dayMinutes)
+        findViewById<TextView>(R.id.sm_day_legend).text = legend(
+            LEGEND_LINE to palette.accent to getString(R.string.sm_leg_daylight),
+            LEGEND_DASH to palette.textSecondary to getString(R.string.sm_leg_season),
+            LEGEND_TODAY to palette.text to getString(R.string.sm_today_lower),
+            LEGEND_DOT to palette.accent to getString(R.string.sm_leg_chosen),
+        )
+
+        findViewById<YearChartView>(R.id.sm_rise_chart).show(palette, YearChartView.Chart(
+            sunYear.riseMinute, RANGE_DAYS, palette.accent, breakJump = CLOCK_JUMP_MIN, marks = clockMarks, bottomRow = false,
+        ))
+        findViewById<YearChartView>(R.id.sm_set_chart).show(palette, YearChartView.Chart(
+            sunYear.setMinute, RANGE_DAYS, SUNSET, breakJump = CLOCK_JUMP_MIN,
+            marks = clockMarks.map { YearChartView.Mark(it.offset, null, it.color) }, ticks = monthTicks,
+        ))
+        findViewById<TextView>(R.id.sm_times_range).text = getString(R.string.sm_chart_times_sub)
+        findViewById<TextView>(R.id.sm_times_legend).text = legend(
+            LEGEND_LINE to palette.accent to getString(R.string.sm_leg_sunrise),
+            LEGEND_LINE to SUNSET to getString(R.string.sm_leg_sunset),
+            LEGEND_DASH to CLOCK_BLUE to getString(R.string.sm_leg_clock),
+            LEGEND_TODAY to palette.text to getString(R.string.sm_today_lower),
+            LEGEND_DOT to palette.text to getString(R.string.sm_leg_chosen),
+        )
+        buildMoonChart()
+    }
+
+    /** The Moon chart for the selected metric (the Moon's series arrive a moment after the page). */
+    private fun buildMoonChart() {
+        val moon = moonYear
+        val chart = findViewById<YearChartView>(R.id.sm_moon_chart)
+        val (values, dots) = if (metric == Metric.NIGHT) {
+            sunYear.nightMinutes to emptyList<YearChartView.Dot>()
+        } else {
+            (moon?.skyMinutes ?: DoubleArray(2 * RANGE_DAYS + 1) { Double.NaN }) to
+                moon?.phases.orEmpty().filter { it.quarter == MoonCalculator.Quarter.NEW || it.quarter == MoonCalculator.Quarter.FULL }
+                    .map { YearChartView.Dot(it.offset, it.quarter == MoonCalculator.Quarter.FULL) }
+        }
+        chart.show(palette, YearChartView.Chart(values, RANGE_DAYS, MOON_LINE, marks = if (metric == Metric.NIGHT) seasonMarks else emptyList(), dots = dots))
+        chart.select(offset)
+        findViewById<TextView>(R.id.sm_moon_title).setText(if (metric == Metric.NIGHT) R.string.sm_chart_night else R.string.sm_chart_sky)
+        findViewById<TextView>(R.id.sm_moon_range).text = range(values)
+        findViewById<TextView>(R.id.sm_moon_legend).text = if (metric == Metric.NIGHT) legend(
+            LEGEND_LINE to MOON_LINE to getString(R.string.sm_leg_night),
+            LEGEND_DASH to palette.textSecondary to getString(R.string.sm_leg_season),
+            LEGEND_TODAY to palette.text to getString(R.string.sm_today_lower),
+            LEGEND_DOT to MOON_LINE to getString(R.string.sm_leg_chosen),
+        ) else legend(
+            LEGEND_LINE to MOON_LINE to getString(R.string.sm_leg_sky),
+            LEGEND_DOT to MOON_LIT to getString(R.string.sm_leg_full),
+            LEGEND_RING to MOON_LIT to getString(R.string.sm_leg_new),
+            LEGEND_TODAY to palette.text to getString(R.string.sm_today_lower),
+            LEGEND_DOT to MOON_LINE to getString(R.string.sm_leg_chosen),
+        )
+        styleChips()
+        showMoonNext()
+    }
+
+    private fun setMetric(new: Metric) {
+        if (new == metric) return
+        metric = new
+        buildMoonChart()
+    }
+
+    private fun styleChips() {
+        for ((id, own) in listOf(R.id.sm_chip_night to Metric.NIGHT, R.id.sm_chip_sky to Metric.SKY)) {
+            val on = own == metric
+            findViewById<TextView>(id).apply {
+                setTextColor(if (on) palette.text else palette.textSecondary)
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(14).toFloat()
+                    setColor(if (on) Palette.blend(palette.cardBackground, palette.accent, 0.22f) else Color.TRANSPARENT)
+                    setStroke(dp(1), if (on) palette.accent else Palette.blend(palette.cardBackground, Color.WHITE, 0.18f))
+                }
+            }
+        }
+    }
+
+    /** "— sunrise to sunset   ¦ solstice   | today   ● chosen date": a glyph in the series' colour, then its meaning. */
+    private fun legend(vararg items: Pair<Pair<String, Int>, String>): CharSequence {
+        val text = SpannableStringBuilder()
+        for ((glyph, label) in items) {
+            if (text.isNotEmpty()) text.append("   ")
+            text.append(glyph.first, ForegroundColorSpan(glyph.second), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE).append(" ").append(label)
+        }
+        return text
+    }
+
+    private fun range(values: DoubleArray): String {
+        val finite = values.filter { !it.isNaN() }
+        if (finite.isEmpty()) return ""
+        fun length(m: Double) = Formatters.length(Duration.ofSeconds((m * 60).toLong()))
+        return length(finite.min()) + " – " + length(finite.max())
     }
 
     private fun setUpSlider() {
@@ -238,7 +396,8 @@ class SunMoonActivity : Activity() {
         showHeader()
         showSun(facts)
         showMoon()
-        showYear(facts)
+        showKpis(facts)
+        showCharts(facts)
         showTabs()
         findViewById<SeekBar>(R.id.sm_slider).progress = offset + RANGE_DAYS
         findViewById<TextView>(R.id.sm_today).visibility = if (offset == 0) View.INVISIBLE else View.VISIBLE
@@ -394,22 +553,94 @@ class SunMoonActivity : Activity() {
             .joinToString(" • ") { (quarter, at) -> getString(MainActivity.quarterName(quarter), ddmm.format(at.atZone(zone))) }
     }
 
-    private fun showYear(facts: SunDayFacts) {
-        findViewById<YearStripView>(R.id.sm_year).select(offset)
-        // The first equinox or solstice after the chosen date.
-        val from = date.plusDays(1).atStartOfDay(zone).toInstant()
-        val (season, at) = SunCalculator.Season.values().map { it to SunCalculator.nextSeason(it, from) }.minBy { it.second }
-        val day = at.atZone(zone).toLocalDate()
-        val days = ChronoUnit.DAYS.between(date, day).toInt()
-        val length = SunDayFacts.daylight(day, place.latitude, place.longitude, zone)
-        val d = length.minus(facts.daylight)
+    /** Moves every chart's dot to the chosen date and rewrites the texts that depend on it. */
+    private fun showCharts(facts: SunDayFacts) {
+        for (view in charts) view.select(offset)
+        showSunNext(facts)
+        val i = offset + RANGE_DAYS
+        findViewById<TextView>(R.id.sm_rise_label).apply {
+            text = getString(R.string.sm_label_sunrise, minuteText(sunYear.riseMinute[i]))
+            setTextColor(palette.accent)
+        }
+        findViewById<TextView>(R.id.sm_set_label).apply {
+            text = getString(R.string.sm_label_sunset, minuteText(sunYear.setMinute[i]))
+            setTextColor(SUNSET)
+        }
+        showMoonNext()
+    }
+
+    private fun minuteText(minute: Double): String {
+        if (minute.isNaN()) return DASH
+        val m = minute.toInt()
+        // Local clock time on that date, so a day with a clock change still reads right.
+        return time(date.atTime(m / 60, m % 60).atZone(zone).toInstant())
+    }
+
+    /** The first equinox or solstice after the chosen date, with how its daylight differs. */
+    private fun showSunNext(facts: SunDayFacts) {
+        val (season, day, days) = nextSeason() ?: return
+        val d = SunDayFacts.daylight(day, place.latitude, place.longitude, zone).minus(facts.daylight)
         findViewById<TextView>(R.id.sm_next_event).text = getString(
-            R.string.sm_next_event,
-            getString(seasonNames(season).first),
-            DateTimeFormatter.ofPattern("dd/MM").format(day),
-            resources.getQuantityString(R.plurals.sm_in_days, days, days),
-            (if (d.isNegative) "−" else "+") + Formatters.length(d.abs()),
+            R.string.sm_next_event, getString(seasonNames(season).first), DateTimeFormatter.ofPattern("dd/MM").format(day),
+            resources.getQuantityString(R.plurals.sm_in_days, days, days), (if (d.isNegative) "−" else "+") + Formatters.length(d.abs()),
         )
+    }
+
+    private fun nextSeason(): Triple<SunCalculator.Season, LocalDate, Int>? {
+        val from = date.plusDays(1).atStartOfDay(zone).toInstant()
+        val (season, at) = SunCalculator.Season.values().map { it to SunCalculator.nextSeason(it, from) }.minByOrNull { it.second } ?: return null
+        val day = at.atZone(zone).toLocalDate()
+        return Triple(season, day, ChronoUnit.DAYS.between(date, day).toInt())
+    }
+
+    /** Under the Moon chart: the next solstice with the night's change, or the next new and full moon. */
+    private fun showMoonNext() {
+        val view = findViewById<TextView>(R.id.sm_moon_chart_next)
+        if (metric == Metric.NIGHT) {
+            val (season, day, days) = nextSeason() ?: return
+            val here = nightOf(date)
+            val there = nightOf(day)
+            val change = if (here != null && there != null) there.minus(here) else null
+            view.text = getString(
+                R.string.sm_next_event_night, getString(seasonNames(season).first), DateTimeFormatter.ofPattern("dd/MM").format(day),
+                resources.getQuantityString(R.plurals.sm_in_days, days, days),
+                change?.let { (if (it.isNegative) "−" else "+") + Formatters.length(it.abs()) } ?: DASH,
+            )
+            return
+        }
+        val phases = moonYear?.phases.orEmpty().filter { it.offset >= offset }
+        val parts = listOf(MoonCalculator.Quarter.NEW to R.string.sm_next_new, MoonCalculator.Quarter.FULL to R.string.sm_next_full).mapNotNull { (q, label) ->
+            phases.firstOrNull { it.quarter == q }?.let { phase ->
+                val day = today.plusDays(Math.floor(phase.offset).toLong())
+                val days = ChronoUnit.DAYS.between(date, day).toInt()
+                phase.offset to getString(
+                    R.string.sm_next_moon, getString(label), DateTimeFormatter.ofPattern("dd/MM").format(day),
+                    if (days <= 0) getString(R.string.sm_today_lower) else resources.getQuantityString(R.plurals.sm_in_days, days, days),
+                )
+            }
+        }.sortedBy { it.first }
+        view.text = parts.joinToString("  ·  ") { it.second }
+    }
+
+    /** Sunset → next sunrise, or null where one of them doesn't happen. */
+    private fun nightOf(day: LocalDate): Duration? {
+        val a = SunCalculator.day(day, place.latitude, place.longitude, zone) as? SunCalculator.Day.Normal ?: return null
+        val b = SunCalculator.day(day.plusDays(1), place.latitude, place.longitude, zone) as? SunCalculator.Day.Normal ?: return null
+        return Duration.between(a.sunset, b.sunrise)
+    }
+
+    /** The values stated outright: day length and Sun height; night, Moon in the sky and its height. */
+    private fun showKpis(facts: SunDayFacts) {
+        val yesterday = SunDayFacts.daylight(date.minusDays(1), place.latitude, place.longitude, zone)
+        findViewById<TextView>(R.id.sm_kpi_day).text = Formatters.length(facts.daylight)
+        findViewById<TextView>(R.id.sm_kpi_day_sub).text =
+            getString(R.string.sm_kpi_day_sub, Formatters.delta(facts.daylight.seconds - yesterday.seconds))
+        findViewById<TextView>(R.id.sm_kpi_sun_max).text = "${facts.noonElevation.roundToInt()}°"
+        findViewById<TextView>(R.id.sm_kpi_sun_max_sub).text = getString(R.string.sm_kpi_sun_max_sub, time(facts.day.solarNoon))
+        findViewById<TextView>(R.id.sm_kpi_night).text = nightOf(date)?.let { Formatters.length(it) } ?: DASH
+        val moon = MoonCalculator.dayStats(date, place.latitude, place.longitude, zone)
+        findViewById<TextView>(R.id.sm_kpi_moon_sky).text = Formatters.length(Duration.ofSeconds((moon.minutesAbove * 60).toLong()))
+        findViewById<TextView>(R.id.sm_kpi_moon_max).text = "${moon.maxAltitude.roundToInt()}°"
     }
 
     /** Seven days centred on the chosen one (kept inside the range); a dot marks today. */
@@ -466,8 +697,26 @@ class SunMoonActivity : Activity() {
 
     companion object {
         const val EXTRA_DATE = "date"
+
+        /** Which tile opened the page: it starts at the top for the Sun, at the bottom for the Moon. */
+        const val EXTRA_ENTRY = "entry"
+        const val ENTRY_SUN = "sun"
+        const val ENTRY_MOON = "moon"
+
+        /** Runs the Moon's year of values; tests swap in a direct executor. */
+        internal var moonExecutor: Executor = Executors.newSingleThreadExecutor()
         const val RANGE_DAYS = 182
         private const val STATE_OFFSET = "offset"
+        private const val STATE_METRIC = "metric"
+        private const val CLOCK_JUMP_MIN = 30.0
+        private const val CLOCK_BLUE = 0xFF7AA2F7.toInt()
+        private const val SUNSET = 0xFFFF6A3D.toInt()
+        private const val MOON_LINE = 0xFFB9C4F2.toInt()
+        private const val LEGEND_LINE = "—"
+        private const val LEGEND_DASH = "¦"
+        private const val LEGEND_TODAY = "|"
+        private const val LEGEND_DOT = "●"
+        private const val LEGEND_RING = "○"
         private const val SLIDE_FRACTION = 0.25f
         private const val SWIPE_MIN_DP = 80
         private const val SWIPE_MIN_VELOCITY = 600f

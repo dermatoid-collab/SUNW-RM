@@ -51,7 +51,7 @@ sono quelli di Windy. Da verificare sul telefono (da qui windy.com non è raggiu
 
 ## 4. Pagina «Sole e Luna per data» — prima versione sviluppata
 
-Implementata in `SunMoonActivity` (cursore ±6 mesi confermato). Da provare sul telefono e rifinire.
+Implementata in `SunMoonActivity` (cursore ±6 mesi confermato), poi riorganizzata come da proposta definitiva: una pagina con tre sezioni (Sole, Alba e tramonto, Luna), barra fissa in alto e schede+cursore fissi in basso, ingresso in alto dal Sole e in fondo dalla Luna, valori espliciti e grafici annuali con legenda e selettore per la Luna. Da provare sul telefono e rifinire.
 
 - **Prototipo:** artifact «Alba · Tramonto — schermate», tavola «Sole e Luna per data (proposta)»
   (https://claude.ai/artifact/KJjPBhHAyGoU2EYyyfjg7L), approvato dall'utente.
