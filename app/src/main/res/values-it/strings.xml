@@ -261,4 +261,27 @@
     <string name="sm_next_moon">%1$s %2$s · %3$s</string>
     <string name="sm_next_new">Prossima luna nuova</string>
     <string name="sm_next_full">Prossima luna piena</string>
+    <string name="wc_title">Webcam</string>
+    <string name="wc_subtitle">%1$s · entro %2$d km</string>
+    <string name="wc_tab_near">Vicine</string>
+    <string name="wc_tab_mine">Le mie webcam</string>
+    <string name="wc_no_key">Le webcam vicine richiedono la chiave Windy Webcams, che manca in questa versione. Le tue webcam funzionano comunque.</string>
+    <string name="wc_loading">Carico le webcam…</string>
+    <string name="wc_error">Webcam non disponibili: controlla la connessione.</string>
+    <string name="wc_none">Nessuna webcam entro %1$d km.</string>
+    <string name="wc_windy_note">Anteprime del servizio Windy Webcams (bassa risoluzione, ricaricate a ogni apertura della pagina). Non tutte le telecamere di windy.com sono disponibili.</string>
+    <string name="wc_all">Tutte le webcam</string>
+    <string name="wc_add">＋ Aggiungi webcam</string>
+    <string name="wc_edit">Modifica</string>
+    <string name="wc_delete">Elimina</string>
+    <string name="wc_name">Nome</string>
+    <string name="wc_address">Indirizzo web</string>
+    <string name="wc_bad_address">Inserisci un indirizzo web valido.</string>
+    <string name="wc_mine_note">La tua lista: qualsiasi indirizzo web di una pagina o di un lettore live. Le pagine si aprono nell\'app; se una non funziona, usa «Apri nel browser». La lista è salvata con il backup delle impostazioni.</string>
+    <string name="wc_own_note">Mostrata come sul suo sito; si ferma quando esci da questa pagina.</string>
+    <string name="wc_windy_credit">Webcam fornite da windy.com · l\'immagine si ricarica ogni minuto finché la pagina è aperta.</string>
+    <string name="wc_updated">Aggiornata alle %1$s · webcam fornite da windy.com</string>
+    <string name="wc_open_browser">Apri nel browser</string>
+    <string name="wc_section_note">Webcam fornite da windy.com</string>
+    <string name="wc_section_none">Apri l\'elenco completo per le webcam vicine e le tue.</string>
 </resources>

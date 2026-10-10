@@ -35,6 +35,7 @@ jobs:
       - name: Build APK
         env:
           METEOBLUE_API_KEY: ${{ secrets.METEOBLUE_API_KEY }}
+          WINDY_WEBCAMS_API_KEY: ${{ secrets.WINDY_WEBCAMS_API_KEY }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew --no-daemon assembleDebug assembleRelease
 

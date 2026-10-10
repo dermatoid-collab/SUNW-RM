@@ -21,6 +21,8 @@ android {
 
         // MeteoBlue key from the CI secret METEOBLUE_API_KEY; without it the weather card says so.
         buildConfigField("String", "METEOBLUE_API_KEY", "\"${System.getenv("METEOBLUE_API_KEY") ?: ""}\"")
+        // Windy Webcams key from the CI secret WINDY_WEBCAMS_API_KEY; without it only "my webcams" work.
+        buildConfigField("String", "WINDY_WEBCAMS_API_KEY", "\"${System.getenv("WINDY_WEBCAMS_API_KEY") ?: ""}\"")
     }
 
     buildFeatures {

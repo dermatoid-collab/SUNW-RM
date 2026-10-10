@@ -2,4 +2,8 @@
 <resources>
     <!-- Views created in code (dialog fields), referenced by tests. -->
     <item name="favorite_name" type="id" />
+    <item name="wc_page" type="id" />
+    <item name="wc_add" type="id" />
+    <item name="wc_name" type="id" />
+    <item name="wc_address" type="id" />
 </resources>

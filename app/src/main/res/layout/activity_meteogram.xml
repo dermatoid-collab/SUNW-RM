@@ -155,6 +155,48 @@
                 android:textSize="11.5sp" />
         </LinearLayout>
 
+        <!-- Webcams near the place: four previews and the button to the full list. -->
+        <LinearLayout
+            android:id="@+id/mg_webcams"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="14dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/card_background"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <TextView
+                android:id="@+id/mg_webcams_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/wc_title"
+                android:textSize="16sp" />
+
+            <LinearLayout
+                android:id="@+id/mg_webcams_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal" />
+
+            <TextView
+                android:id="@+id/mg_webcams_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/mg_webcams_all"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="@string/wc_all"
+                android:textSize="14sp" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/mg_status"
             android:layout_width="match_parent"

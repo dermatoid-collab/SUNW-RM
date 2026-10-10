@@ -260,4 +260,27 @@
     <string name="sm_next_moon">%1$s %2$s · %3$s</string>
     <string name="sm_next_new">Next new moon</string>
     <string name="sm_next_full">Next full moon</string>
+    <string name="wc_title">Webcams</string>
+    <string name="wc_subtitle">%1$s · within %2$d km</string>
+    <string name="wc_tab_near">Nearby</string>
+    <string name="wc_tab_mine">My webcams</string>
+    <string name="wc_no_key">Nearby webcams need the Windy Webcams key, which is missing from this build. Your own webcams work all the same.</string>
+    <string name="wc_loading">Loading webcams…</string>
+    <string name="wc_error">Webcams unavailable: check the connection.</string>
+    <string name="wc_none">No webcam within %1$d km.</string>
+    <string name="wc_windy_note">Previews from the Windy Webcams service (low resolution, reloaded every time you open the page). Not every camera on windy.com is available.</string>
+    <string name="wc_all">All webcams</string>
+    <string name="wc_add">＋ Add webcam</string>
+    <string name="wc_edit">Edit</string>
+    <string name="wc_delete">Delete</string>
+    <string name="wc_name">Name</string>
+    <string name="wc_address">Web address</string>
+    <string name="wc_bad_address">Enter a valid web address.</string>
+    <string name="wc_mine_note">Your own list: any web address of a page or live player. Pages open inside the app; if one does not work there, use “Open in browser”. The list is saved with the settings backup.</string>
+    <string name="wc_own_note">Shown as on its website; it stops when you leave this page.</string>
+    <string name="wc_windy_credit">Webcams provided by windy.com · the image reloads every minute while this page is open.</string>
+    <string name="wc_updated">Updated at %1$s · webcams provided by windy.com</string>
+    <string name="wc_open_browser">Open in browser</string>
+    <string name="wc_section_note">Webcams provided by windy.com</string>
+    <string name="wc_section_none">Open the full list for the nearby webcams and your own.</string>
 </resources>

@@ -14,6 +14,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import it.sunw.widget.AppearanceStore
 import it.sunw.widget.LocationStore
@@ -21,6 +22,10 @@ import it.sunw.widget.MainActivity
 import it.sunw.widget.Palette
 import it.sunw.widget.Place
 import it.sunw.widget.R
+import it.sunw.widget.webcams.ImageLoader
+import it.sunw.widget.webcams.WebcamViewActivity
+import it.sunw.widget.webcams.WebcamsActivity
+import it.sunw.widget.webcams.WindyWebcams
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -60,6 +65,7 @@ class MeteogramActivity : Activity() {
         findViewById<TextView>(R.id.mg_legend).setTextColor(palette.textSecondary)
         val status = findViewById<TextView>(R.id.mg_status).apply { setTextColor(palette.textSecondary) }
 
+        setUpWebcams(palette, place)
         setUpMap(palette, place, savedInstanceState?.getString(STATE_LAYER)?.let { runCatching { Layer.valueOf(it) }.getOrNull() })
 
         val forecast = WeatherRepository(this).cached(place)
@@ -106,6 +112,68 @@ class MeteogramActivity : Activity() {
         fun t(v: Double) = String.format(Locale.getDefault(), "%.1f°", v)
         view.visibility = View.VISIBLE
         view.text = getString(R.string.mg_stats, t(min.value), clock.format(min.time), t(max.value), clock.format(max.time))
+    }
+
+    /** Four previews of the nearest webcams and the button to the full page. */
+    private fun setUpWebcams(palette: Palette, place: Place) {
+        findViewById<View>(R.id.mg_webcams).background =
+            (getDrawable(R.drawable.card_background)!!.mutate() as GradientDrawable).apply { setColor(palette.cardBackground) }
+        findViewById<TextView>(R.id.mg_webcams_title).setTextColor(palette.text)
+        val note = findViewById<TextView>(R.id.mg_webcams_note).apply { setTextColor(palette.textSecondary) }
+        findViewById<TextView>(R.id.mg_webcams_all).apply {
+            setTextColor(palette.text)
+            background = GradientDrawable().apply {
+                cornerRadius = 14 * resources.displayMetrics.density
+                setColor(Palette.blend(palette.cardBackground, palette.accent, 0.22f))
+            }
+            setOnClickListener { startActivity(Intent(this@MeteogramActivity, WebcamsActivity::class.java)) }
+        }
+        val windy = WindyWebcams()
+        if (!windy.hasKey) {
+            note.text = getString(R.string.wc_section_none)
+            return
+        }
+        val row = findViewById<LinearLayout>(R.id.mg_webcams_row)
+        windy.nearby(place) { result ->
+            runOnUiThread {
+                if (isDestroyed) return@runOnUiThread
+                val cams = result.getOrNull()?.take(4).orEmpty()
+                if (cams.isEmpty()) {
+                    note.text = getString(R.string.wc_section_none)
+                    return@runOnUiThread
+                }
+                note.text = getString(R.string.wc_section_note)
+                val d = resources.displayMetrics.density
+                for (cam in cams) {
+                    row.addView(LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        tag = cam.id
+                        addView(android.widget.ImageView(context).apply {
+                            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                            background = GradientDrawable().apply { cornerRadius = 10 * d; setColor(Palette.blend(palette.cardBackground, android.graphics.Color.WHITE, 0.08f)) }
+                            clipToOutline = true
+                            outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
+                            cam.imageUrl?.let { url -> ImageLoader.load(url, 480) { b -> if (b != null) setImageBitmap(b) } }
+                        }, LinearLayout.LayoutParams(-1, (52 * d).toInt()))
+                        addView(TextView(context).apply {
+                            text = cam.title
+                            textSize = 10.5f
+                            maxLines = 1
+                            ellipsize = android.text.TextUtils.TruncateAt.END
+                            setTextColor(palette.textSecondary)
+                            setPadding(0, (4 * d).toInt(), 0, 0)
+                        })
+                        setOnClickListener {
+                            startActivity(Intent(context, WebcamViewActivity::class.java)
+                                .putExtra(WebcamViewActivity.EXTRA_TITLE, cam.title)
+                                .putExtra(WebcamViewActivity.EXTRA_WINDY_ID, cam.id)
+                                .putExtra(WebcamViewActivity.EXTRA_IMAGE, cam.imageUrl)
+                                .putExtra(WebcamViewActivity.EXTRA_PAGE, cam.pageUrl))
+                        }
+                    }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = (8 * d).toInt() })
+                }
+            }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
