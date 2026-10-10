@@ -12,6 +12,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import it.sunw.widget.Palette
+import it.sunw.widget.R
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -37,19 +38,48 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
     private var days = emptyList<Forecast.Day>()
     private var now: LocalDateTime? = null
 
+    /** Leading slots before the forecast starts: only the dimmed temperature of the last 24 hours. */
+    private var pastCount = 0
+
+    /** Slot under the finger after a long press, or -1. */
+    private var cursor = -1
+
     /** Called with the date of the tapped day column. */
     var onDayTap: ((LocalDate) -> Unit)? = null
 
-    fun show(palette: Palette, forecast: Forecast, now: LocalDateTime) {
+    /**
+     * [past] (Open-Meteo) adds the last 24 hours to the left of the forecast and replaces the
+     * forecast temperatures of the hours already gone; everything before "now" is drawn dimmed.
+     */
+    fun show(palette: Palette, forecast: Forecast, now: LocalDateTime, past: PastTemperatures? = null) {
         this.palette = palette
         val start = now.toLocalDate().atStartOfDay()
-        hours = forecast.hours.filter { !it.time.isBefore(start) }.take(MAX_HOURS)
+        val ahead = forecast.hours.filter { !it.time.isBefore(start) }.take(MAX_HOURS)
+        val thisHour = now.truncatedTo(java.time.temporal.ChronoUnit.HOURS)
+        val lead = ArrayList<Forecast.Hour>()
+        if (past != null && ahead.isNotEmpty()) {
+            val daylight = ahead.take(24).associate { it.time.hour to it.isDaylight }
+            var t = thisHour.minusHours(24)
+            while (t.isBefore(start)) {
+                past[t]?.let { lead += blank(t, it, daylight[t.hour] ?: (t.hour in 7..18)) }
+                t = t.plusHours(1)
+            }
+        }
+        pastCount = lead.size
+        hours = lead + ahead.map { h -> if (past != null && h.time.isBefore(thisHour)) past[h.time]?.let { h.copy(temperature = it) } ?: h else h }
+        cursor = -1
         days = forecast.days.filter { !it.date.isBefore(now.toLocalDate()) }
         this.now = now
         contentDescription = null
         requestLayout()
         invalidate()
     }
+
+    private fun blank(time: LocalDateTime, temperature: Double, daylight: Boolean) = Forecast.Hour(
+        time = time, temperature = temperature, feltTemperature = temperature, precipitation = 0.0,
+        precipitationProbability = 0, windSpeed = 0.0, windDirection = 0, condition = Condition.CLEAR,
+        uvIndex = 0, isDaylight = daylight,
+    )
 
     private fun dp(v: Float) = v * resources.displayMetrics.density
     private fun sp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, v, resources.displayMetrics)
@@ -95,7 +125,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
 
         // What the weather does, every 3 hours: the most significant condition of the three.
         val iconPx = dp(ICON_SIZE_DP).roundToInt()
-        for (i in hours.indices step 3) {
+        for (i in pastCount until hours.size step 3) {
             val block = hours.subList(i, minOf(i + 3, hours.size))
             val mid = block[block.size / 2]
             val condition = block.maxBy { it.condition.severity }.condition
@@ -109,6 +139,14 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         // Midnight separators and day headers.
         val dayFormat = DateTimeFormatter.ofPattern("EEE dd/MM", Locale.getDefault())
         paint.textAlign = Paint.Align.CENTER
+        if (pastCount > 0 && hours[0].time.hour != 0) {
+            // The part of yesterday that is still in the last 24 hours, dimmed.
+            val mid = x(((24 - hours[0].time.hour) / 2.0).coerceAtMost(pastCount.toDouble()))
+            paint.style = Paint.Style.FILL
+            paint.color = p.textSecondary
+            paint.textSize = sp(12.5f)
+            canvas.drawText(dayFormat.format(hours[0].time.toLocalDate()).replace(".", "").replaceFirstChar { it.titlecase() }, mid, dp(15f), paint)
+        }
         for ((i, h) in hours.withIndex()) {
             if (h.time.hour != 0) continue
             paint.style = Paint.Style.STROKE
@@ -158,10 +196,13 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = dp(2.5f)
         paint.strokeCap = Paint.Cap.ROUND
+        val elapsed = now?.let { slot(it).toInt() } ?: 0
         for (i in 0 until n - 1) {
             paint.color = WeatherCard.temperatureColor((temps[i] + temps[i + 1]) / 2)
+            paint.alpha = if (i < elapsed) PAST_ALPHA else 255
             canvas.drawLine(cxOf(i), ty(temps[i]), cxOf(i + 1), ty(temps[i + 1]), paint)
         }
+        paint.alpha = 255
         // Each day's warmest and coldest hour, labelled.
         paint.textSize = sp(11f)
         paint.textAlign = Paint.Align.CENTER
@@ -196,7 +237,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         canvas.drawLine(0f, rainBottom, width.toFloat(), rainBottom, paint)
 
         // Wind every 3 hours: an arrow where it blows to, km/h below, stronger winds brighter.
-        for (i in hours.indices step 3) {
+        for (i in pastCount until hours.size step 3) {
             val block = hours.subList(i, minOf(i + 3, hours.size))
             val mid = block[block.size / 2]
             val speed = block.maxOf { it.windSpeed }
@@ -228,7 +269,68 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
                 canvas.drawLine(x(s), header - dp(2f), x(s), windBottom, paint)
             }
         }
+
+        if (cursor in 0 until n) drawCursor(canvas, p, cursor, cxOf(cursor), ty(temps[cursor]), header, windBottom, elapsed)
     }
+
+    /** Line, dot and a label with the time and temperature of slot [i], kept inside the visible part. */
+    private fun drawCursor(canvas: Canvas, p: Palette, i: Int, cx: Float, cy: Float, top: Float, bottom: Float, elapsed: Int) {
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = dp(1.5f)
+        paint.color = p.text
+        canvas.drawLine(cx, top, cx, bottom, paint)
+        paint.style = Paint.Style.FILL
+        paint.color = p.cardBackground
+        canvas.drawCircle(cx, cy, dp(5.5f), paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = dp(2.5f)
+        paint.color = p.text
+        canvas.drawCircle(cx, cy, dp(5.5f), paint)
+
+        val label = cursorLabel(i, elapsed)
+        paint.style = Paint.Style.FILL
+        paint.textSize = sp(12f)
+        val w1 = paint.measureText(label.first)
+        paint.textSize = sp(11f)
+        val w2 = paint.measureText(label.second)
+        val boxW = max(w1, w2) + dp(20f)
+        val boxH = dp(36f)
+        val visible = android.graphics.Rect().also { getLocalVisibleRect(it) }
+        val boxLeft = (cx - boxW / 2).coerceIn(visible.left + dp(4f), max(visible.left + dp(4f), visible.right - boxW - dp(4f)))
+        val boxTop = top + dp(2f)
+        paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.14f)
+        canvas.drawRoundRect(boxLeft, boxTop, boxLeft + boxW, boxTop + boxH, dp(9f), dp(9f), paint)
+        paint.textAlign = Paint.Align.CENTER
+        paint.textSize = sp(12f)
+        paint.color = p.text
+        canvas.drawText(label.first, boxLeft + boxW / 2, boxTop + dp(14f), paint)
+        paint.textSize = sp(11f)
+        paint.color = if (i < elapsed) p.textSecondary else p.accent
+        canvas.drawText(label.second, boxLeft + boxW / 2, boxTop + dp(28f), paint)
+    }
+
+    /** "Sat 10/10 · 15:00" and "15.3° · Open-Meteo" / "forecast" / "now". */
+    internal fun cursorLabel(i: Int, elapsed: Int = now?.let { slot(it).toInt() } ?: 0): Pair<String, String> {
+        val h = hours[i]
+        val whenText = DateTimeFormatter.ofPattern("EEE dd/MM · HH:mm", Locale.getDefault()).format(h.time)
+            .replace(".", "").replaceFirstChar { it.titlecase() }
+        val kind = when {
+            i < elapsed -> context.getString(R.string.mg_cursor_past)
+            i == elapsed -> context.getString(R.string.mg_cursor_now)
+            else -> context.getString(R.string.mg_cursor_forecast)
+        }
+        return whenText to String.format(Locale.getDefault(), "%.1f° · %s", h.temperature, kind)
+    }
+
+    /** For tests: shows the cursor on slot [i] (or hides it with -1). */
+    internal fun setCursor(i: Int) {
+        cursor = if (i in hours.indices) i else -1
+        invalidate()
+    }
+
+    internal val cursorSlot: Int get() = cursor
+    internal val leadingSlots: Int get() = pastCount
+    internal val slots: Int get() = hours.size
 
     /** Calm winds dim, fresh ones in the text colour, strong ones orange, gales red. */
     private fun windColor(kmh: Double, p: Palette): Int = when {
@@ -265,7 +367,19 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
 
     private var downX = 0f
     private var downY = 0f
+    private var pressing = false
     private val slop = ViewConfiguration.get(context).scaledTouchSlop
+
+    private fun slotAt(px: Float) = ((px - left) / hourWidth).toInt().coerceIn(0, max(hours.size - 1, 0))
+
+    /** A long press starts the cursor: from then on the finger moves it and the page does not scroll. */
+    private val startCursor = Runnable {
+        if (!pressing || hours.isEmpty()) return@Runnable
+        cursor = slotAt(downX)
+        parent?.requestDisallowInterceptTouchEvent(true)
+        performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+        invalidate()
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -273,12 +387,33 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             MotionEvent.ACTION_DOWN -> {
                 downX = event.x
                 downY = event.y
+                pressing = true
+                postDelayed(startCursor, ViewConfiguration.getLongPressTimeout().toLong())
                 return true
             }
-            MotionEvent.ACTION_UP -> {
-                if (abs(event.x - downX) < slop && abs(event.y - downY) < slop && hours.isNotEmpty()) {
-                    val i = ((event.x - left) / hourWidth).toInt().coerceIn(0, hours.size - 1)
-                    onDayTap?.invoke(hours[i].time.toLocalDate())
+            MotionEvent.ACTION_MOVE -> {
+                if (cursor >= 0) {
+                    cursor = slotAt(event.x)
+                    invalidate()
+                } else if (abs(event.x - downX) > slop || abs(event.y - downY) > slop) {
+                    removeCallbacks(startCursor)
+                }
+                return true
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                pressing = false
+                removeCallbacks(startCursor)
+                val showedCursor = cursor >= 0
+                cursor = -1
+                if (showedCursor) {
+                    invalidate()
+                    parent?.requestDisallowInterceptTouchEvent(false)
+                    return true
+                }
+                if (event.actionMasked == MotionEvent.ACTION_UP && abs(event.x - downX) < slop && abs(event.y - downY) < slop && hours.isNotEmpty()) {
+                    // Yesterday's dimmed hours have no day page to open.
+                    val i = slotAt(event.x)
+                    if (i >= pastCount) onDayTap?.invoke(hours[i].time.toLocalDate())
                     return true
                 }
             }
@@ -290,6 +425,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         /** Width of one hour: a day is 144 dp, about 2.5 days on a phone screen. */
         private const val HOUR_DP = 6f
         private const val MAX_HOURS = 7 * 24
+        private const val PAST_ALPHA = 110
         private const val HEADER_DP = 38f
         private const val ICON_DP = 26f
         private const val ICON_SIZE_DP = 18f

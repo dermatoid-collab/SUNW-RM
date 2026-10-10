@@ -183,7 +183,12 @@
     </string-array>
     <string name="mg_title">Meteogram</string>
     <string name="mg_subtitle">%1$s · next 7 days</string>
-    <string name="mg_legend">Weather and wind (direction, km/h) every 3 hours · temperature over day/night · rain mm/h (stronger = more likely) · tap a day to open it</string>
+    <string name="mg_legend">Weather and wind (direction, km/h) every 3 hours · temperature over day/night (dimmed: the last 24 hours) · rain mm/h (stronger = more likely) · touch and hold, then drag, for the temperature at that time · tap a day to open it</string>
+    <string name="weather_source_past">MeteoBlue data · updated at %1$s · last 24 h from Open-Meteo</string>
+    <string name="mg_stats">Last 24 h · min %1$s at %2$s · max %3$s at %4$s</string>
+    <string name="mg_cursor_past">Open-Meteo</string>
+    <string name="mg_cursor_forecast">forecast</string>
+    <string name="mg_cursor_now">now</string>
     <string name="mg_open">Radar and meteogram</string>
     <string name="mg_layer_radar">Radar</string>
     <string name="mg_layer_rain">Rain forecast</string>

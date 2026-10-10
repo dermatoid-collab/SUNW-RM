@@ -184,7 +184,12 @@
     </string-array>
     <string name="mg_title">Meteogramma</string>
     <string name="mg_subtitle">%1$s · prossimi 7 giorni</string>
-    <string name="mg_legend">Tempo e vento (direzione, km/h) ogni 3 ore · temperatura su giorno/notte · pioggia mm/h (più intensa = più probabile) · tocca un giorno per aprirlo</string>
+    <string name="mg_legend">Tempo e vento (direzione, km/h) ogni 3 ore · temperatura su giorno/notte (sbiadita: le ultime 24 ore) · pioggia mm/h (più intensa = più probabile) · tocco lungo e trascina per la temperatura in quel momento · tocca un giorno per aprirlo</string>
+    <string name="weather_source_past">Dati MeteoBlue · aggiornato alle %1$s · ultime 24 h da Open-Meteo</string>
+    <string name="mg_stats">Ultime 24 h · min %1$s alle %2$s · max %3$s alle %4$s</string>
+    <string name="mg_cursor_past">Open-Meteo</string>
+    <string name="mg_cursor_forecast">previsione</string>
+    <string name="mg_cursor_now">adesso</string>
     <string name="mg_open">Radar e meteogramma</string>
     <string name="mg_layer_radar">Radar</string>
     <string name="mg_layer_rain">Pioggia prevista</string>

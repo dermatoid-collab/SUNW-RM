@@ -69,14 +69,43 @@ class MeteogramActivity : Activity() {
             return
         }
         val chart = findViewById<MeteogramView>(R.id.mg_chart)
-        chart.show(palette, forecast, forecast.localTime(Instant.now()))
+        val stats = findViewById<TextView>(R.id.mg_stats).apply { setTextColor(palette.textSecondary) }
+        val pastRepo = PastTemperatureRepository(this)
+        val now = forecast.localTime(Instant.now())
+        val updated = DateTimeFormatter.ofPattern("HH:mm").format(forecast.fetchedAt.atZone(java.time.ZoneId.systemDefault()))
+
+        // The last 24 hours (Open-Meteo) sit to the left of "now"; they arrive after the first draw when not cached.
+        fun draw(past: PastTemperatures?) {
+            chart.show(palette, forecast, now, past)
+            showExtremes(stats, palette, past, now)
+            status.text = getString(if (past == null) R.string.weather_source else R.string.weather_source_past, updated)
+        }
+        draw(pastRepo.cached(place))
+        if (!pastRepo.isFresh() || pastRepo.cached(place) == null) {
+            pastRepo.refresh(place) { result ->
+                result.getOrNull()?.let { fresh -> runOnUiThread { if (!isDestroyed) draw(fresh) } }
+            }
+        }
         chart.onDayTap = { date ->
             startActivity(Intent(this, WeatherDayActivity::class.java).putExtra(WeatherDayActivity.EXTRA_DATE, date.toString()))
         }
         // Start a little before the current hour.
         val scroll = findViewById<HorizontalScrollView>(R.id.mg_scroll)
         scroll.post { scroll.scrollTo((chart.nowX() - (40 * resources.displayMetrics.density).toInt()).coerceAtLeast(0), 0) }
-        status.text = getString(R.string.weather_source, DateTimeFormatter.ofPattern("HH:mm").format(forecast.fetchedAt.atZone(java.time.ZoneId.systemDefault())))
+    }
+
+    /** "Last 24 h · min 11.0° at 03:00 · max 18.4° at 15:00", hidden without data. */
+    private fun showExtremes(view: TextView, palette: Palette, past: PastTemperatures?, now: java.time.LocalDateTime) {
+        val extremes = past?.extremes(now)
+        if (extremes == null) {
+            view.visibility = View.GONE
+            return
+        }
+        val (min, max) = extremes
+        val clock = DateTimeFormatter.ofPattern("HH:mm")
+        fun t(v: Double) = String.format(Locale.getDefault(), "%.1f°", v)
+        view.visibility = View.VISIBLE
+        view.text = getString(R.string.mg_stats, t(min.value), clock.format(min.time), t(max.value), clock.format(max.time))
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
