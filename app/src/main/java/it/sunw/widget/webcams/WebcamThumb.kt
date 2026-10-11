@@ -8,11 +8,12 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import it.sunw.widget.Palette
+import it.sunw.widget.R
 import it.sunw.widget.raised
 
 /**
  * Preview box of one of the user's webcams: its picture when an image address is set, otherwise a
- * plain tile with the kind of page (Twitch, Feratel, Web), since a page or player has no picture.
+ * tile with a video-camera icon and the kind of page (Twitch, Feratel, Web).
  */
 object WebcamThumb {
 
@@ -23,11 +24,20 @@ object WebcamThumb {
             clipToOutline = true
             outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
         }
-        box.addView(TextView(context).apply {
-            text = cam.kind
-            textSize = 11.5f
+        // No picture: a video-camera icon with the kind of page under it.
+        box.addView(android.widget.LinearLayout(context).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setTextColor(palette.textSecondary)
+            addView(ImageView(context).apply {
+                setImageResource(R.drawable.ic_webcam)
+                setColorFilter(palette.textSecondary)
+            }, android.widget.LinearLayout.LayoutParams((22 * d).toInt(), (22 * d).toInt()))
+            addView(TextView(context).apply {
+                text = cam.kind
+                textSize = 10f
+                gravity = Gravity.CENTER
+                setTextColor(palette.textSecondary)
+            })
         }, FrameLayout.LayoutParams(-1, -1))
         cam.imageUrl?.let { url ->
             val picture = ImageView(context).apply { scaleType = ImageView.ScaleType.CENTER_CROP; visibility = View.GONE }

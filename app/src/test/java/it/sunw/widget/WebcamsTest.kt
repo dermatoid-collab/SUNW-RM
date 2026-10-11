@@ -98,8 +98,10 @@ class WebcamsTest {
         for (i in 0 until 4) {
             val tile = mine.getChildAt(i) as android.widget.LinearLayout
             assertEquals(2, tile.childCount)
-            // Preview first (a plain tile with the kind of page when there is no picture), then the caption.
-            val kind = ((tile.getChildAt(0) as ViewGroup).getChildAt(0) as TextView).text.toString()
+            // Preview first (an icon and the kind of page when there is no picture), then the caption.
+            val placeholder = (tile.getChildAt(0) as ViewGroup).getChildAt(0) as ViewGroup
+            assertTrue(placeholder.getChildAt(0) is android.widget.ImageView) // the video-camera icon
+            val kind = (placeholder.getChildAt(1) as TextView).text.toString()
             assertEquals(OwnWebcamStore.DEFAULTS[i].kind, kind)
             assertEquals(OwnWebcamStore.DEFAULTS[i].name, (tile.getChildAt(1) as TextView).text.toString())
         }
