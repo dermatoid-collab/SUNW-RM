@@ -151,7 +151,7 @@
                     android:contentDescription="@string/mg_open"
                     android:foreground="?android:attr/selectableItemBackground"
                     android:orientation="horizontal"
-                    android:padding="4dp">
+                    android:padding="9dp">
 
                     <ImageView
                         android:id="@+id/weather_today_spot"

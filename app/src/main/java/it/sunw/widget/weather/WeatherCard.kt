@@ -96,8 +96,8 @@ class WeatherCard(private val activity: Activity) {
             setOnClickListener(open)
             // A lighter, rounded tile makes the tap area visible.
             background = GradientDrawable().apply {
-                cornerRadius = dp(14).toFloat()
-                setColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.08f))
+                cornerRadius = dp(16).toFloat()
+                setColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.14f))
             }
         }
         val pills = find<View>(R.id.weather_today_pills)

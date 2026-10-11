@@ -287,29 +287,35 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.color = p.text
         canvas.drawCircle(cx, cy, dp(5.5f), paint)
 
+        // Small time and date on top, the temperature large below.
         val label = cursorLabel(i, elapsed)
         paint.style = Paint.Style.FILL
-        paint.textSize = sp(12f)
-        val w1 = paint.measureText(label.first)
+        paint.typeface = android.graphics.Typeface.DEFAULT
         paint.textSize = sp(11f)
+        val w1 = paint.measureText(label.first)
+        paint.typeface = android.graphics.Typeface.DEFAULT_BOLD
+        paint.textSize = sp(16f)
         val w2 = paint.measureText(label.second)
         val boxW = max(w1, w2) + dp(20f)
-        val boxH = dp(36f)
+        val boxH = dp(42f)
         val visible = android.graphics.Rect().also { getLocalVisibleRect(it) }
         val boxLeft = (cx - boxW / 2).coerceIn(visible.left + dp(4f), max(visible.left + dp(4f), visible.right - boxW - dp(4f)))
         val boxTop = top + dp(2f)
+        paint.typeface = android.graphics.Typeface.DEFAULT
         paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.14f)
         canvas.drawRoundRect(boxLeft, boxTop, boxLeft + boxW, boxTop + boxH, dp(9f), dp(9f), paint)
         paint.textAlign = Paint.Align.CENTER
-        paint.textSize = sp(12f)
-        paint.color = p.text
-        canvas.drawText(label.first, boxLeft + boxW / 2, boxTop + dp(14f), paint)
         paint.textSize = sp(11f)
         paint.color = if (i < elapsed) p.textSecondary else p.accent
-        canvas.drawText(label.second, boxLeft + boxW / 2, boxTop + dp(28f), paint)
+        canvas.drawText(label.first, boxLeft + boxW / 2, boxTop + dp(15f), paint)
+        paint.typeface = android.graphics.Typeface.DEFAULT_BOLD
+        paint.textSize = sp(16f)
+        paint.color = p.text
+        canvas.drawText(label.second, boxLeft + boxW / 2, boxTop + dp(35f), paint)
+        paint.typeface = android.graphics.Typeface.DEFAULT
     }
 
-    /** "Sat 10/10 · 15:00" and "15.3° · Open-Meteo" / "forecast" / "now". */
+    /** "Sat 10/10 · 14:00 · forecast" (or Open-Meteo / now) and "15.3°". */
     internal fun cursorLabel(i: Int, elapsed: Int = now?.let { slot(it).toInt() } ?: 0): Pair<String, String> {
         val h = hours[i]
         val whenText = DateTimeFormatter.ofPattern("EEE dd/MM · HH:mm", Locale.getDefault()).format(h.time)
@@ -319,7 +325,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             i == elapsed -> context.getString(R.string.mg_cursor_now)
             else -> context.getString(R.string.mg_cursor_forecast)
         }
-        return whenText to String.format(Locale.getDefault(), "%.1f° · %s", h.temperature, kind)
+        return "$whenText · $kind" to String.format(Locale.getDefault(), "%.1f°", h.temperature)
     }
 
     /** For tests: shows the cursor on slot [i] (or hides it with -1). */

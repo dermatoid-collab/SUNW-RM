@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.HapticFeedbackConstants
@@ -214,28 +215,38 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         paint.color = p.text
         canvas.drawCircle(cx, cy, dp(5.5f), paint)
 
-        val (whenText, what) = cursorLabel(i)
+        // Small time and date on top, the temperature large below.
+        val (whenText, temperature) = cursorLabel(i)
         paint.style = Paint.Style.FILL
-        paint.textSize = sp(12f)
-        val w = max(paint.measureText(whenText), paint.measureText(what)) + dp(20f)
+        paint.typeface = Typeface.DEFAULT
+        paint.textSize = sp(11f)
+        val w1 = paint.measureText(whenText)
+        paint.typeface = Typeface.DEFAULT_BOLD
+        paint.textSize = sp(16f)
+        val w2 = paint.measureText(temperature)
+        val w = max(w1, w2) + dp(20f)
         val boxLeft = (cx - w / 2).coerceIn(dp(4f), max(dp(4f), width - w - dp(4f)))
         val top = chartTop - dp(6f)
+        paint.typeface = Typeface.DEFAULT
         paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.14f)
-        canvas.drawRoundRect(RectF(boxLeft, top, boxLeft + w, top + dp(36f)), dp(9f), dp(9f), paint)
+        canvas.drawRoundRect(RectF(boxLeft, top, boxLeft + w, top + dp(42f)), dp(9f), dp(9f), paint)
         paint.textAlign = Paint.Align.CENTER
-        paint.color = p.text
-        canvas.drawText(whenText, boxLeft + w / 2, top + dp(14f), paint)
         paint.textSize = sp(11f)
         paint.color = p.textSecondary
-        canvas.drawText(what, boxLeft + w / 2, top + dp(28f), paint)
+        canvas.drawText(whenText, boxLeft + w / 2, top + dp(15f), paint)
+        paint.typeface = Typeface.DEFAULT_BOLD
+        paint.textSize = sp(16f)
+        paint.color = p.text
+        canvas.drawText(temperature, boxLeft + w / 2, top + dp(35f), paint)
+        paint.typeface = Typeface.DEFAULT
     }
 
-    /** "Sat 10/10 · 14:00" and "18.0° · Open-Meteo". */
+    /** "Sat 10/10 · 14:00 · Open-Meteo" and "18.0°". */
     internal fun cursorLabel(i: Int): Pair<String, String> {
         val t = points[i].first
         val whenText = DateTimeFormatter.ofPattern("EEE dd/MM · HH:mm", Locale.getDefault()).format(t)
             .replace(".", "").replaceFirstChar { it.titlecase() }
-        return whenText to "${deg1(points[i].second)} · ${context.getString(R.string.mg_cursor_past)}"
+        return "$whenText · ${context.getString(R.string.mg_cursor_past)}" to deg1(points[i].second)
     }
 
     private val startCursor = Runnable {
