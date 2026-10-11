@@ -41,7 +41,8 @@ enum class Accent(val key: String, val label: Int, private val color: Int?) {
 }
 
 /** Widget background plus the matching text colours and, for the app pages, page/card colours. */
-enum class Theme(val key: String, val label: Int) {
+enum class Theme(val key: String, val label: Int, val isLight: Boolean = false) {
+    /** The original look (kept under its old key so saved settings still match). */
     ANTHRACITE("anthracite", R.string.theme_anthracite),
     BLACK("black", R.string.theme_black),
     GLASS("glass", R.string.theme_glass),
@@ -50,7 +51,13 @@ enum class Theme(val key: String, val label: Int) {
     CATPPUCCIN("catppuccin", R.string.theme_catppuccin),
     NORD("nord", R.string.theme_nord),
     DRACULA("dracula", R.string.theme_dracula),
-    ROSE_PINE("rose_pine", R.string.theme_rose_pine);
+    ROSE_PINE("rose_pine", R.string.theme_rose_pine),
+    GRUVBOX_DARK("gruvbox_dark", R.string.theme_gruvbox_dark),
+    ONE_DARK("one_dark", R.string.theme_one_dark),
+    SOLARIZED_DARK("solarized_dark", R.string.theme_solarized_dark),
+    SOLARIZED_LIGHT("solarized_light", R.string.theme_solarized_light, isLight = true),
+    CATPPUCCIN_LATTE("catppuccin_latte", R.string.theme_catppuccin_latte, isLight = true),
+    GRUVBOX_LIGHT("gruvbox_light", R.string.theme_gruvbox_light, isLight = true);
 
     /** Rounded (system radius) and square-ish (1×1 "big") background drawables. */
     val background: Int
@@ -64,6 +71,12 @@ enum class Theme(val key: String, val label: Int) {
             NORD -> R.drawable.widget_bg_nord
             DRACULA -> R.drawable.widget_bg_dracula
             ROSE_PINE -> R.drawable.widget_bg_rose_pine
+            GRUVBOX_DARK -> R.drawable.widget_bg_gruvbox_dark
+            ONE_DARK -> R.drawable.widget_bg_one_dark
+            SOLARIZED_DARK -> R.drawable.widget_bg_solarized_dark
+            SOLARIZED_LIGHT -> R.drawable.widget_bg_solarized_light
+            CATPPUCCIN_LATTE -> R.drawable.widget_bg_catppuccin_latte
+            GRUVBOX_LIGHT -> R.drawable.widget_bg_gruvbox_light
         }
     val backgroundSquare: Int
         get() = when (this) {
@@ -76,6 +89,12 @@ enum class Theme(val key: String, val label: Int) {
             NORD -> R.drawable.widget_bg_square_nord
             DRACULA -> R.drawable.widget_bg_square_dracula
             ROSE_PINE -> R.drawable.widget_bg_square_rose_pine
+            GRUVBOX_DARK -> R.drawable.widget_bg_square_gruvbox_dark
+            ONE_DARK -> R.drawable.widget_bg_square_one_dark
+            SOLARIZED_DARK -> R.drawable.widget_bg_square_solarized_dark
+            SOLARIZED_LIGHT -> R.drawable.widget_bg_square_solarized_light
+            CATPPUCCIN_LATTE -> R.drawable.widget_bg_square_catppuccin_latte
+            GRUVBOX_LIGHT -> R.drawable.widget_bg_square_gruvbox_light
         }
 }
 
@@ -99,6 +118,17 @@ data class Palette(
     val highSun: Int,
     val twilightBand: Int,
 ) {
+    val isLight: Boolean get() = theme.isLight
+
+    /**
+     * [cardBackground] pushed [amount] towards the text colour: a lighter tile on a dark theme,
+     * a darker one on a light theme, so raised areas and rules stay visible on both.
+     */
+    fun raised(amount: Float): Int = blend(cardBackground, text, amount)
+
+    /** Colour of the unlit part of the Moon: a clear grey disc on light themes. */
+    fun moonDark(): Int = raised(if (isLight) 0.45f else 0.08f)
+
     /** Colour of the curve (and the Sun dot) at a given solar elevation. */
     fun curveColor(elevation: Double): Int = when (curveStyle) {
         CurveStyle.ACCENT, CurveStyle.TWILIGHT -> if (elevation > SunCalculator.HORIZON_DEG) accent else dim
@@ -153,7 +183,7 @@ class AppearanceStore(private val context: Context) {
         set(value) = prefs.edit().putString(KEY_THEME, value.key).apply()
 
     fun palette(theme: Theme = this.theme): Palette {
-        val accent = accent.resolve(context)
+        val accent = readable(accent.resolve(context), theme.isLight)
         val materialYou = Build.VERSION.SDK_INT >= 31
         fun sys(id: Int, fallback: Int) = if (materialYou) context.getColor(id) else fallback
         return when (theme) {
@@ -199,6 +229,56 @@ class AppearanceStore(private val context: Context) {
                 blueHour = 0xFF9CCFD8.toInt(), goldenHour = 0xFFEB6F92.toInt(),
                 highSun = 0xFFF6C177.toInt(), twilightBand = 0xFFC4A7E7.toInt(),
             )
+            // Gruvbox, One Dark and Solarized (dark), with their light siblings, as in HRV-RM.
+            Theme.GRUVBOX_DARK -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF282828.toInt(), text = 0xFFEBDBB2.toInt(), textSecondary = 0xFFD5C4A1.toInt(),
+                dim = 0xFF928374.toInt(), pageBackground = 0xFF1D2021.toInt(), cardBackground = 0xFF32302F.toInt(),
+                sky = sky(0xFF3C3836, 0xFF504945, 0xFF458588, 0xFFB16286, 0xFFFB4934, 0xFFFE8019, 0xFFFABD2F, 0xFFFBF1C7),
+                blueHour = 0xFF83A598.toInt(), goldenHour = 0xFFFE8019.toInt(),
+                highSun = 0xFFFABD2F.toInt(), twilightBand = 0xFF83A598.toInt(),
+            )
+            Theme.ONE_DARK -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF282C34.toInt(), text = 0xFFABB2BF.toInt(), textSecondary = 0xFF9DA5B4.toInt(),
+                dim = 0xFF5C6370.toInt(), pageBackground = 0xFF21252B.toInt(), cardBackground = 0xFF2C313A.toInt(),
+                sky = sky(0xFF353B45, 0xFF3E4451, 0xFF61AFEF, 0xFFC678DD, 0xFFE06C75, 0xFFD19A66, 0xFFE5C07B, 0xFFABB2BF),
+                blueHour = 0xFF61AFEF.toInt(), goldenHour = 0xFFD19A66.toInt(),
+                highSun = 0xFFE5C07B.toInt(), twilightBand = 0xFFC678DD.toInt(),
+            )
+            Theme.SOLARIZED_DARK -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF002B36.toInt(), text = 0xFF93A1A1.toInt(), textSecondary = 0xFF839496.toInt(),
+                dim = 0xFF586E75.toInt(), pageBackground = 0xFF00212B.toInt(), cardBackground = 0xFF073642.toInt(),
+                sky = sky(0xFF073642, 0xFF0E4350, 0xFF268BD2, 0xFF6C71C4, 0xFFD33682, 0xFFCB4B16, 0xFFB58900, 0xFFEEE8D5),
+                blueHour = 0xFF268BD2.toInt(), goldenHour = 0xFFCB4B16.toInt(),
+                highSun = 0xFFB58900.toInt(), twilightBand = 0xFF6C71C4.toInt(),
+            )
+            // Light themes: page in the base colour, cards a step darker, deeper sky colours.
+            Theme.SOLARIZED_LIGHT -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFFFDF6E3.toInt(), text = 0xFF073642.toInt(), textSecondary = 0xFF586E75.toInt(),
+                dim = 0xFF93A1A1.toInt(), pageBackground = 0xFFFDF6E3.toInt(), cardBackground = 0xFFEEE8D5.toInt(),
+                sky = sky(0xFF586E75, 0xFF6C71C4, 0xFF268BD2, 0xFFD33682, 0xFFDC322F, 0xFFCB4B16, 0xFFB58900, 0xFFB58900),
+                blueHour = 0xFF268BD2.toInt(), goldenHour = 0xFFCB4B16.toInt(),
+                highSun = 0xFFB58900.toInt(), twilightBand = 0xFF6C71C4.toInt(),
+            )
+            Theme.CATPPUCCIN_LATTE -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFFEFF1F5.toInt(), text = 0xFF4C4F69.toInt(), textSecondary = 0xFF6C6F85.toInt(),
+                dim = 0xFF9CA0B0.toInt(), pageBackground = 0xFFEFF1F5.toInt(), cardBackground = 0xFFDCE0E8.toInt(),
+                sky = sky(0xFF9CA0B0, 0xFF7287FD, 0xFF1E66F5, 0xFF8839EF, 0xFFD20F39, 0xFFFE640B, 0xFFDF8E1D, 0xFFDF8E1D),
+                blueHour = 0xFF1E66F5.toInt(), goldenHour = 0xFFFE640B.toInt(),
+                highSun = 0xFFDF8E1D.toInt(), twilightBand = 0xFF8839EF.toInt(),
+            )
+            Theme.GRUVBOX_LIGHT -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFFFBF1C7.toInt(), text = 0xFF3C3836.toInt(), textSecondary = 0xFF665C54.toInt(),
+                dim = 0xFF928374.toInt(), pageBackground = 0xFFFBF1C7.toInt(), cardBackground = 0xFFEBDBB2.toInt(),
+                sky = sky(0xFFA89984, 0xFF076678, 0xFF458588, 0xFFB16286, 0xFF9D0006, 0xFFAF3A03, 0xFFB57614, 0xFFB57614),
+                blueHour = 0xFF076678.toInt(), goldenHour = 0xFFAF3A03.toInt(),
+                highSun = 0xFFB57614.toInt(), twilightBand = 0xFF8F3F71.toInt(),
+            )
             else -> {
                 val (bg, text, secondary) = when (theme) {
                     Theme.MATERIAL_YOU -> Triple(
@@ -223,6 +303,13 @@ class AppearanceStore(private val context: Context) {
     }
 
     companion object {
+        /** A light accent (amber, white…) is darkened on a light theme so text in it stays readable. */
+        fun readable(accent: Int, onLight: Boolean): Int {
+            if (!onLight) return accent
+            val luminance = (0.299 * Color.red(accent) + 0.587 * Color.green(accent) + 0.114 * Color.blue(accent)) / 255
+            return if (luminance > 0.45) Palette.blend(accent, Color.BLACK, 0.45f) else accent
+        }
+
         private const val KEY_CURVE = "curve"
         private const val KEY_ACCENT = "accent"
         private const val KEY_THEME = "theme"
@@ -247,5 +334,24 @@ class AppearanceStore(private val context: Context) {
             -2.0 to 0xFFBB9AF7.toInt(), 1.0 to 0xFFF7768E.toInt(), 6.0 to 0xFFFF9E64.toInt(),
             15.0 to 0xFFE0AF68.toInt(), 30.0 to 0xFFC0CAF5.toInt(),
         )
+    }
+}
+
+/** Status and navigation bars in the page colour, with dark icons on a light theme. */
+fun Palette.styleSystemBars(window: android.view.Window) {
+    window.statusBarColor = pageBackground
+    window.navigationBarColor = pageBackground
+    if (Build.VERSION.SDK_INT >= 30) {
+        val mask = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+            android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+        window.decorView.windowInsetsController?.setSystemBarsAppearance(if (isLight) mask else 0, mask)
+    } else {
+        @Suppress("DEPRECATION")
+        var flags = window.decorView.systemUiVisibility
+        @Suppress("DEPRECATION")
+        val light = android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        flags = if (isLight) flags or light else flags and light.inv()
+        @Suppress("DEPRECATION")
+        window.decorView.systemUiVisibility = flags
     }
 }

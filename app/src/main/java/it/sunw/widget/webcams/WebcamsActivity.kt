@@ -23,6 +23,7 @@ import it.sunw.widget.MainActivity
 import it.sunw.widget.Palette
 import it.sunw.widget.Place
 import it.sunw.widget.R
+import it.sunw.widget.styleSystemBars
 import java.util.Locale
 
 /**
@@ -51,8 +52,7 @@ class WebcamsActivity : Activity() {
         palette = AppearanceStore(this).palette()
         place = LocationStore(this).current()
         window.decorView.setBackgroundColor(palette.pageBackground)
-        window.statusBarColor = palette.pageBackground
-        window.navigationBarColor = palette.pageBackground
+        palette.styleSystemBars(window)
 
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         root.addView(header())
@@ -201,7 +201,7 @@ class WebcamsActivity : Activity() {
     private fun thumbnail(url: String?, heightDp: Int): ImageView = ImageView(this).apply {
         scaleType = ImageView.ScaleType.CENTER_CROP
         layoutParams = LinearLayout.LayoutParams(-1, dp(heightDp))
-        background = GradientDrawable().apply { cornerRadius = dp(10).toFloat(); setColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.08f)) }
+        background = GradientDrawable().apply { cornerRadius = dp(10).toFloat(); setColor(palette.raised(0.08f)) }
         clipToOutline = true
         outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
         if (url != null) ImageLoader.load(url, 640) { bitmap -> if (bitmap != null) setImageBitmap(bitmap) }
@@ -214,7 +214,7 @@ class WebcamsActivity : Activity() {
                 gravity = Gravity.CENTER_VERTICAL
                 tag = cam.url
                 setPadding(dp(12), dp(8), dp(4), dp(8))
-                background = GradientDrawable().apply { cornerRadius = dp(14).toFloat(); setColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.07f)) }
+                background = GradientDrawable().apply { cornerRadius = dp(14).toFloat(); setColor(palette.raised(0.07f)) }
                 addView(LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
                     addView(TextView(context).apply { text = cam.name; textSize = 15f; setTextColor(palette.text) })

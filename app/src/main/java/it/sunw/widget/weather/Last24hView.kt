@@ -117,7 +117,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         for ((k, tile) in tiles.withIndex()) {
             val l = k * (cell + gap)
             paint.style = Paint.Style.FILL
-            paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.07f)
+            paint.color = p.raised(0.07f)
             canvas.drawRoundRect(RectF(l, 0f, l + cell, dp(TILES_DP - 8f)), dp(12f), dp(12f), paint)
             paint.textAlign = Paint.Align.LEFT
             paint.color = p.textSecondary
@@ -145,7 +145,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         while (g <= hi()) {
             val gy = y(g)
             paint.style = Paint.Style.STROKE
-            paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.12f)
+            paint.color = p.raised(0.12f)
             canvas.drawLine(0f, gy, width.toFloat(), gy, paint)
             paint.style = Paint.Style.FILL
             paint.color = p.textSecondary
@@ -228,7 +228,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         val boxLeft = (cx - w / 2).coerceIn(dp(4f), max(dp(4f), width - w - dp(4f)))
         val top = chartTop - dp(6f)
         paint.typeface = Typeface.DEFAULT
-        paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.14f)
+        paint.color = p.raised(0.14f)
         canvas.drawRoundRect(RectF(boxLeft, top, boxLeft + w, top + dp(42f)), dp(9f), dp(9f), paint)
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = sp(11f)

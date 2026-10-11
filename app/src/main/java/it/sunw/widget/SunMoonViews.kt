@@ -204,7 +204,7 @@ class SunCompassView @JvmOverloads constructor(context: Context, attrs: Attribut
 
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = dpf(1.5f)
-        paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.2f)
+        paint.color = p.raised(0.2f)
         canvas.drawCircle(c, cy, r, paint)
 
         paint.style = Paint.Style.FILL

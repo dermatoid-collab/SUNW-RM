@@ -23,6 +23,7 @@ import android.widget.TextView
 import it.sunw.widget.AppearanceStore
 import it.sunw.widget.Palette
 import it.sunw.widget.R
+import it.sunw.widget.styleSystemBars
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -48,8 +49,7 @@ class WebcamViewActivity : Activity() {
         super.onCreate(savedInstanceState)
         val palette = AppearanceStore(this).palette()
         window.decorView.setBackgroundColor(palette.pageBackground)
-        window.statusBarColor = palette.pageBackground
-        window.navigationBarColor = palette.pageBackground
+        palette.styleSystemBars(window)
         windyId = intent.getLongExtra(EXTRA_WINDY_ID, 0L)
         val own = intent.getStringExtra(EXTRA_URL)
         pageUrl = own ?: intent.getStringExtra(EXTRA_PAGE)

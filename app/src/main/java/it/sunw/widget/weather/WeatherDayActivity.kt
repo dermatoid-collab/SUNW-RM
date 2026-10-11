@@ -28,6 +28,7 @@ import it.sunw.widget.MainActivity
 import it.sunw.widget.MoonCalculator
 import it.sunw.widget.Palette
 import it.sunw.widget.R
+import it.sunw.widget.styleSystemBars
 import it.sunw.widget.SunCalculator
 import it.sunw.widget.alerts.AlertRepository
 import it.sunw.widget.alerts.Bulletin
@@ -75,8 +76,7 @@ class WeatherDayActivity : Activity() {
         setContentView(R.layout.activity_weather_day)
         palette = AppearanceStore(this).palette()
         window.decorView.setBackgroundColor(palette.pageBackground)
-        window.statusBarColor = palette.pageBackground
-        window.navigationBarColor = palette.pageBackground
+        palette.styleSystemBars(window)
 
         val place = LocationStore(this).current()
         findViewById<TextView>(R.id.day_back).apply {
@@ -341,7 +341,7 @@ class WeatherDayActivity : Activity() {
             list.addView(text(getString(R.string.detail_no_hours), 15.5f, palette.textSecondary))
             return
         }
-        val divider = Palette.blend(palette.cardBackground, Color.WHITE, 0.18f)
+        val divider = palette.raised(0.18f)
         hours.forEachIndexed { i, h ->
             if (i > 0) list.addView(View(this).apply {
                 setBackgroundColor(divider)

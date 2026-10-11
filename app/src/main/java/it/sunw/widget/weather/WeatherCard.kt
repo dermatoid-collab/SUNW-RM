@@ -97,7 +97,7 @@ class WeatherCard(private val activity: Activity) {
             // A lighter, rounded tile makes the tap area visible.
             background = GradientDrawable().apply {
                 cornerRadius = dp(16).toFloat()
-                setColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.14f))
+                setColor(palette.raised(0.14f))
             }
         }
         val pills = find<View>(R.id.weather_today_pills)
@@ -156,7 +156,7 @@ class WeatherCard(private val activity: Activity) {
     private fun style(palette: Palette) {
         find<LinearLayout>(R.id.weather_card).background =
             (activity.getDrawable(R.drawable.card_background)!!.mutate() as GradientDrawable).apply { setColor(palette.cardBackground) }
-        find<View>(R.id.weather_divider).setBackgroundColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.08f))
+        find<View>(R.id.weather_divider).setBackgroundColor(palette.raised(0.08f))
         find<TextView>(R.id.weather_status).setTextColor(palette.textSecondary)
     }
 

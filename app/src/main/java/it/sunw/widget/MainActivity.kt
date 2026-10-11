@@ -177,8 +177,7 @@ class MainActivity : Activity() {
         val now = Instant.now()
 
         window.decorView.setBackgroundColor(palette.pageBackground)
-        window.statusBarColor = palette.pageBackground
-        window.navigationBarColor = palette.pageBackground
+        palette.styleSystemBars(window)
 
         findViewById<TextView>(R.id.place).apply {
             text = getString(R.string.place_with_menu, placeLabel(this@MainActivity, place))
@@ -308,7 +307,7 @@ class MainActivity : Activity() {
         val phase = MoonCalculator.phase(now)
         val sizePx = dp(64)
         findViewById<ImageView>(R.id.moon_image).setImageBitmap(
-            MoonRenderer.draw(sizePx, phase, place.latitude < 0, dark = Palette.blend(palette.cardBackground, Color.WHITE, 0.08f), lit = MOON_LIT),
+            MoonRenderer.draw(sizePx, phase, place.latitude < 0, dark = palette.moonDark(), lit = MOON_LIT),
         )
         findViewById<TextView>(R.id.moon_illumination).apply {
             text = getString(R.string.percent, Math.round(phase.illumination * 100).toInt())
@@ -339,7 +338,7 @@ class MainActivity : Activity() {
             text = next
             setTextColor(palette.textSecondary)
         }
-        findViewById<android.view.View>(R.id.moon_divider).setBackgroundColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.08f))
+        findViewById<android.view.View>(R.id.moon_divider).setBackgroundColor(palette.raised(0.08f))
         showMoonWeek(palette, place, now, zone)
     }
 
@@ -362,7 +361,7 @@ class MainActivity : Activity() {
             }
             cell.addView(ImageView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(iconPx, iconPx)
-                setImageBitmap(MoonRenderer.draw(iconPx, phase, place.latitude < 0, Palette.blend(palette.cardBackground, Color.WHITE, 0.08f), MOON_LIT))
+                setImageBitmap(MoonRenderer.draw(iconPx, phase, place.latitude < 0, palette.moonDark(), MOON_LIT))
             })
             // Labels span the column and centre their text, so they line up under the icon.
             fun label(value: String, sizeSp: Float, color: Int, topPadPx: Int = 0) = TextView(this).apply {

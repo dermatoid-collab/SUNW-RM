@@ -42,7 +42,7 @@ L'icona ⚙ apre le **impostazioni**:
 - **Crepuscoli**: curva come «Accento» più tre fasce sotto l'orizzonte (civile 0…−6°, nautico −6…−12°, astronomico −12…−18°).
 
 Colori d'accento: Ambra, Material You, Ghiaccio, Alpino, Corallo, Bianco, Tokyo giallo, Tokyo blu.
-Sfondi: Antracite, Nero, Vetro (semitrasparente), Material You, Tokyo Night (con la scala «Cielo» ricavata dalla palette Tokyo Night).
+Sfondi (temi): **SUNW-RM Legacy** (l'aspetto originale, ex «Antracite»), Nero, Vetro (semitrasparente), Material You, Tokyo Night (con la scala «Cielo» ricavata dalla palette Tokyo Night), Catppuccin, Nord, Dracula, Rosé Pine e, come in HRV-RM, Gruvbox Dark, One Dark, Solarized Dark e tre temi chiari: Solarized Light, Catppuccin Latte, Gruvbox Light. Nei temi chiari le barre di sistema hanno icone scure e l'accento troppo chiaro (ambra, bianco) viene scurito per restare leggibile.
 
 ## Come funziona
 

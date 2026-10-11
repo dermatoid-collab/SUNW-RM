@@ -151,7 +151,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             if (h.time.hour != 0) continue
             paint.style = Paint.Style.STROKE
             paint.strokeWidth = dp(1f)
-            paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.22f)
+            paint.color = p.raised(0.22f)
             canvas.drawLine(x(i.toDouble()), 0f, x(i.toDouble()), windBottom, paint)
             val date = h.time.toLocalDate()
             val cx = x(i + 12.0)
@@ -233,7 +233,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.alpha = 255
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = dp(1f)
-        paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.15f)
+        paint.color = p.raised(0.15f)
         canvas.drawLine(0f, rainBottom, width.toFloat(), rainBottom, paint)
 
         // Wind every 3 hours: an arrow where it blows to, km/h below, stronger winds brighter.
@@ -302,7 +302,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         val boxLeft = (cx - boxW / 2).coerceIn(visible.left + dp(4f), max(visible.left + dp(4f), visible.right - boxW - dp(4f)))
         val boxTop = top + dp(2f)
         paint.typeface = android.graphics.Typeface.DEFAULT
-        paint.color = Palette.blend(p.cardBackground, Color.WHITE, 0.14f)
+        paint.color = p.raised(0.14f)
         canvas.drawRoundRect(boxLeft, boxTop, boxLeft + boxW, boxTop + boxH, dp(9f), dp(9f), paint)
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = sp(11f)

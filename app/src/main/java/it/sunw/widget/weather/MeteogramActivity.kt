@@ -22,6 +22,7 @@ import it.sunw.widget.MainActivity
 import it.sunw.widget.Palette
 import it.sunw.widget.Place
 import it.sunw.widget.R
+import it.sunw.widget.styleSystemBars
 import it.sunw.widget.webcams.ImageLoader
 import it.sunw.widget.webcams.OwnWebcamStore
 import it.sunw.widget.webcams.WebcamViewActivity
@@ -48,8 +49,7 @@ class MeteogramActivity : Activity() {
         setContentView(R.layout.activity_meteogram)
         val palette = AppearanceStore(this).palette()
         window.decorView.setBackgroundColor(palette.pageBackground)
-        window.statusBarColor = palette.pageBackground
-        window.navigationBarColor = palette.pageBackground
+        palette.styleSystemBars(window)
 
         val place = LocationStore(this).current()
         findViewById<ImageButton>(R.id.mg_back).apply {
@@ -154,7 +154,7 @@ class MeteogramActivity : Activity() {
                 setPadding((4 * d).toInt(), 0, (4 * d).toInt(), 0)
                 background = GradientDrawable().apply {
                     cornerRadius = 10 * d
-                    setColor(Palette.blend(palette.cardBackground, android.graphics.Color.WHITE, 0.08f))
+                    setColor(palette.raised(0.08f))
                 }
                 setOnClickListener {
                     startActivity(Intent(context, WebcamViewActivity::class.java)
@@ -189,7 +189,7 @@ class MeteogramActivity : Activity() {
                         tag = cam.id
                         addView(android.widget.ImageView(context).apply {
                             scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-                            background = GradientDrawable().apply { cornerRadius = 10 * d; setColor(Palette.blend(palette.cardBackground, android.graphics.Color.WHITE, 0.08f)) }
+                            background = GradientDrawable().apply { cornerRadius = 10 * d; setColor(palette.raised(0.08f)) }
                             clipToOutline = true
                             outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
                             cam.imageUrl?.let { url -> ImageLoader.load(url, 480) { b -> if (b != null) setImageBitmap(b) } }

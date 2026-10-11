@@ -88,8 +88,7 @@ class SunMoonActivity : Activity() {
         metric = savedInstanceState?.getString(STATE_METRIC)?.let { runCatching { Metric.valueOf(it) }.getOrNull() } ?: Metric.NIGHT
 
         window.decorView.setBackgroundColor(palette.pageBackground)
-        window.statusBarColor = palette.pageBackground
-        window.navigationBarColor = palette.pageBackground
+        palette.styleSystemBars(window)
         styleStaticParts()
         setUpYear()
         setUpSlider()
@@ -163,7 +162,7 @@ class SunMoonActivity : Activity() {
         // Same background as the sun tile on the main page.
         findViewById<View>(R.id.sm_sun_card).setBackgroundResource(palette.theme.background)
         findViewById<View>(R.id.sm_moon_card).background = card(palette.cardBackground)
-        val inner = Palette.blend(palette.cardBackground, Color.WHITE, 0.05f)
+        val inner = palette.raised(0.05f)
         for (id in listOf(R.id.sm_useful_box, R.id.sm_morning, R.id.sm_evening)) {
             findViewById<View>(id).background = card(inner, 12)
         }
@@ -200,7 +199,7 @@ class SunMoonActivity : Activity() {
         when (view.tag) {
             "card" -> view.background = card(palette.cardBackground, 20)
             "cell" -> view.background = card(palette.cardBackground, 16)
-            "rule" -> view.setBackgroundColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.12f))
+            "rule" -> view.setBackgroundColor(palette.raised(0.12f))
             "label" -> (view as TextView).setTextColor(palette.textSecondary)
             "value" -> (view as TextView).setTextColor(palette.text)
             "section" -> (view as TextView).setTextColor(palette.accent)
@@ -314,7 +313,7 @@ class SunMoonActivity : Activity() {
                 background = GradientDrawable().apply {
                     cornerRadius = dp(14).toFloat()
                     setColor(if (on) Palette.blend(palette.cardBackground, palette.accent, 0.22f) else Color.TRANSPARENT)
-                    setStroke(dp(1), if (on) palette.accent else Palette.blend(palette.cardBackground, Color.WHITE, 0.18f))
+                    setStroke(dp(1), if (on) palette.accent else palette.raised(0.18f))
                 }
             }
         }
@@ -538,7 +537,7 @@ class SunMoonActivity : Activity() {
         val noon = date.atTime(12, 0).atZone(zone).toInstant()
         val phase = MoonCalculator.phase(if (offset == 0) Instant.now() else noon)
         findViewById<ImageView>(R.id.sm_moon_image).setImageBitmap(
-            MoonRenderer.draw(dp(64), phase, place.latitude < 0, Palette.blend(palette.cardBackground, Color.WHITE, 0.08f), MOON_LIT),
+            MoonRenderer.draw(dp(64), phase, place.latitude < 0, palette.moonDark(), MOON_LIT),
         )
         findViewById<TextView>(R.id.sm_moon_pct).text = getString(R.string.percent, (phase.illumination * 100).roundToInt())
         findViewById<TextView>(R.id.sm_moon_name).text = getString(MainActivity.phaseName(phase.name))
