@@ -65,6 +65,21 @@ class MeteogramTest {
     }
 
     @Test
+    fun tappingTheMaxMinPillsAlsoOpensTheMeteogram() {
+        val main = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        val forecast = Forecast.parse(json(), Instant.now())
+        WeatherCard(main).show(AppearanceStore(main).palette(), forecast, Instant.now())
+        // One tap area around the spot and the two pills.
+        val target = main.findViewById<View>(R.id.weather_today_target)
+        val pills = main.findViewById<android.view.ViewGroup>(R.id.weather_today_pills)
+        assertTrue(pills.childCount == 2)
+        assertEquals(target, pills.parent)
+        assertEquals(target, main.findViewById<View>(R.id.weather_today_spot).parent)
+        target.performClick()
+        assertEquals(MeteogramActivity::class.java.name, shadowOf(main).nextStartedActivity.component?.className)
+    }
+
+    @Test
     fun withoutARainspotARadarIconTakesItsPlace() {
         val main = Robolectric.buildActivity(MainActivity::class.java).setup().get()
         val forecast = Forecast.parse(WeatherTest.sampleJson(today), Instant.now())

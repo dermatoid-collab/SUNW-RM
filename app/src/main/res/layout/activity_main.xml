@@ -142,22 +142,31 @@
                         android:textSize="12sp" />
                 </LinearLayout>
 
-                <!-- Today's rainspot (or a radar icon), as tall as the two pills: opens radar and meteogram. -->
-                <ImageView
-                    android:id="@+id/weather_today_spot"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:layout_marginStart="6dp"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/mg_open"
-                    android:visibility="gone" />
-
+                <!-- Radar target: today's rainspot (or a radar icon) and the two pills in one tap area,
+                     opens radar and meteogram. The spot is as tall as the two pills. -->
                 <LinearLayout
-                    android:id="@+id/weather_today_pills"
+                    android:id="@+id/weather_today_target"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:orientation="vertical" />
+                    android:background="?android:attr/selectableItemBackground"
+                    android:contentDescription="@string/mg_open"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/weather_today_spot"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:layout_marginStart="6dp"
+                        android:importantForAccessibility="no"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:id="@+id/weather_today_pills"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:orientation="vertical" />
+                </LinearLayout>
             </LinearLayout>
 
             <View

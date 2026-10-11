@@ -84,12 +84,15 @@ class WeatherCard(private val activity: Activity) {
 
     /**
      * Today's rainspot beside the pills, sized to their height (a radar icon when MeteoBlue sends
-     * none); tap → radar and meteogram.
+     * none); a tap on the spot or on the max/min pills → radar and meteogram.
      */
     private fun showTodaySpot(palette: Palette, spot: String?) {
         val view = find<ImageView>(R.id.weather_today_spot)
         view.visibility = View.VISIBLE
-        view.setOnClickListener { activity.startActivity(Intent(activity, MeteogramActivity::class.java)) }
+        // The whole target (spot and pills) opens the page, not just the spot.
+        val open = View.OnClickListener { activity.startActivity(Intent(activity, MeteogramActivity::class.java)) }
+        view.setOnClickListener(open)
+        find<View>(R.id.weather_today_target).setOnClickListener(open)
         val pills = find<View>(R.id.weather_today_pills)
         pills.post {
             val size = pills.height.takeIf { it > 0 } ?: dp(52)
