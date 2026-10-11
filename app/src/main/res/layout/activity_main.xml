@@ -148,15 +148,15 @@
                     android:id="@+id/weather_today_target"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="?android:attr/selectableItemBackground"
                     android:contentDescription="@string/mg_open"
-                    android:orientation="horizontal">
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:orientation="horizontal"
+                    android:padding="4dp">
 
                     <ImageView
                         android:id="@+id/weather_today_spot"
                         android:layout_width="52dp"
                         android:layout_height="52dp"
-                        android:layout_marginStart="6dp"
                         android:importantForAccessibility="no"
                         android:visibility="gone" />
 

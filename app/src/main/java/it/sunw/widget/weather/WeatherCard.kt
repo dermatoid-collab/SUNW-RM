@@ -92,7 +92,14 @@ class WeatherCard(private val activity: Activity) {
         // The whole target (spot and pills) opens the page, not just the spot.
         val open = View.OnClickListener { activity.startActivity(Intent(activity, MeteogramActivity::class.java)) }
         view.setOnClickListener(open)
-        find<View>(R.id.weather_today_target).setOnClickListener(open)
+        find<View>(R.id.weather_today_target).apply {
+            setOnClickListener(open)
+            // A lighter, rounded tile makes the tap area visible.
+            background = GradientDrawable().apply {
+                cornerRadius = dp(14).toFloat()
+                setColor(Palette.blend(palette.cardBackground, Color.WHITE, 0.08f))
+            }
+        }
         val pills = find<View>(R.id.weather_today_pills)
         pills.post {
             val size = pills.height.takeIf { it > 0 } ?: dp(52)
