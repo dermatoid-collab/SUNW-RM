@@ -350,7 +350,7 @@ class WeatherDayActivity : Activity() {
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(6), dp(8), dp(6), dp(8))
+                setPadding(dp(6), dp(ROW_PAD_DP), dp(6), dp(ROW_PAD_DP))
                 val isNow = isToday && h.time.hour == focusHour
                 if (isNow) {
                     focusedRow = this
@@ -446,5 +446,8 @@ class WeatherDayActivity : Activity() {
         /** How far (share of the width) the new day starts from; the pages use 12 %. */
         private const val SLIDE_FRACTION = 0.25f
         private const val SWIPE_MIN_VELOCITY = 600f
+
+        /** Space above and below each hour row, as tight as the Meteoblue app's table (was 8). */
+        private const val ROW_PAD_DP = 6
     }
 }

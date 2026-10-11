@@ -131,6 +131,18 @@ class WeatherTest {
     }
 
     @Test
+    fun rainspotCellsMeetOnWholePixels() {
+        for (size in listOf(42, 118, 146, 200)) {
+            val edges = Rainspot.edges(size * 0.006f, size * 0.988f)
+            assertEquals(8, edges.size)
+            // Strictly increasing, and every cell within a pixel of the exact width: no gaps, no overlaps.
+            assertTrue(edges.toList().zipWithNext().all { (a, b) -> b > a })
+            val exact = size * 0.988f / 7
+            assertTrue(edges.toList().zipWithNext().all { (a, b) -> Math.abs((b - a) - exact) <= 1f })
+        }
+    }
+
+    @Test
     fun rainspotIsParsedPerHourAndDay() {
         val json = JSONObject(sampleJson())
         val spot = "0".repeat(42) + "1111111"

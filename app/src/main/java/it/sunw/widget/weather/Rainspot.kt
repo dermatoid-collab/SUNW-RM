@@ -20,9 +20,12 @@ import android.graphics.RectF
 object Rainspot {
 
     private const val BACKGROUND = 0xFF000000.toInt()
-    private const val TRACES = 0xFF4C8F74.toInt()   // '9' measured
-    private const val LIGHT = 0xFF509DA8.toInt()    // '1' measured
-    private const val MODERATE = 0xFF3D74C4.toInt() // '2'
+    // Tones tuned against a side-by-side screenshot with the Meteoblue app on the same phone:
+    // green and teal a little deeper than first measured, and the moderate level a muted
+    // steel blue (Meteoblue has no bright blue there).
+    private const val TRACES = 0xFF388F74.toInt()   // '9'
+    private const val LIGHT = 0xFF3C9DA8.toInt()    // '1'
+    private const val MODERATE = 0xFF3D7EA6.toInt() // '2'
     private const val HEAVY = 0xFF6A4FB8.toInt()    // '3'
     private const val WHITE = 0xFFF8F8F8.toInt()
 
@@ -40,6 +43,10 @@ object Rainspot {
     /** Code for the cell at [row] (0 = north) and [col] (0 = west). */
     fun cell(rainspot: String, row: Int, col: Int): Char = rainspot[(6 - row) * 7 + col]
 
+    /** The 8 pixel positions of the 7 cell boundaries across [length] starting at [start]. */
+    internal fun edges(start: Float, length: Float): IntArray =
+        IntArray(8) { Math.round(start + length * it / 7f) }
+
     fun draw(sizePx: Int, rainspot: String): Bitmap {
         val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -53,13 +60,15 @@ object Rainspot {
         canvas.save()
         canvas.clipPath(Path().apply { addRoundRect(box, corner, corner, Path.Direction.CW) })
         canvas.drawColor(BACKGROUND)
-        val cellSize = box.width() / 7
+        // Cells on whole pixels and without anti-aliasing: neighbours then meet with no seam.
+        val xs = edges(box.left, box.width())
+        val ys = edges(box.top, box.height())
+        paint.isAntiAlias = false
         for (row in 0 until 7) for (col in 0 until 7) {
             paint.color = color(cell(rainspot, row, col)) ?: continue
-            val left = box.left + col * cellSize
-            val top = box.top + row * cellSize
-            canvas.drawRect(left, top, left + cellSize, top + cellSize, paint)
+            canvas.drawRect(xs[col].toFloat(), ys[row].toFloat(), xs[col + 1].toFloat(), ys[row + 1].toFloat(), paint)
         }
+        paint.isAntiAlias = true
         canvas.restore()
 
         // Target: three rings, ticks across the outer ring, border.
