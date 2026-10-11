@@ -108,6 +108,8 @@ class WebcamsTest {
         val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
         val mine = activity.findViewById<ViewGroup>(R.id.mg_webcams_mine)
         assertEquals(4, mine.childCount)
+        // Tiles with one or two lines of text must not be shifted to line their baselines up.
+        assertTrue(!(mine as android.widget.LinearLayout).isBaselineAligned)
         assertEquals(OwnWebcamStore.DEFAULTS.map { it.url }, (0 until 4).map { mine.getChildAt(it).tag })
         // Order inside the tile: my webcams, then the nearby ones, then the button.
         val card = activity.findViewById<ViewGroup>(R.id.mg_webcams)
