@@ -142,21 +142,24 @@ class SunMoonActivityTest {
         assertTrue(!activity.isFinishing)
     }
 
-    /** Slow gesture on the Moon card: [steps] are (dx dp, dy dp) positions, 400 ms apart, then release. */
+    /** Where the gesture started (the card's centre, taken before the page moves with the finger). */
+    private var origin = 0f to 0f
+
+    /** Slow gesture on the Moon card: [steps] are (dx dp, dy dp) positions, 400 ms apart; the finger stays down. */
     private fun drag(activity: SunMoonActivity, vararg steps: Pair<Float, Float>): android.view.View {
         val r = android.graphics.Rect().also { activity.findViewById<android.view.View>(R.id.sm_moon_card).getGlobalVisibleRect(it) }
+        origin = r.exactCenterX() to r.exactCenterY()
         val d = activity.resources.displayMetrics.density
         fun event(action: Int, dx: Float, dy: Float, t: Long) =
-            android.view.MotionEvent.obtain(0, t, action, r.exactCenterX() + dx * d, r.exactCenterY() + dy * d, 0)
+            android.view.MotionEvent.obtain(0, t, action, origin.first + dx * d, origin.second + dy * d, 0)
         activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_DOWN, 0f, 0f, 0))
         steps.forEachIndexed { i, (dx, dy) -> activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_MOVE, dx, dy, 400L * (i + 1))) }
         return activity.findViewById(R.id.sm_content)
     }
 
     private fun release(activity: SunMoonActivity, dx: Float, dy: Float, t: Long) {
-        val r = android.graphics.Rect().also { activity.findViewById<android.view.View>(R.id.sm_moon_card).getGlobalVisibleRect(it) }
         val d = activity.resources.displayMetrics.density
-        activity.dispatchTouchEvent(android.view.MotionEvent.obtain(0, t, android.view.MotionEvent.ACTION_UP, r.exactCenterX() + dx * d, r.exactCenterY() + dy * d, 0))
+        activity.dispatchTouchEvent(android.view.MotionEvent.obtain(0, t, android.view.MotionEvent.ACTION_UP, origin.first + dx * d, origin.second + dy * d, 0))
     }
 
     @Test
