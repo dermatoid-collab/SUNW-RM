@@ -77,6 +77,35 @@ class WebcamsTest {
     }
 
     @Test
+    fun anImageAddressIsKeptAndSavedWithTheBackup() {
+        val store = OwnWebcamStore(context)
+        val cam = OwnWebcam("Delta", "https://example.com/cam", "https://example.com/cam.jpg")
+        store.add(cam)
+        assertEquals("https://example.com/cam.jpg", store.all().last().imageUrl)
+        assertEquals(null, store.all().first().imageUrl)
+        val json = SettingsBackup.export(context)
+        store.remove(cam)
+        SettingsBackup.import(context, json)
+        assertEquals("https://example.com/cam.jpg", OwnWebcamStore(context).all().last().imageUrl)
+        store.replace(OwnWebcamStore(context).all().last(), cam.copy(imageUrl = null))
+        assertEquals(null, OwnWebcamStore(context).all().last().imageUrl)
+    }
+
+    @Test
+    fun theNameSitsBelowThePreviewOfEachOfMyWebcams() {
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        val mine = activity.findViewById<ViewGroup>(R.id.mg_webcams_mine)
+        for (i in 0 until 4) {
+            val tile = mine.getChildAt(i) as android.widget.LinearLayout
+            assertEquals(2, tile.childCount)
+            // Preview first (a plain tile with the kind of page when there is no picture), then the caption.
+            val kind = ((tile.getChildAt(0) as ViewGroup).getChildAt(0) as TextView).text.toString()
+            assertEquals(OwnWebcamStore.DEFAULTS[i].kind, kind)
+            assertEquals(OwnWebcamStore.DEFAULTS[i].name, (tile.getChildAt(1) as TextView).text.toString())
+        }
+    }
+
+    @Test
     fun addressesAreCheckedAndCompleted() {
         assertEquals("https://example.com/cam", OwnWebcamStore.normalizeUrl(" example.com/cam "))
         assertEquals("http://a.it/x", OwnWebcamStore.normalizeUrl("http://a.it/x"))

@@ -299,4 +299,5 @@
     <string name="l24_legend">Long press and drag for the temperature at that time.</string>
     <string name="wc_section_mine">My webcams</string>
     <string name="wc_section_near">Nearby</string>
+    <string name="wc_image_address">Image address (optional)</string>
 </resources>

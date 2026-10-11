@@ -25,6 +25,7 @@ import it.sunw.widget.R
 import it.sunw.widget.styleSystemBars
 import it.sunw.widget.webcams.ImageLoader
 import it.sunw.widget.webcams.OwnWebcamStore
+import it.sunw.widget.webcams.WebcamThumb
 import it.sunw.widget.webcams.WebcamViewActivity
 import it.sunw.widget.webcams.WebcamsActivity
 import it.sunw.widget.webcams.WindyWebcams
@@ -137,31 +138,30 @@ class MeteogramActivity : Activity() {
         }
         val d = resources.displayMetrics.density
 
-        // First row: the user's own webcams. They are pages, not pictures, so a tile shows the name.
+        // First row: the user's own webcams: their picture (or the kind of page) with the name below, as for the nearby ones.
         val mineLabel = findViewById<TextView>(R.id.mg_webcams_mine_label).apply { setTextColor(palette.textSecondary) }
         val mine = findViewById<LinearLayout>(R.id.mg_webcams_mine)
         val own = OwnWebcamStore(this).all().take(4)
         mineLabel.visibility = if (own.isEmpty()) View.GONE else View.VISIBLE
         for (cam in own) {
-            mine.addView(TextView(this).apply {
+            mine.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
                 tag = cam.url
-                text = cam.name
-                textSize = 11.5f
-                maxLines = 2
-                ellipsize = android.text.TextUtils.TruncateAt.END
-                gravity = android.view.Gravity.CENTER
-                setTextColor(palette.text)
-                setPadding((4 * d).toInt(), 0, (4 * d).toInt(), 0)
-                background = GradientDrawable().apply {
-                    cornerRadius = 10 * d
-                    setColor(palette.raised(0.08f))
-                }
+                addView(WebcamThumb.create(context, cam, palette), LinearLayout.LayoutParams(-1, (52 * d).toInt()))
+                addView(TextView(context).apply {
+                    text = cam.name
+                    textSize = 10.5f
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    setTextColor(palette.textSecondary)
+                    setPadding(0, (4 * d).toInt(), 0, 0)
+                })
                 setOnClickListener {
                     startActivity(Intent(context, WebcamViewActivity::class.java)
                         .putExtra(WebcamViewActivity.EXTRA_TITLE, cam.name)
                         .putExtra(WebcamViewActivity.EXTRA_URL, cam.url))
                 }
-            }, LinearLayout.LayoutParams(0, (52 * d).toInt(), 1f).apply { marginEnd = (8 * d).toInt() })
+            }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = (8 * d).toInt() })
         }
 
         // Second row: the nearest Windy webcams, with their current picture.

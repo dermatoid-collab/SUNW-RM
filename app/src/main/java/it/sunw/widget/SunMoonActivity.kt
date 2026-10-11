@@ -13,9 +13,10 @@ import android.util.TypedValue
 import android.graphics.Rect
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
-import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
+import android.view.ViewConfiguration
+import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
@@ -33,6 +34,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.tan
 
@@ -107,35 +109,89 @@ class SunMoonActivity : Activity() {
         })
     }
 
-    /** Horizontal flings move a day, as on the weather day page: left → next day, right → previous. */
-    private val swipe by lazy {
-        GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-                val start = e1 ?: return false
-                val dx = e2.x - start.x
-                val dy = e2.y - start.y
-                if (abs(dx) < dp(SWIPE_MIN_DP) || abs(dx) < 1.5f * abs(dy) || abs(velocityX) < SWIPE_MIN_VELOCITY) return false
-                if (startsOnControl(start)) return false
-                val target = offset + if (dx < 0) 1 else -1
-                if (target !in -RANGE_DAYS..RANGE_DAYS) return false
-                select(target)
-                return true
-            }
-        })
-    }
-
     /** The curve, the year strip and the slider use horizontal drags themselves. */
     private fun startsOnControl(e: MotionEvent): Boolean = listOf(R.id.sm_curve, R.id.sm_year, R.id.sm_rise_chart, R.id.sm_set_chart, R.id.sm_moon_chart, R.id.sm_slider).any { id ->
         val r = Rect()
         findViewById<View>(id).getGlobalVisibleRect(r) && r.contains(e.rawX.toInt(), e.rawY.toInt())
     }
 
+    // Horizontal drag anywhere but on the charts, curve and slider: the page follows the finger and,
+    // let go past a threshold (or flicked), switches to the next day (left) or the previous (right).
+    private var dragCandidate = false
+    private var dragging = false
+    private var downX = 0f
+    private var downY = 0f
+    private var velocity: VelocityTracker? = null
+    private val touchSlop by lazy { ViewConfiguration.get(this).scaledTouchSlop }
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (swipe.onTouchEvent(ev)) {
-            // Let the page know the gesture ended so it doesn't keep a half-finished scroll.
-            ev.action = MotionEvent.ACTION_CANCEL
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                dragCandidate = !startsOnControl(ev)
+                dragging = false
+                downX = ev.x
+                downY = ev.y
+                velocity?.recycle()
+                velocity = VelocityTracker.obtain().also { it.addMovement(ev) }
+            }
+            MotionEvent.ACTION_MOVE -> {
+                velocity?.addMovement(ev)
+                if (dragCandidate) {
+                    val dx = ev.x - downX
+                    val dy = ev.y - downY
+                    if (!dragging && abs(dx) > 2 * touchSlop && abs(dx) > 1.5f * abs(dy)) {
+                        dragging = true
+                        // The children (page scroll, buttons) lose the gesture.
+                        val cancel = MotionEvent.obtain(ev).also { it.action = MotionEvent.ACTION_CANCEL }
+                        super.dispatchTouchEvent(cancel)
+                        cancel.recycle()
+                        findViewById<View>(R.id.sm_content).animate().cancel()
+                    }
+                    if (dragging) {
+                        dragTo(dx)
+                        return true
+                    }
+                    if (abs(dy) > touchSlop) dragCandidate = false // a vertical scroll
+                }
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                val wasDragging = dragging
+                val dx = ev.x - downX
+                velocity?.addMovement(ev)
+                velocity?.computeCurrentVelocity(1000)
+                val vx = velocity?.xVelocity ?: 0f
+                velocity?.recycle()
+                velocity = null
+                dragging = false
+                dragCandidate = false
+                if (wasDragging) {
+                    finishDrag(dx, vx, canceled = ev.actionMasked == MotionEvent.ACTION_CANCEL)
+                    return true
+                }
+            }
         }
         return super.dispatchTouchEvent(ev)
+    }
+
+    /** The content moves with the finger and fades a little; against the ends of the range it resists. */
+    private fun dragTo(dx: Float) {
+        val content = findViewById<View>(R.id.sm_content)
+        val target = offset + if (dx < 0) 1 else -1
+        val resist = if (target in -RANGE_DAYS..RANGE_DAYS) 0.9f else 0.25f
+        content.translationX = dx * resist
+        content.alpha = 1f - 0.5f * min(abs(dx) / content.width, 1f)
+    }
+
+    private fun finishDrag(dx: Float, velocityX: Float, canceled: Boolean) {
+        val target = offset + if (dx < 0) 1 else -1
+        val far = abs(dx) >= dp(SWIPE_MIN_DP)
+        val flick = abs(velocityX) >= SWIPE_MIN_VELOCITY && abs(dx) >= dp(SWIPE_FLICK_DP)
+        if (!canceled && (far || flick) && target in -RANGE_DAYS..RANGE_DAYS) {
+            select(target)
+        } else {
+            findViewById<View>(R.id.sm_content).animate().translationX(0f).alpha(1f)
+                .setDuration(resources.getInteger(R.integer.page_transition_ms).toLong()).start()
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -383,23 +439,54 @@ class SunMoonActivity : Activity() {
         val content = findViewById<View>(R.id.sm_content)
         content.animate().cancel()
         content.translationX = delta * content.width * SLIDE_FRACTION
-        content.alpha = 0f
+        content.alpha = SLIDE_START_ALPHA
         content.animate().translationX(0f).alpha(1f)
             .setDuration(resources.getInteger(R.integer.page_transition_ms).toLong())
             .setInterpolator(AnimationUtils.loadInterpolator(this, android.R.interpolator.fast_out_slow_in))
             .start()
     }
 
+    /** What the page needs for one day and is slow to compute: the Sun's facts, the Moon's rise and set, the next quarters. */
+    private class DayData(val facts: SunDayFacts, val moon: MoonCalculator.RiseSet, val quarters: List<Pair<MoonCalculator.Quarter, Instant>>)
+
+    private val dayCache = java.util.concurrent.ConcurrentHashMap<Int, DayData>()
+
+    private fun compute(o: Int): DayData {
+        val d = today.plusDays(o.toLong())
+        return DayData(
+            SunDayFacts(d, place.latitude, place.longitude, zone),
+            MoonCalculator.riseSet(d, place.latitude, place.longitude, zone),
+            MoonCalculator.nextQuarters(d.atStartOfDay(zone).toInstant()),
+        )
+    }
+
+    private fun dayFor(o: Int): DayData = dayCache[o] ?: compute(o).also { dayCache[o] = it }
+
+    /** The two days on each side are worked out in the background, so a swipe finds them ready. */
+    private fun prefetchAround() {
+        val here = offset
+        dayCache.keys.removeAll { abs(it - here) > PREFETCH_KEEP }
+        for (o in listOf(here + 1, here - 1, here + 2, here - 2)) {
+            if (o !in -RANGE_DAYS..RANGE_DAYS || dayCache.containsKey(o)) continue
+            prefetchExecutor.execute {
+                // Skip what the user has already moved away from.
+                if (!isDestroyed && abs(o - offset) <= PREFETCH_KEEP && !dayCache.containsKey(o)) dayCache[o] = compute(o)
+            }
+        }
+    }
+
     private fun render() {
-        val facts = SunDayFacts(date, place.latitude, place.longitude, zone)
+        val day = dayFor(offset)
+        val facts = day.facts
         showHeader()
         showSun(facts)
-        showMoon()
+        showMoon(day)
         showKpis(facts)
         showCharts(facts)
         showTabs()
         findViewById<SeekBar>(R.id.sm_slider).progress = offset + RANGE_DAYS
         findViewById<TextView>(R.id.sm_today).visibility = if (offset == 0) View.INVISIBLE else View.VISIBLE
+        prefetchAround()
     }
 
     /** "Fri 9 Oct" as on the main page; the year only when it isn't this year's. */
@@ -533,7 +620,7 @@ class SunMoonActivity : Activity() {
         label.setTextColor(palette.text)
     }
 
-    private fun showMoon() {
+    private fun showMoon(day: DayData) {
         val noon = date.atTime(12, 0).atZone(zone).toInstant()
         val phase = MoonCalculator.phase(if (offset == 0) Instant.now() else noon)
         findViewById<ImageView>(R.id.sm_moon_image).setImageBitmap(
@@ -541,14 +628,14 @@ class SunMoonActivity : Activity() {
         )
         findViewById<TextView>(R.id.sm_moon_pct).text = getString(R.string.percent, (phase.illumination * 100).roundToInt())
         findViewById<TextView>(R.id.sm_moon_name).text = getString(MainActivity.phaseName(phase.name))
-        val riseSet = MoonCalculator.riseSet(date, place.latitude, place.longitude, zone)
+        val riseSet = day.moon
         val parts = listOfNotNull(
             riseSet.rise?.let { getString(R.string.moon_rise, time(it)) },
             riseSet.set?.let { getString(R.string.moon_set, time(it)) },
         )
         findViewById<TextView>(R.id.sm_moon_times).text = if (parts.isEmpty()) getString(R.string.sm_moon_no_events) else parts.joinToString("   ")
         val ddmm = DateTimeFormatter.ofPattern("dd/MM")
-        findViewById<TextView>(R.id.sm_moon_next).text = MoonCalculator.nextQuarters(date.atStartOfDay(zone).toInstant())
+        findViewById<TextView>(R.id.sm_moon_next).text = day.quarters
             .joinToString(" • ") { (quarter, at) -> getString(MainActivity.quarterName(quarter), ddmm.format(at.atZone(zone))) }
     }
 
@@ -704,6 +791,10 @@ class SunMoonActivity : Activity() {
 
         /** Runs the Moon's year of values; tests swap in a direct executor. */
         internal var moonExecutor: Executor = Executors.newSingleThreadExecutor()
+
+        /** Works out the neighbouring days; tests replace it with a direct executor. */
+        internal var prefetchExecutor: Executor = Executors.newSingleThreadExecutor()
+        private const val PREFETCH_KEEP = 3
         const val RANGE_DAYS = 182
         private const val STATE_OFFSET = "offset"
         private const val STATE_METRIC = "metric"
@@ -719,6 +810,8 @@ class SunMoonActivity : Activity() {
         private const val SLIDE_FRACTION = 0.25f
         private const val SWIPE_MIN_DP = 80
         private const val SWIPE_MIN_VELOCITY = 600f
+        private const val SWIPE_FLICK_DP = 24
+        private const val SLIDE_START_ALPHA = 0.35f
         private const val DASH = "—"
         private const val MOON_LIT = 0xFFECE6D2.toInt()
     }

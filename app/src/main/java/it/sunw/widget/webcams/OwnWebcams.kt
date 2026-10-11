@@ -6,7 +6,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /** One of the user's own webcams: a web page or live player, shown in the app or in the browser. */
-data class OwnWebcam(val name: String, val url: String) {
+/** [imageUrl]: an optional picture of the webcam (a snapshot address) for its preview. */
+data class OwnWebcam(val name: String, val url: String, val imageUrl: String? = null) {
     val host: String get() = Uri.parse(url).host?.removePrefix("www.").orEmpty()
 
     /** Short kind of page, from its address. */
@@ -25,7 +26,7 @@ class OwnWebcamStore(context: Context) {
     fun all(): List<OwnWebcam> {
         if (!prefs.contains(KEY)) return DEFAULTS
         val json = JSONArray(prefs.getString(KEY, "[]"))
-        return (0 until json.length()).map { i -> json.getJSONObject(i).let { OwnWebcam(it.getString("name"), it.getString("url")) } }
+        return (0 until json.length()).map { i -> fromJson(json.getJSONObject(i)) }
     }
 
     fun add(webcam: OwnWebcam) = write(all().filterNot { it.url == webcam.url } + webcam)
@@ -37,15 +38,15 @@ class OwnWebcamStore(context: Context) {
     fun toJson(): JSONArray = toArray(all())
 
     /** Replaces the list with the one in a backup. */
-    fun restore(json: JSONArray) = write((0 until json.length()).map { i ->
-        json.getJSONObject(i).let { OwnWebcam(it.getString("name"), it.getString("url")) }
-    })
+    fun restore(json: JSONArray) = write((0 until json.length()).map { i -> fromJson(json.getJSONObject(i)) })
+
+    private fun fromJson(o: JSONObject) = OwnWebcam(o.getString("name"), o.getString("url"), o.optString("image").takeIf(String::isNotEmpty))
 
     private fun write(list: List<OwnWebcam>) {
         prefs.edit().putString(KEY, toArray(list).toString()).apply()
     }
 
-    private fun toArray(list: List<OwnWebcam>) = JSONArray().also { a -> list.forEach { a.put(JSONObject().put("name", it.name).put("url", it.url)) } }
+    private fun toArray(list: List<OwnWebcam>) = JSONArray().also { a -> list.forEach { a.put(JSONObject().put("name", it.name).put("url", it.url).also { o -> it.imageUrl?.let { image -> o.put("image", image) } }) } }
 
     companion object {
         private const val KEY = "list"

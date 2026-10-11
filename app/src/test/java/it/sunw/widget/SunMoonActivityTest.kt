@@ -29,6 +29,7 @@ class SunMoonActivityTest {
         LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
         // The Moon's year is computed on the calling thread, so the tests don't wait for a worker.
         SunMoonActivity.moonExecutor = java.util.concurrent.Executor { it.run() }
+        SunMoonActivity.prefetchExecutor = java.util.concurrent.Executor { it.run() }
     }
 
     private fun open(date: LocalDate? = null) = Robolectric.buildActivity(
@@ -139,6 +140,52 @@ class SunMoonActivityTest {
         fling(activity, 160f)  // and the day before
         assertEquals(-1, activity.offset)
         assertTrue(!activity.isFinishing)
+    }
+
+    /** Slow gesture on the Moon card: [steps] are (dx dp, dy dp) positions, 400 ms apart, then release. */
+    private fun drag(activity: SunMoonActivity, vararg steps: Pair<Float, Float>): android.view.View {
+        val r = android.graphics.Rect().also { activity.findViewById<android.view.View>(R.id.sm_moon_card).getGlobalVisibleRect(it) }
+        val d = activity.resources.displayMetrics.density
+        fun event(action: Int, dx: Float, dy: Float, t: Long) =
+            android.view.MotionEvent.obtain(0, t, action, r.exactCenterX() + dx * d, r.exactCenterY() + dy * d, 0)
+        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_DOWN, 0f, 0f, 0))
+        steps.forEachIndexed { i, (dx, dy) -> activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_MOVE, dx, dy, 400L * (i + 1))) }
+        return activity.findViewById(R.id.sm_content)
+    }
+
+    private fun release(activity: SunMoonActivity, dx: Float, dy: Float, t: Long) {
+        val r = android.graphics.Rect().also { activity.findViewById<android.view.View>(R.id.sm_moon_card).getGlobalVisibleRect(it) }
+        val d = activity.resources.displayMetrics.density
+        activity.dispatchTouchEvent(android.view.MotionEvent.obtain(0, t, android.view.MotionEvent.ACTION_UP, r.exactCenterX() + dx * d, r.exactCenterY() + dy * d, 0))
+    }
+
+    @Test
+    fun theContentFollowsTheFingerAndComesBackWhenLetGoTooSoon() {
+        val activity = open()
+        val content = drag(activity, -30f to 0f, -60f to 0f)
+        // Still down: the page has moved with the finger and faded a little, the day is unchanged.
+        assertTrue(content.translationX < 0f)
+        assertTrue(content.alpha < 1f)
+        assertEquals(0, activity.offset)
+        release(activity, -60f, 0f, 1600) // slow and short: back to the same day
+        assertEquals(0, activity.offset)
+    }
+
+    @Test
+    fun aLongSlowDragChangesTheDayOnRelease() {
+        val activity = open()
+        drag(activity, -50f to 0f, -100f to 0f)
+        assertEquals(0, activity.offset)
+        release(activity, -100f, 0f, 1600)
+        assertEquals(1, activity.offset)
+    }
+
+    @Test
+    fun aVerticalDragDoesNotChangeTheDay() {
+        val activity = open()
+        drag(activity, 5f to 60f, 10f to 140f)
+        release(activity, 10f, 140f, 1600)
+        assertEquals(0, activity.offset)
     }
 
     @Test

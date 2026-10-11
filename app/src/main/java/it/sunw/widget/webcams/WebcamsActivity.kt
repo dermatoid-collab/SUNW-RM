@@ -215,6 +215,7 @@ class WebcamsActivity : Activity() {
                 tag = cam.url
                 setPadding(dp(12), dp(8), dp(4), dp(8))
                 background = GradientDrawable().apply { cornerRadius = dp(14).toFloat(); setColor(palette.raised(0.07f)) }
+                addView(WebcamThumb.create(context, cam, palette, 8f), LinearLayout.LayoutParams(dp(72), dp(48)).apply { marginEnd = dp(12) })
                 addView(LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
                     addView(TextView(context).apply { text = cam.name; textSize = 15f; setTextColor(palette.text) })
@@ -264,7 +265,8 @@ class WebcamsActivity : Activity() {
         val pad = dp(20)
         val name = EditText(this).apply { hint = getString(R.string.wc_name); setText(existing?.name.orEmpty()); inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES; id = R.id.wc_name }
         val url = EditText(this).apply { hint = getString(R.string.wc_address); setText(existing?.url.orEmpty()); inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI; id = R.id.wc_address }
-        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(pad, dp(8), pad, 0); addView(name); addView(url) }
+        val image = EditText(this).apply { hint = getString(R.string.wc_image_address); setText(existing?.imageUrl.orEmpty()); inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI; id = R.id.wc_image }
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(pad, dp(8), pad, 0); addView(name); addView(url); addView(image) }
         val dialog = AlertDialog.Builder(this)
             .setTitle(if (existing == null) R.string.wc_add else R.string.wc_edit)
             .setView(box)
@@ -278,8 +280,14 @@ class WebcamsActivity : Activity() {
                 Toast.makeText(this, R.string.wc_bad_address, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+            val imageText = image.text.toString().trim()
+            val imageAddress = if (imageText.isEmpty()) null else OwnWebcamStore.normalizeUrl(imageText)
+            if (imageText.isNotEmpty() && imageAddress == null) {
+                Toast.makeText(this, R.string.wc_bad_address, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val label = name.text.toString().trim().ifEmpty { Regex("^https?://(www\\.)?").replace(address, "").substringBefore('/') }
-            val cam = OwnWebcam(label, address)
+            val cam = OwnWebcam(label, address, imageAddress)
             if (existing == null) store.add(cam) else store.replace(existing, cam)
             dialog.dismiss()
             show(Tab.MINE)

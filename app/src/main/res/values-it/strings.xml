@@ -300,4 +300,5 @@
     <string name="l24_legend">Tocco lungo e trascina per la temperatura in quel momento.</string>
     <string name="wc_section_mine">Le mie webcam</string>
     <string name="wc_section_near">Vicine</string>
+    <string name="wc_image_address">Indirizzo immagine (facoltativo)</string>
 </resources>
