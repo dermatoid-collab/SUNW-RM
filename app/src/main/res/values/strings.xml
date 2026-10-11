@@ -110,7 +110,7 @@
     <string name="wx_snow">Snow</string>
     <string name="wx_thunderstorm">Thunderstorms</string>
     <string name="weather_today_facts">Rain %1$d%% · %2$s\nWind %3$s %4$d km/h · UV %5$d</string>
-    <string name="weather_source">MeteoBlue data · updated at %1$s</string>
+    <string name="weather_source">Updated at %1$s</string>
     <string name="weather_loading">Loading the weather…</string>
     <string name="weather_missing_key">Weather unavailable: this build has no MeteoBlue key.</string>
     <string name="weather_error">Weather unavailable: %1$s</string>
@@ -125,7 +125,7 @@
     <string name="section_about">About</string>
     <string name="build_info">Version %1$s\nGitHub build #%2$d of %3$s\nCommit %4$s</string>
     <string name="data_sources">Data sources</string>
-    <string name="sources">• Sun: NOAA Solar Calculator equations (J. Meeus, “Astronomical Algorithms”), computed on the phone.\n• Moon: Paul Schlyter\'s algorithm (“How to compute planetary positions”), computed on the phone and checked against PyEphem.\n• Weather: meteoblue AG (basic-1h / basic-day package). Weather data © meteoblue.\n• Place search: Android geocoding service (Google).\n• Weather icons: Material Symbols by Google, Apache License 2.0.\n• Radar and rain map: Windy.com embedded map (shown as provided by Windy, logo included).\n• Weather alerts (Italy): Italian Civil Protection Department, national criticality bulletin and alert zones, CC BY 4.0.</string>
+    <string name="sources">• Sun: NOAA Solar Calculator equations (J. Meeus, “Astronomical Algorithms”), computed on the phone.\n• Moon: Paul Schlyter\'s algorithm (“How to compute planetary positions”), computed on the phone and checked against PyEphem.\n• Weather: meteoblue AG (basic-1h / basic-day package). Weather data © meteoblue.\n• Place search: Android geocoding service (Google).\n• Weather icons: Material Symbols by Google, Apache License 2.0.\n• Radar and rain map: Windy.com embedded map (shown as provided by Windy, logo included).\n• Weather alerts (Italy): Italian Civil Protection Department, national criticality bulletin and alert zones, CC BY 4.0.\n• Last 24 h temperature: Open-Meteo.com (CC BY 4.0), model values for the place.\n• Webcams: Windy Webcams API, webcams provided by windy.com; the pages in “My webcams” belong to their owners.</string>
     <string name="detail_back">%1$s</string>
     <string name="detail_hourly">Hour by hour</string>
     <string name="detail_step_1h">Every hour ▾</string>
@@ -183,15 +183,15 @@
     </string-array>
     <string name="mg_title">Meteogram</string>
     <string name="mg_subtitle">%1$s · next 7 days</string>
-    <string name="mg_legend">Weather and wind (direction, km/h) every 3 hours · temperature over day/night (dimmed: the last 24 hours) · rain mm/h (stronger = more likely) · touch and hold, then drag, for the temperature at that time · tap a day to open it</string>
-    <string name="weather_source_past">MeteoBlue data · updated at %1$s · last 24 h from Open-Meteo</string>
-    <string name="mg_cursor_past">Open-Meteo</string>
+    <string name="mg_legend">Weather and wind every 3 hours · rain mm/h · long press and drag for the temperature · tap a day to open it</string>
+    <string name="weather_source_past">Updated at %1$s</string>
+    <string name="mg_cursor_past">Past</string>
     <string name="mg_cursor_forecast">forecast</string>
     <string name="mg_cursor_now">now</string>
     <string name="mg_open">Radar and meteogram</string>
     <string name="mg_layer_radar">Radar</string>
     <string name="mg_layer_rain">Rain forecast</string>
-    <string name="mg_map_offline">Map unavailable: Windy needs a connection.</string>
+    <string name="mg_map_offline">Map unavailable: no connection.</string>
     <string name="alert_yellow">Yellow alert</string>
     <string name="alert_orange">Orange alert</string>
     <string name="alert_red">Red alert</string>
@@ -205,7 +205,6 @@
     <string name="alert_zone">Alert zone: %1$s</string>
     <string name="alert_none">no alert</string>
     <string name="alert_issued">Bulletin of %1$s</string>
-    <string name="alert_source">Source: Italian Civil Protection Department, national criticality bulletin (CC BY 4.0). Hydrogeological, thunderstorm and hydraulic risk; Italy only. Follow your Region and Municipality for official instructions.</string>
     <string name="alert_open">Open the map</string>
     <string name="section_alerts">Weather alerts</string>
     <string name="alert_notifications">Notify yellow, orange and red alerts</string>
@@ -263,11 +262,11 @@
     <string name="wc_subtitle">%1$s · within %2$d km</string>
     <string name="wc_tab_near">Nearby</string>
     <string name="wc_tab_mine">My webcams</string>
-    <string name="wc_no_key">Nearby webcams need the Windy Webcams key, which is missing from this build. Your own webcams work all the same.</string>
+    <string name="wc_no_key">Nearby webcams are not available in this build.</string>
     <string name="wc_loading">Loading webcams…</string>
     <string name="wc_error">Webcams unavailable: check the connection.</string>
     <string name="wc_none">No webcam within %1$d km.</string>
-    <string name="wc_windy_note">Previews from the Windy Webcams service (low resolution, reloaded every time you open the page). Not every camera on windy.com is available.</string>
+    <string name="wc_windy_note">Low-resolution previews.</string>
     <string name="wc_all">All webcams</string>
     <string name="wc_add">＋ Add webcam</string>
     <string name="wc_edit">Edit</string>
@@ -275,13 +274,12 @@
     <string name="wc_name">Name</string>
     <string name="wc_address">Web address</string>
     <string name="wc_bad_address">Enter a valid web address.</string>
-    <string name="wc_mine_note">Your own list: any web address of a page or live player. Pages open inside the app; if one does not work there, use “Open in browser”. The list is saved with the settings backup.</string>
-    <string name="wc_own_note">Shown as on its website; it stops when you leave this page.</string>
-    <string name="wc_windy_credit">Webcams provided by windy.com · the image reloads every minute while this page is open.</string>
-    <string name="wc_updated">Updated at %1$s · webcams provided by windy.com</string>
+    <string name="wc_mine_note">Any web page or live player. If one does not open here, use “Open in browser”.</string>
+    <string name="wc_own_note">Shown as on its website.</string>
+    <string name="wc_windy_credit">The image reloads every minute.</string>
+    <string name="wc_updated">Updated at %1$s</string>
     <string name="wc_open_browser">Open in browser</string>
-    <string name="wc_section_note">Webcams provided by windy.com</string>
-    <string name="wc_section_none">Open the full list for the nearby webcams and your own.</string>
+    <string name="wc_section_none">Open the full list.</string>
     <string name="l24_title">Last 24 hours</string>
     <string name="l24_step_15">every 15 minutes</string>
     <string name="l24_step_hour">every hour</string>
@@ -292,7 +290,7 @@
     <string name="l24_in_24h">in 24 h</string>
     <string name="l24_now">now %1$s</string>
     <string name="l24_now_axis">now</string>
-    <string name="l24_legend">Touch and hold, then drag: a cursor gives the temperature at that time. Values from Open-Meteo for the place (model, not a station reading).</string>
+    <string name="l24_legend">Long press and drag for the temperature at that time.</string>
     <string name="wc_section_mine">My webcams</string>
     <string name="wc_section_near">Nearby</string>
 </resources>

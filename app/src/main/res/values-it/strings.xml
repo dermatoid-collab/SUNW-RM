@@ -110,7 +110,7 @@
     <string name="wx_snow">Neve</string>
     <string name="wx_thunderstorm">Temporali</string>
     <string name="weather_today_facts">Pioggia %1$d%% · %2$s\nVento %3$s %4$d km/h · UV %5$d</string>
-    <string name="weather_source">Dati MeteoBlue · aggiornato alle %1$s</string>
+    <string name="weather_source">Aggiornato alle %1$s</string>
     <string name="weather_loading">Caricamento del meteo…</string>
     <string name="weather_missing_key">Meteo non disponibile: chiave MeteoBlue mancante in questa build.</string>
     <string name="weather_error">Meteo non disponibile: %1$s</string>
@@ -125,7 +125,7 @@
     <string name="section_about">Informazioni</string>
     <string name="build_info">Versione %1$s\nBuild GitHub n. %2$d del %3$s\nCommit %4$s</string>
     <string name="data_sources">Fonti dei dati</string>
-    <string name="sources">• Sole: equazioni del NOAA Solar Calculator (J. Meeus, «Astronomical Algorithms»), calcolate sul telefono.\n• Luna: algoritmo di Paul Schlyter («How to compute planetary positions»), calcolato sul telefono e verificato con PyEphem.\n• Meteo: meteoblue AG (pacchetto basic-1h / basic-day). Dati meteo © meteoblue.\n• Ricerca località: servizio di geocoding di Android (Google).\n• Icone meteo: Material Symbols di Google, licenza Apache 2.0.\n• Mappa radar e pioggia: mappa incorporata di Windy.com (mostrata così come la fornisce Windy, logo compreso).\n• Allerte meteo (Italia): Dipartimento della Protezione Civile, bollettino di criticità nazionale e zone di allerta, CC BY 4.0.</string>
+    <string name="sources">• Sole: equazioni del NOAA Solar Calculator (J. Meeus, «Astronomical Algorithms»), calcolate sul telefono.\n• Luna: algoritmo di Paul Schlyter («How to compute planetary positions»), calcolato sul telefono e verificato con PyEphem.\n• Meteo: meteoblue AG (pacchetto basic-1h / basic-day). Dati meteo © meteoblue.\n• Ricerca località: servizio di geocoding di Android (Google).\n• Icone meteo: Material Symbols di Google, licenza Apache 2.0.\n• Mappa radar e pioggia: mappa incorporata di Windy.com (mostrata così come la fornisce Windy, logo compreso).\n• Allerte meteo (Italia): Dipartimento della Protezione Civile, bollettino di criticità nazionale e zone di allerta, CC BY 4.0.\n• Temperatura delle ultime 24 ore: Open-Meteo.com (CC BY 4.0), valori del modello per il luogo.\n• Webcam: Windy Webcams API, webcam fornite da windy.com; le pagine di «Le mie webcam» appartengono ai rispettivi proprietari.</string>
     <string name="detail_back">%1$s</string>
     <string name="detail_hourly">Ora per ora</string>
     <string name="detail_step_1h">Ogni ora ▾</string>
@@ -184,15 +184,15 @@
     </string-array>
     <string name="mg_title">Meteogramma</string>
     <string name="mg_subtitle">%1$s · prossimi 7 giorni</string>
-    <string name="mg_legend">Tempo e vento (direzione, km/h) ogni 3 ore · temperatura su giorno/notte (sbiadita: le ultime 24 ore) · pioggia mm/h (più intensa = più probabile) · tocco lungo e trascina per la temperatura in quel momento · tocca un giorno per aprirlo</string>
-    <string name="weather_source_past">Dati MeteoBlue · aggiornato alle %1$s · ultime 24 h da Open-Meteo</string>
-    <string name="mg_cursor_past">Open-Meteo</string>
+    <string name="mg_legend">Tempo e vento ogni 3 ore · pioggia mm/h · tocco lungo e trascina per la temperatura · tocca un giorno per aprirlo</string>
+    <string name="weather_source_past">Aggiornato alle %1$s</string>
+    <string name="mg_cursor_past">Passato</string>
     <string name="mg_cursor_forecast">previsione</string>
     <string name="mg_cursor_now">adesso</string>
     <string name="mg_open">Radar e meteogramma</string>
     <string name="mg_layer_radar">Radar</string>
     <string name="mg_layer_rain">Pioggia prevista</string>
-    <string name="mg_map_offline">Mappa non disponibile: Windy richiede la connessione.</string>
+    <string name="mg_map_offline">Mappa non disponibile: manca la connessione.</string>
     <string name="alert_yellow">Allerta gialla</string>
     <string name="alert_orange">Allerta arancione</string>
     <string name="alert_red">Allerta rossa</string>
@@ -206,7 +206,6 @@
     <string name="alert_zone">Zona di allerta: %1$s</string>
     <string name="alert_none">nessuna allerta</string>
     <string name="alert_issued">Bollettino del %1$s</string>
-    <string name="alert_source">Fonte: Dipartimento della Protezione Civile, bollettino di criticità nazionale (CC BY 4.0). Rischio idrogeologico, temporali e idraulico; solo Italia. Per le indicazioni ufficiali segui la tua Regione e il tuo Comune.</string>
     <string name="alert_open">Apri la mappa</string>
     <string name="section_alerts">Allerte meteo</string>
     <string name="alert_notifications">Notifica allerte gialle, arancioni e rosse</string>
@@ -264,11 +263,11 @@
     <string name="wc_subtitle">%1$s · entro %2$d km</string>
     <string name="wc_tab_near">Vicine</string>
     <string name="wc_tab_mine">Le mie webcam</string>
-    <string name="wc_no_key">Le webcam vicine richiedono la chiave Windy Webcams, che manca in questa versione. Le tue webcam funzionano comunque.</string>
+    <string name="wc_no_key">Le webcam vicine non sono disponibili in questa versione.</string>
     <string name="wc_loading">Carico le webcam…</string>
     <string name="wc_error">Webcam non disponibili: controlla la connessione.</string>
     <string name="wc_none">Nessuna webcam entro %1$d km.</string>
-    <string name="wc_windy_note">Anteprime del servizio Windy Webcams (bassa risoluzione, ricaricate a ogni apertura della pagina). Non tutte le telecamere di windy.com sono disponibili.</string>
+    <string name="wc_windy_note">Anteprime a bassa risoluzione.</string>
     <string name="wc_all">Tutte le webcam</string>
     <string name="wc_add">＋ Aggiungi webcam</string>
     <string name="wc_edit">Modifica</string>
@@ -276,13 +275,12 @@
     <string name="wc_name">Nome</string>
     <string name="wc_address">Indirizzo web</string>
     <string name="wc_bad_address">Inserisci un indirizzo web valido.</string>
-    <string name="wc_mine_note">La tua lista: qualsiasi indirizzo web di una pagina o di un lettore live. Le pagine si aprono nell\'app; se una non funziona, usa «Apri nel browser». La lista è salvata con il backup delle impostazioni.</string>
-    <string name="wc_own_note">Mostrata come sul suo sito; si ferma quando esci da questa pagina.</string>
-    <string name="wc_windy_credit">Webcam fornite da windy.com · l\'immagine si ricarica ogni minuto finché la pagina è aperta.</string>
-    <string name="wc_updated">Aggiornata alle %1$s · webcam fornite da windy.com</string>
+    <string name="wc_mine_note">Qualsiasi pagina web o lettore live. Se una non si apre qui, usa «Apri nel browser».</string>
+    <string name="wc_own_note">Mostrata come sul suo sito.</string>
+    <string name="wc_windy_credit">L\'immagine si ricarica ogni minuto.</string>
+    <string name="wc_updated">Aggiornata alle %1$s</string>
     <string name="wc_open_browser">Apri nel browser</string>
-    <string name="wc_section_note">Webcam fornite da windy.com</string>
-    <string name="wc_section_none">Apri l\'elenco completo per le webcam vicine e le tue.</string>
+    <string name="wc_section_none">Apri l\'elenco completo.</string>
     <string name="l24_title">Ultime 24 ore</string>
     <string name="l24_step_15">ogni 15 minuti</string>
     <string name="l24_step_hour">ogni ora</string>
@@ -293,7 +291,7 @@
     <string name="l24_in_24h">in 24 h</string>
     <string name="l24_now">ora %1$s</string>
     <string name="l24_now_axis">ora</string>
-    <string name="l24_legend">Tocco lungo e trascina: un cursore dà la temperatura in quel momento. Valori di Open-Meteo per il luogo (del modello, non di una stazione).</string>
+    <string name="l24_legend">Tocco lungo e trascina per la temperatura in quel momento.</string>
     <string name="wc_section_mine">Le mie webcam</string>
     <string name="wc_section_near">Vicine</string>
 </resources>

@@ -182,7 +182,7 @@ class MeteogramActivity : Activity() {
                     note.text = getString(R.string.wc_section_none)
                     return@runOnUiThread
                 }
-                note.text = getString(R.string.wc_section_note)
+                note.visibility = View.GONE
                 for (cam in cams) {
                     row.addView(LinearLayout(this).apply {
                         orientation = LinearLayout.VERTICAL

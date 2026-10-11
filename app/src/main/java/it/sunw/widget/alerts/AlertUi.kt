@@ -97,8 +97,6 @@ object AlertUi {
                 DateTimeFormatter.ofPattern("d MMMM HH:mm", Locale.getDefault()).format(it.atZoneSameInstant(ZoneId.systemDefault())),
             )
         }
-        lines += ""
-        lines += activity.getString(R.string.alert_source)
         AlertDialog.Builder(activity, android.R.style.Theme_Material_Dialog_Alert)
             .setTitle(R.string.alert_title)
             .setMessage(lines.joinToString("\n"))
