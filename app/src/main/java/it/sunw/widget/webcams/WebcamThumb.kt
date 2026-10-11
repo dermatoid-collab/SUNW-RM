@@ -9,7 +9,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import it.sunw.widget.Palette
 import it.sunw.widget.R
-import it.sunw.widget.raised
 
 /**
  * Preview box of one of the user's webcams: its picture when an image address is set, otherwise a
