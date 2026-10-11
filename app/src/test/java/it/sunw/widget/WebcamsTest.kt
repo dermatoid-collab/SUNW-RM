@@ -109,8 +109,11 @@ class WebcamsTest {
         val mine = activity.findViewById<ViewGroup>(R.id.mg_webcams_mine)
         assertEquals(4, mine.childCount)
         assertEquals(OwnWebcamStore.DEFAULTS.map { it.url }, (0 until 4).map { mine.getChildAt(it).tag })
+        // Order inside the tile: my webcams, then the nearby ones, then the button.
+        val card = activity.findViewById<ViewGroup>(R.id.mg_webcams)
         val order = listOf(R.id.mg_webcams_mine_label, R.id.mg_webcams_mine, R.id.mg_webcams_near_label, R.id.mg_webcams_row, R.id.mg_webcams_all)
-            .map { id -> activity.findViewById<View>(id).let { v -> IntArray(2).also { v.getLocationOnScreen(it) }[1] } }
+            .map { card.indexOfChild(activity.findViewById(it)) }
+        assertTrue(order.all { it >= 0 })
         assertEquals(order, order.sorted())
         mine.getChildAt(1).performClick()
         val next = shadowOf(activity).nextStartedActivity
