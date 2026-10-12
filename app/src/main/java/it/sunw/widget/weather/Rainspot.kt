@@ -40,8 +40,20 @@ object Rainspot {
     /** Whether any cell expects precipitation. */
     fun hasRain(rainspot: String?) = rainspot?.any { it != '0' } == true
 
-    /** Code for the cell at [row] (0 = north) and [col] (0 = west). */
+    /**
+     * The picture is moved this many columns east of the string's own layout: compared hour by hour
+     * with the Meteoblue app (same place, two days, 20+ hours), its target shows the same shapes one
+     * column further east, with 97 % of the filled cells in the same colour once shifted (73 % not
+     * shifted). Rows line up exactly. The string has no cell for the new west column, so it stays dry.
+     */
+    internal const val EAST_SHIFT = 1
+
+    /** Code for the cell at [row] (0 = north) and [col] (0 = west), as the string lays it out. */
     fun cell(rainspot: String, row: Int, col: Int): Char = rainspot[(6 - row) * 7 + col]
+
+    /** What the target shows at [row] and [col]: the string's cells moved [EAST_SHIFT] column(s) east. */
+    fun shown(rainspot: String, row: Int, col: Int): Char =
+        if (col < EAST_SHIFT) '0' else cell(rainspot, row, col - EAST_SHIFT)
 
     /** The 8 pixel positions of the 7 cell boundaries across [length] starting at [start]. */
     internal fun edges(start: Float, length: Float): IntArray =
@@ -65,7 +77,7 @@ object Rainspot {
         val ys = edges(box.top, box.height())
         paint.isAntiAlias = false
         for (row in 0 until 7) for (col in 0 until 7) {
-            paint.color = color(cell(rainspot, row, col)) ?: continue
+            paint.color = color(shown(rainspot, row, col)) ?: continue
             canvas.drawRect(xs[col].toFloat(), ys[row].toFloat(), xs[col + 1].toFloat(), ys[row + 1].toFloat(), paint)
         }
         paint.isAntiAlias = true

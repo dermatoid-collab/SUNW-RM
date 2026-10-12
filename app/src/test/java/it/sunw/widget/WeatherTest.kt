@@ -131,6 +131,17 @@ class WeatherTest {
     }
 
     @Test
+    fun theTargetShowsTheCellsOneColumnEastOfTheString() {
+        val spot = "1111111111111111191119119900009000000000000000000"
+        assertEquals('0', Rainspot.shown(spot, 6, 0)) // the new west column is dry
+        assertEquals(Rainspot.cell(spot, 6, 0), Rainspot.shown(spot, 6, 1))
+        assertEquals(Rainspot.cell(spot, 3, 5), Rainspot.shown(spot, 3, 6))
+        // The string's east column falls off the edge.
+        val eastOnly = StringBuilder("0".repeat(49)).also { for (row in 0 until 7) it.setCharAt((6 - row) * 7 + 6, '1') }.toString()
+        for (row in 0 until 7) for (col in 0 until 7) assertEquals('0', Rainspot.shown(eastOnly, row, col))
+    }
+
+    @Test
     fun rainspotCellsMeetOnWholePixels() {
         for (size in listOf(42, 118, 146, 200)) {
             val edges = Rainspot.edges(size * 0.006f, size * 0.988f)
