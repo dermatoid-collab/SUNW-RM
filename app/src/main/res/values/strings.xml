@@ -165,6 +165,9 @@
     <string name="sm_blue">Blue %1$s</string>
     <string name="sm_golden">Golden %1$s</string>
     <string name="sm_vs">vs: %1$s</string>
+    <string name="sm_vs_today">vs today:</string>
+    <string name="sm_sunrise_lower">sunrise</string>
+    <string name="sm_sunset_lower">sunset</string>
     <string name="sm_cursor_hint">Touch the curve to read the Sun at any time</string>
     <string name="sm_now">(now)</string>
     <string name="sm_shadow">shadow ×%1$s</string>

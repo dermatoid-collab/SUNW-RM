@@ -228,7 +228,7 @@ class SunMoonActivity : Activity() {
             R.id.sm_length to palette.text, R.id.sm_delta to palette.textSecondary,
             R.id.sm_useful_label to palette.textSecondary, R.id.sm_useful to palette.text,
             R.id.sm_morning to palette.text, R.id.sm_evening to palette.text,
-            R.id.sm_compare to palette.textSecondary,
+            R.id.sm_compare to palette.textSecondary, R.id.sm_compare_times to palette.textSecondary,
             R.id.sm_moon_pct to palette.text, R.id.sm_moon_name to palette.textSecondary,
             R.id.sm_moon_times to palette.text, R.id.sm_moon_next to palette.textSecondary,
             R.id.sm_next_event to palette.text,
@@ -532,6 +532,24 @@ class SunMoonActivity : Activity() {
         findViewById<TextView>(R.id.sm_evening).text = hours(R.string.sm_evening,
             R.string.sm_golden to facts.eveningGolden, R.string.sm_blue to facts.eveningBlue)
         findViewById<TextView>(R.id.sm_compare).text = compare(facts)
+        findViewById<TextView>(R.id.sm_compare_times).apply {
+            visibility = if (offset == 0) View.GONE else View.VISIBLE
+            text = compareTimes(facts)
+        }
+    }
+
+    /** "vs today: · sunrise +1h 05m · sunset −3h 03m": clock times as displayed (DST included), "—" in polar days. */
+    private fun compareTimes(facts: SunDayFacts): String {
+        if (offset == 0) return ""
+        val now = SunCalculator.day(today, place.latitude, place.longitude, zone) as? SunCalculator.Day.Normal
+        val chosen = facts.normal
+        fun gap(label: Int, pick: (SunCalculator.Day.Normal) -> Instant): String {
+            val value = if (now != null && chosen != null) {
+                Formatters.gap(Duration.between(pick(now).atZone(zone).toLocalTime(), pick(chosen).atZone(zone).toLocalTime()))
+            } else DASH
+            return "${getString(label)} $value"
+        }
+        return "${getString(R.string.sm_vs_today)} · ${gap(R.string.sm_sunrise_lower) { it.sunrise }} · ${gap(R.string.sm_sunset_lower) { it.sunset }}"
     }
 
     /** "Morning" over "● Blue 07:01–07:10" and "● Golden 07:10–07:52", dots in their colours. */

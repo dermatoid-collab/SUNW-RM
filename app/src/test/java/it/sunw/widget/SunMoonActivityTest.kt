@@ -204,6 +204,22 @@ class SunMoonActivityTest {
     }
 
     @Test
+    fun sunriseAndSunsetAreComparedWithTodayOnOtherDays() {
+        val activity = open(LocalDate.now().plusDays(90))
+        val view = activity.findViewById<android.widget.TextView>(R.id.sm_compare_times)
+        val text = view.text.toString()
+        assertEquals(text, android.view.View.VISIBLE, view.visibility)
+        assertTrue(text, text.startsWith("vs today: · sunrise "))
+        assertTrue(text, Regex("sunrise [+−]\\S+( \\d\\dm)? · sunset [+−]\\S+( \\d\\dm)?").containsMatchIn(text))
+    }
+
+    @Test
+    fun theSunriseComparisonIsHiddenOnToday() {
+        val activity = open()
+        assertEquals(android.view.View.GONE, activity.findViewById<android.view.View>(R.id.sm_compare_times).visibility)
+    }
+
+    @Test
     fun draggingOnTheYearStripChangesTheWholePage() {
         val activity = open()
         val strip = activity.findViewById<YearChartView>(R.id.sm_year)
