@@ -159,6 +159,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        SunWidgetProvider.updateAll(this)
         if (!ready) return
         handler.post(tick)
         handler.post(secondTick)

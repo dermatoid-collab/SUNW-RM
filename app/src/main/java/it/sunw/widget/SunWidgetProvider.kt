@@ -87,7 +87,7 @@ open class SunWidgetProvider : AppWidgetProvider() {
         /**
          * The system refreshes us every 30 min (updatePeriodMillis); on top of that, wake up
          * right after the next sunrise, sunset or midnight so the text flips on time.
-         * Inexact alarms need no special permission and don't wake the device.
+         * Inexact alarms need no special permission; this one also fires in Doze.
          */
         private fun scheduleNextTick(context: Context, place: Place, now: Instant, zone: ZoneId) {
             val today = now.atZone(zone).toLocalDate()
@@ -96,7 +96,7 @@ open class SunWidgetProvider : AppWidgetProvider() {
             if (day is SunCalculator.Day.Normal) candidates += listOf(day.sunrise, day.sunset)
             val next = candidates.filter { it.isAfter(now) }.min().plusSeconds(30)
             context.getSystemService(AlarmManager::class.java)
-                ?.set(AlarmManager.RTC, next.toEpochMilli(), tickIntent(context))
+                ?.setAndAllowWhileIdle(AlarmManager.RTC, next.toEpochMilli(), tickIntent(context))
         }
 
         private fun tickIntent(context: Context): PendingIntent = PendingIntent.getBroadcast(
