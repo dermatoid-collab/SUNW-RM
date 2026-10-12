@@ -1,6 +1,7 @@
 package it.sunw.widget.weather
 
 import android.app.Activity
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
@@ -236,12 +237,23 @@ class WeatherDayActivity : Activity() {
         }
         findViewById<LinearLayout>(R.id.day_pills).apply {
             removeAllViews()
+            // The max and min pills open the radar page, like the rainSPOT does.
+            setOnClickListener { openRadar() }
+            setBackgroundResource(tapBackground())
+            contentDescription = getString(R.string.mg_open)
             addView(WeatherCard.temperaturePill(this@WeatherDayActivity, day.temperatureMax, 17f, 46))
             addView(WeatherCard.temperaturePill(this@WeatherDayActivity, day.temperatureMin, 17f, 46).apply {
                 (layoutParams as LinearLayout.LayoutParams).topMargin = dp(5)
             })
         }
     }
+
+    /** Radar and meteogram page, from the max/min pills and from any rainSPOT on this page. */
+    private fun openRadar() = startActivity(Intent(this, MeteogramActivity::class.java))
+
+    private fun tapBackground(): Int = android.util.TypedValue().also {
+        theme.resolveAttribute(android.R.attr.selectableItemBackground, it, true)
+    }.resourceId
 
     /** Sun and Moon from the on-device calculators; rain and wind from MeteoBlue. */
     private fun showInfo() {
@@ -276,7 +288,11 @@ class WeatherDayActivity : Activity() {
         showAlert(day.date)
         info.setTextColor(palette.text)
         val spot = day.rainspot
-        findViewById<View>(R.id.day_rainspot_box).visibility = if (spot != null) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.day_rainspot_box).apply {
+            visibility = if (spot != null) View.VISIBLE else View.GONE
+            setOnClickListener { openRadar() }
+            setBackgroundResource(tapBackground())
+        }
         if (spot != null) {
             findViewById<ImageView>(R.id.day_rainspot).setImageBitmap(Rainspot.draw(dp(64), spot))
             findViewById<TextView>(R.id.day_rainspot_label).setTextColor(palette.textSecondary)
@@ -396,6 +412,8 @@ class WeatherDayActivity : Activity() {
                     h.rainspot?.let { spot ->
                         setImageBitmap(Rainspot.draw(dp(42), spot))
                         contentDescription = getString(R.string.rainspot_label)
+                        setOnClickListener { openRadar() }
+                        setBackgroundResource(tapBackground())
                     }
                 })
             }

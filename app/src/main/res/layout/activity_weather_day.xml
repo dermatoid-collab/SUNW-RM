@@ -52,7 +52,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="14dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="6dp"
             android:background="@drawable/card_background"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -100,7 +100,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="14dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="6dp"
             android:paddingHorizontal="14dp"
             android:paddingVertical="8dp"
             android:textSize="14sp"
@@ -111,7 +111,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="14dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="6dp"
             android:background="@drawable/card_background"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -155,11 +155,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="14dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="6dp"
             android:background="@drawable/card_background"
             android:orientation="vertical"
+            android:paddingBottom="10dp"
             android:paddingHorizontal="12dp"
-            android:paddingVertical="18dp">
+            android:paddingTop="10dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -178,7 +179,7 @@
                 <TextView
                     android:id="@+id/day_step"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="32dp"
                     android:background="?android:attr/selectableItemBackground"
                     android:gravity="center"
                     android:paddingHorizontal="10dp"
@@ -198,7 +199,7 @@
             android:id="@+id/day_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="6dp"
             android:gravity="center_horizontal"
             android:paddingHorizontal="22dp"
             android:textSize="13sp" />

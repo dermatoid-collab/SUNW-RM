@@ -66,6 +66,46 @@ class WeatherDayActivityTest {
         assertTrue(info, info.lines().size >= 4) // sun, moon, rain, wind
     }
 
+    /** The sample response with a rainSPOT on every day and every hour. */
+    private fun seedRainspots() {
+        val root = org.json.JSONObject(WeatherTest.sampleJson())
+        val spot = "0".repeat(24) + "1" + "0".repeat(24)
+        for (key in listOf("data_1h", "data_day")) {
+            val data = root.getJSONObject(key)
+            data.put("rainspot", org.json.JSONArray(List(data.getJSONArray("time").length()) { spot }))
+        }
+        File(context.cacheDir, "meteoblue.json").writeText(root.toString())
+    }
+
+    private fun assertOpensRadar(activity: WeatherDayActivity, view: View) {
+        view.performClick()
+        assertEquals(it.sunw.widget.weather.MeteogramActivity::class.java.name, shadowOf(activity).nextStartedActivity.component?.className)
+    }
+
+    @Test
+    fun maxMinPillsAndEveryRainspotOpenTheRadarPage() {
+        seedRainspots()
+        val activity = open("2026-10-09")
+        assertOpensRadar(activity, activity.findViewById(R.id.day_pills))
+        assertOpensRadar(activity, activity.findViewById(R.id.day_rainspot_box))
+        // Every hour row's rainSPOT is the last view of its row.
+        val hours = activity.findViewById<LinearLayout>(R.id.day_hours)
+        val spots = (0 until hours.childCount).map { hours.getChildAt(it) }.filterIsInstance<LinearLayout>()
+            .map { it.getChildAt(it.childCount - 1) }.filter { it.hasOnClickListeners() }
+        assertTrue("rows with a rainSPOT: ${spots.size}", spots.size > 1)
+        spots.forEach { assertOpensRadar(activity, it) }
+    }
+
+    @Test
+    fun theTilesSitCloserTogether() {
+        val activity = open("2026-10-09")
+        val d = activity.resources.displayMetrics.density
+        for (id in listOf(R.id.day_hero, R.id.day_info_card, R.id.day_hourly_card)) {
+            val gap = (activity.findViewById<View>(id).layoutParams as android.view.ViewGroup.MarginLayoutParams).topMargin
+            assertTrue("tile gap $gap", gap <= (6 * d).toInt())
+        }
+    }
+
     @Test
     fun stepToggleShowsEveryThreeHours() {
         val activity = open("2026-10-09")
