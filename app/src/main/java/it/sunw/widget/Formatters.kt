@@ -20,6 +20,14 @@ object Formatters {
     fun length(duration: Duration): String =
         "%dh %02dm".format(Locale.ROOT, duration.toHours(), duration.toMinutes() % 60)
 
+    /** A difference in length: "−2h 13m", "+7m" (no hours when there are none). */
+    fun gap(duration: Duration): String {
+        val minutes = duration.abs().toMinutes()
+        val sign = if (duration.isNegative) "−" else "+"
+        return if (minutes >= 60) "%s%dh %02dm".format(Locale.ROOT, sign, minutes / 60, minutes % 60)
+        else "%s%dm".format(Locale.ROOT, sign, minutes)
+    }
+
     /** Day-length change vs. yesterday, e.g. "−2m 51s" or "+0m 07s". */
     fun delta(seconds: Long): String {
         val sign = if (seconds < 0) "−" else "+"

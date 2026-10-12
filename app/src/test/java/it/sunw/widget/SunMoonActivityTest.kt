@@ -192,6 +192,18 @@ class SunMoonActivityTest {
     }
 
     @Test
+    fun theComparisonIsOneLineWithASingleVs() {
+        val activity = open(LocalDate.now().plusDays(30))
+        val text = activity.findViewById<android.widget.TextView>(R.id.sm_compare).text.toString()
+        assertTrue(text, text.startsWith("vs: "))
+        assertEquals(text, 1, Regex("vs").findAll(text).count())
+        assertTrue(text, !text.contains("\n"))
+        // Today and the two solstices, each with a signed gap.
+        assertEquals(text, 3, text.split(" · ").size)
+        assertTrue(text, Regex("[+−]\\d+(h \\d\\d)?m").findAll(text).count() == 3)
+    }
+
+    @Test
     fun draggingOnTheYearStripChangesTheWholePage() {
         val activity = open()
         val strip = activity.findViewById<YearChartView>(R.id.sm_year)

@@ -577,22 +577,20 @@ class SunMoonActivity : Activity() {
         layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, weight)
     }
 
-    /** Daylight vs today and the two solstices of the chosen date's year. */
+    /** One line: "vs: today −2h 13m · 21 Jun −6h 38m · 22 Dec +7m" (daylight against today and the two solstices). */
     private fun compare(facts: SunDayFacts): String {
         val parts = mutableListOf<String>()
-        fun signed(d: Duration) = (if (d.isNegative) "−" else "+") + Formatters.length(d.abs())
+        fun item(label: String, other: Duration) = "$label ${Formatters.gap(facts.daylight.minus(other))}"
         if (offset != 0) {
-            val todayLength = SunDayFacts.daylight(today, place.latitude, place.longitude, zone)
-            parts += getString(R.string.sm_vs, getString(R.string.sm_today_lower), signed(facts.daylight.minus(todayLength)))
+            parts += item(getString(R.string.sm_today_lower), SunDayFacts.daylight(today, place.latitude, place.longitude, zone))
         }
         val yearStart = date.withDayOfYear(1).atStartOfDay(zone).toInstant()
         val dm = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
         for (season in listOf(SunCalculator.Season.JUNE_SOLSTICE, SunCalculator.Season.DECEMBER_SOLSTICE)) {
             val day = SunCalculator.nextSeason(season, yearStart).atZone(zone).toLocalDate()
-            val length = SunDayFacts.daylight(day, place.latitude, place.longitude, zone)
-            parts += getString(R.string.sm_vs, dm.format(day).replace(".", ""), signed(facts.daylight.minus(length)))
+            parts += item(dm.format(day).replace(".", ""), SunDayFacts.daylight(day, place.latitude, place.longitude, zone))
         }
-        return parts.joinToString(" · ")
+        return getString(R.string.sm_vs, parts.joinToString(" · "))
     }
 
     /** "14:35 (now) · 32° · 210° SSW · shadow ×1.6" for the cursor, or a hint. */

@@ -165,7 +165,7 @@
     <string name="sm_evening">Sera</string>
     <string name="sm_blue">Blu %1$s</string>
     <string name="sm_golden">Oro %1$s</string>
-    <string name="sm_vs">vs %1$s %2$s</string>
+    <string name="sm_vs">vs: %1$s</string>
     <string name="sm_cursor_hint">Tocca la curva per leggere il Sole a ogni ora</string>
     <string name="sm_now">(ora)</string>
     <string name="sm_shadow">ombra ×%1$s</string>
