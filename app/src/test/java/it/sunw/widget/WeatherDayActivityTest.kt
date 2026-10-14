@@ -267,6 +267,30 @@ class WeatherDayActivityTest {
         shadowOf(Looper.getMainLooper()).idle()
         assertTrue("back to today scrollY=${page.scrollY}", page.scrollY > 0)
     }
+    @Test
+    fun theCurveJoinsAcrossAnHourTheClockChangeSkips() {
+        assertTrue(DayChartView.connects(1, 2))
+        assertTrue(DayChartView.connects(1, 3)) // 02:00 does not exist on the day clocks go forward
+        assertTrue(!DayChartView.connects(1, 4)) // a longer gap in the data stays a gap
+        assertTrue(!DayChartView.connects(3, 3))
+    }
+
+    @Test
+    fun aDayWithoutTwoOClockStillShowsItsOtherHours() {
+        val root = org.json.JSONObject(WeatherTest.sampleJson())
+        val hourly = root.getJSONObject("data_1h")
+        val skipped = hourly.getJSONArray("time").let { times -> (0 until times.length()).first { times.getString(it) == "2026-10-09 02:00" } }
+        for (key in hourly.keys().asSequence().toList()) {
+            val old = hourly.getJSONArray(key)
+            hourly.put(key, org.json.JSONArray((0 until old.length()).filter { it != skipped }.map { old.get(it) }))
+        }
+        File(context.cacheDir, "meteoblue.json").writeText(root.toString())
+        val chart = open("2026-10-09").findViewById<DayChartView>(R.id.day_chart)
+        assertEquals(23, chart.hourCount)
+        assertEquals(null, chart.cursorLabel(2))
+        assertTrue(chart.cursorLabel(1) != null && chart.cursorLabel(3) != null)
+    }
+
     private fun openToday(): WeatherDayActivity {
         File(context.cacheDir, "meteoblue.json").writeText(WeatherTest.sampleJson(today))
         seedModelHours(first = today)

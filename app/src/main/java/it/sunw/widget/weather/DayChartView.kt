@@ -229,7 +229,7 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
         paint.strokeWidth = dp(2.6f)
         paint.strokeCap = Paint.Cap.ROUND
         for ((a, b) in known.zipWithNext()) {
-            if (b != a + 1) continue
+            if (!connects(a, b)) continue
             val ta = slots[a]!!.temperature
             val tb = slots[b]!!.temperature
             val tone = WeatherCard.temperatureColor((ta + tb) / 2)
@@ -407,6 +407,9 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
     }
 
     companion object {
+        /** Whether the curve joins hours [a] and [b]: neighbours, or across the one hour a clock change skips. */
+        internal fun connects(a: Int, b: Int) = b - a in 1..2
+
         /** The hours of the strip: the middle of each three-hour block, as the Windy and Meteoblue strips. */
         internal val COLUMN_HOURS = listOf(2, 5, 8, 11, 14, 17, 20, 23)
         private const val RAIN_MIN = 0.05
