@@ -97,6 +97,14 @@
     <string name="theme_nord">Nord</string>
     <string name="theme_dracula">Dracula</string>
     <string name="theme_rose_pine">Rosé Pine</string>
+    <string name="theme_everforest">Everforest</string>
+    <string name="theme_night_owl">Night Owl</string>
+    <string name="theme_palenight">Palenight</string>
+    <string name="theme_ayu_mirage">Ayu Mirage</string>
+    <string name="theme_vino">Wine</string>
+    <string name="theme_ardesia">Light Slate</string>
+    <string name="theme_salvia">Sage</string>
+    <string name="theme_duna">Dune</string>
     <string name="favorite_added">“%1$s” added to favourites</string>
     <string name="search_picked">Now in use on the widgets. Add it to your favourites?</string>
     <string name="add_to_favorites">Add to favourites</string>

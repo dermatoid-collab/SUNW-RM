@@ -55,9 +55,17 @@ enum class Theme(val key: String, val label: Int, val isLight: Boolean = false) 
     GRUVBOX_DARK("gruvbox_dark", R.string.theme_gruvbox_dark),
     ONE_DARK("one_dark", R.string.theme_one_dark),
     SOLARIZED_DARK("solarized_dark", R.string.theme_solarized_dark),
+    EVERFOREST("everforest", R.string.theme_everforest),
+    NIGHT_OWL("night_owl", R.string.theme_night_owl),
+    PALENIGHT("palenight", R.string.theme_palenight),
+    AYU_MIRAGE("ayu_mirage", R.string.theme_ayu_mirage),
+    VINO("vino", R.string.theme_vino),
     SOLARIZED_LIGHT("solarized_light", R.string.theme_solarized_light, isLight = true),
     CATPPUCCIN_LATTE("catppuccin_latte", R.string.theme_catppuccin_latte, isLight = true),
-    GRUVBOX_LIGHT("gruvbox_light", R.string.theme_gruvbox_light, isLight = true);
+    GRUVBOX_LIGHT("gruvbox_light", R.string.theme_gruvbox_light, isLight = true),
+    ARDESIA("ardesia", R.string.theme_ardesia, isLight = true),
+    SALVIA("salvia", R.string.theme_salvia, isLight = true),
+    DUNA("duna", R.string.theme_duna, isLight = true);
 
     /** Rounded (system radius) and square-ish (1×1 "big") background drawables. */
     val background: Int
@@ -77,6 +85,14 @@ enum class Theme(val key: String, val label: Int, val isLight: Boolean = false) 
             SOLARIZED_LIGHT -> R.drawable.widget_bg_solarized_light
             CATPPUCCIN_LATTE -> R.drawable.widget_bg_catppuccin_latte
             GRUVBOX_LIGHT -> R.drawable.widget_bg_gruvbox_light
+            EVERFOREST -> R.drawable.widget_bg_everforest
+            NIGHT_OWL -> R.drawable.widget_bg_night_owl
+            PALENIGHT -> R.drawable.widget_bg_palenight
+            AYU_MIRAGE -> R.drawable.widget_bg_ayu_mirage
+            VINO -> R.drawable.widget_bg_vino
+            ARDESIA -> R.drawable.widget_bg_ardesia
+            SALVIA -> R.drawable.widget_bg_salvia
+            DUNA -> R.drawable.widget_bg_duna
         }
     val backgroundSquare: Int
         get() = when (this) {
@@ -95,6 +111,14 @@ enum class Theme(val key: String, val label: Int, val isLight: Boolean = false) 
             SOLARIZED_LIGHT -> R.drawable.widget_bg_square_solarized_light
             CATPPUCCIN_LATTE -> R.drawable.widget_bg_square_catppuccin_latte
             GRUVBOX_LIGHT -> R.drawable.widget_bg_square_gruvbox_light
+            EVERFOREST -> R.drawable.widget_bg_square_everforest
+            NIGHT_OWL -> R.drawable.widget_bg_square_night_owl
+            PALENIGHT -> R.drawable.widget_bg_square_palenight
+            AYU_MIRAGE -> R.drawable.widget_bg_square_ayu_mirage
+            VINO -> R.drawable.widget_bg_square_vino
+            ARDESIA -> R.drawable.widget_bg_square_ardesia
+            SALVIA -> R.drawable.widget_bg_square_salvia
+            DUNA -> R.drawable.widget_bg_square_duna
         }
 }
 
@@ -278,6 +302,71 @@ class AppearanceStore(private val context: Context) {
                 sky = sky(0xFFA89984, 0xFF076678, 0xFF458588, 0xFFB16286, 0xFF9D0006, 0xFFAF3A03, 0xFFB57614, 0xFFB57614),
                 blueHour = 0xFF076678.toInt(), goldenHour = 0xFFAF3A03.toInt(),
                 highSun = 0xFFB57614.toInt(), twilightBand = 0xFF8F3F71.toInt(),
+            )
+            // Mid-tone themes: coloured darks (green, deep blue, violet, slate, wine) and tinted lights (slate, sage, sand).
+            Theme.EVERFOREST -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF2D353B.toInt(), text = 0xFFD3C6AA.toInt(), textSecondary = 0xFFA7A08B.toInt(),
+                dim = 0xFF859289.toInt(), pageBackground = 0xFF272E33.toInt(), cardBackground = 0xFF343F44.toInt(),
+                sky = sky(0xFF3D484D, 0xFF4F585E, 0xFF7FBBB3, 0xFFD699B6, 0xFFE67E80, 0xFFE69875, 0xFFDBBC7F, 0xFFD3C6AA),
+                blueHour = 0xFF7FBBB3.toInt(), goldenHour = 0xFFE69875.toInt(),
+                highSun = 0xFFDBBC7F.toInt(), twilightBand = 0xFFD699B6.toInt(),
+            )
+            Theme.NIGHT_OWL -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF011627.toInt(), text = 0xFFD6DEEB.toInt(), textSecondary = 0xFF8AA3BF.toInt(),
+                dim = 0xFF5F7E97.toInt(), pageBackground = 0xFF01111D.toInt(), cardBackground = 0xFF0B2942.toInt(),
+                sky = sky(0xFF0B2942, 0xFF1D3B53, 0xFF82AAFF, 0xFFC792EA, 0xFFFF5874, 0xFFF78C6C, 0xFFECC48D, 0xFFD6DEEB),
+                blueHour = 0xFF82AAFF.toInt(), goldenHour = 0xFFF78C6C.toInt(),
+                highSun = 0xFFECC48D.toInt(), twilightBand = 0xFFC792EA.toInt(),
+            )
+            Theme.PALENIGHT -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF292D3E.toInt(), text = 0xFFBFC7E8.toInt(), textSecondary = 0xFF9AA3CC.toInt(),
+                dim = 0xFF676E95.toInt(), pageBackground = 0xFF232635.toInt(), cardBackground = 0xFF32364A.toInt(),
+                sky = sky(0xFF32364A, 0xFF444267, 0xFF82AAFF, 0xFFC792EA, 0xFFF07178, 0xFFF78C6C, 0xFFFFCB6B, 0xFFEEFFFF),
+                blueHour = 0xFF82AAFF.toInt(), goldenHour = 0xFFF78C6C.toInt(),
+                highSun = 0xFFFFCB6B.toInt(), twilightBand = 0xFFC792EA.toInt(),
+            )
+            Theme.AYU_MIRAGE -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF1F2430.toInt(), text = 0xFFCCCAC2.toInt(), textSecondary = 0xFF9C9A93.toInt(),
+                dim = 0xFF707A8C.toInt(), pageBackground = 0xFF171B24.toInt(), cardBackground = 0xFF2A3142.toInt(),
+                sky = sky(0xFF2A3142, 0xFF34455A, 0xFF73D0FF, 0xFFDFBFFF, 0xFFF28779, 0xFFFFAD66, 0xFFFFD173, 0xFFCCCAC2),
+                blueHour = 0xFF73D0FF.toInt(), goldenHour = 0xFFFFAD66.toInt(),
+                highSun = 0xFFFFD173.toInt(), twilightBand = 0xFFDFBFFF.toInt(),
+            )
+            Theme.VINO -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF2A151B.toInt(), text = 0xFFF1DADA.toInt(), textSecondary = 0xFFC9A5A8.toInt(),
+                dim = 0xFF8A6469.toInt(), pageBackground = 0xFF1F0F13.toInt(), cardBackground = 0xFF3A1D25.toInt(),
+                sky = sky(0xFF3A1D25, 0xFF55283A, 0xFF7A5CA0, 0xFFC25B80, 0xFFE8665F, 0xFFF29A5E, 0xFFF6CB7A, 0xFFFBEFD9),
+                blueHour = 0xFF7A9CE0.toInt(), goldenHour = 0xFFF29A5E.toInt(),
+                highSun = 0xFFF6CB7A.toInt(), twilightBand = 0xFFC25B80.toInt(),
+            )
+            Theme.ARDESIA -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFFE6EBF1.toInt(), text = 0xFF1F2937.toInt(), textSecondary = 0xFF475569.toInt(),
+                dim = 0xFF8793A3.toInt(), pageBackground = 0xFFDDE3EA.toInt(), cardBackground = 0xFFCBD3DD.toInt(),
+                sky = sky(0xFF8793A3, 0xFF5B6BC0, 0xFF2563EB, 0xFF7C3AED, 0xFFDC2626, 0xFFEA580C, 0xFFCA8A04, 0xFFCA8A04),
+                blueHour = 0xFF2563EB.toInt(), goldenHour = 0xFFEA580C.toInt(),
+                highSun = 0xFFCA8A04.toInt(), twilightBand = 0xFF7C3AED.toInt(),
+            )
+            Theme.SALVIA -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFFE3EADD.toInt(), text = 0xFF22301F.toInt(), textSecondary = 0xFF425A3C.toInt(),
+                dim = 0xFF8A9A84.toInt(), pageBackground = 0xFFDCE4D6.toInt(), cardBackground = 0xFFC9D6C1.toInt(),
+                sky = sky(0xFF8A9A84, 0xFF5B6BA8, 0xFF2F6F8F, 0xFF8A4F9E, 0xFFB23A48, 0xFFC2571A, 0xFFA8740A, 0xFFA8740A),
+                blueHour = 0xFF2F6F8F.toInt(), goldenHour = 0xFFC2571A.toInt(),
+                highSun = 0xFFA8740A.toInt(), twilightBand = 0xFF8A4F9E.toInt(),
+            )
+            Theme.DUNA -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFFEFE6D3.toInt(), text = 0xFF3A2F1E.toInt(), textSecondary = 0xFF5E4F37.toInt(),
+                dim = 0xFF9A8B70.toInt(), pageBackground = 0xFFE8DDC8.toInt(), cardBackground = 0xFFD9CBB0.toInt(),
+                sky = sky(0xFF9A8B70, 0xFF6C5FA0, 0xFF2F6B8A, 0xFF9B4F7A, 0xFFB03A2E, 0xFFC0561A, 0xFFA97612, 0xFFA97612),
+                blueHour = 0xFF2F6B8A.toInt(), goldenHour = 0xFFC0561A.toInt(),
+                highSun = 0xFFA97612.toInt(), twilightBand = 0xFF9B4F7A.toInt(),
             )
             else -> {
                 val (bg, text, secondary) = when (theme) {
