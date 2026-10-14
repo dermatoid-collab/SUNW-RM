@@ -3,6 +3,7 @@ package it.sunw.widget
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.drawable.ColorDrawable
+import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.View
@@ -82,6 +83,7 @@ class SettingsThemeBatteryTest {
         assertNotNull(dialog)
         assertEquals(main.getString(R.string.battery_dialog_open), dialog.getButton(AlertDialog.BUTTON_POSITIVE).text.toString())
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle() // a dialog button hands its click to the looper
         assertEquals(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, shadowOf(main).nextStartedActivity.action)
 
         // The second start does not ask again.
