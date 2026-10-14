@@ -68,7 +68,7 @@ class AppearanceTest {
                 assertTrue("$theme page is dark", luminance(p.pageBackground) < 0.35)
             }
         }
-        assertEquals(6, Theme.values().count { it.isLight })
+        assertEquals(9, Theme.values().count { it.isLight })
     }
 
     @Test

@@ -105,6 +105,14 @@
     <string name="theme_ardesia">Light Slate</string>
     <string name="theme_salvia">Sage</string>
     <string name="theme_duna">Dune</string>
+    <string name="theme_meteoblue">MeteoBlue</string>
+    <string name="theme_turchese">Teal</string>
+    <string name="theme_viola">Electric Purple</string>
+    <string name="theme_corallo">Coral Red</string>
+    <string name="theme_lime">Lime Green</string>
+    <string name="theme_ilmeteo">ilMeteo</string>
+    <string name="theme_azzurro">Sky Blue</string>
+    <string name="theme_giallo">Sunny Yellow</string>
     <string name="favorite_added">“%1$s” added to favourites</string>
     <string name="search_picked">Now in use on the widgets. Add it to your favourites?</string>
     <string name="add_to_favorites">Add to favourites</string>

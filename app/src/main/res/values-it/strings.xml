@@ -105,6 +105,14 @@
     <string name="theme_ardesia">Ardesia chiaro</string>
     <string name="theme_salvia">Salvia</string>
     <string name="theme_duna">Duna</string>
+    <string name="theme_meteoblue">MeteoBlue</string>
+    <string name="theme_turchese">Turchese</string>
+    <string name="theme_viola">Viola elettrico</string>
+    <string name="theme_corallo">Rosso corallo</string>
+    <string name="theme_lime">Verde lime</string>
+    <string name="theme_ilmeteo">ilMeteo</string>
+    <string name="theme_azzurro">Azzurro cielo</string>
+    <string name="theme_giallo">Giallo sole</string>
     <string name="favorite_added">«%1$s» aggiunto ai preferiti</string>
     <string name="search_picked">Ora è la località dei widget. Vuoi aggiungerla ai preferiti?</string>
     <string name="add_to_favorites">Aggiungi ai preferiti</string>
