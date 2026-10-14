@@ -234,6 +234,15 @@
     <string name="alert_notifications">Notify yellow, orange and red alerts</string>
     <string name="alert_notifications_hint">Italy only: the Civil Protection bulletin for the alert zone of the place in use, checked about every hour, also with the app closed. One notification per day and level.</string>
     <string name="alert_notifications_denied">Notifications are off for this app: allow them in Android settings.</string>
+    <string name="section_battery">Battery</string>
+    <string name="battery_dialog_title">Keep the widget up to date</string>
+    <string name="battery_dialog_message">To change its times at sunrise and sunset, the widget needs the app not to be limited by battery saving. Allow unrestricted use; on Samsung also check that the app is not among the sleeping apps.</string>
+    <string name="battery_dialog_open">Settings</string>
+    <string name="battery_dialog_later">Not now</string>
+    <string name="battery_status_ok">Battery: unrestricted ✓</string>
+    <string name="battery_status_limited">Battery: limited, the widget may update late</string>
+    <string name="battery_fix">Allow unrestricted use</string>
+    <string name="battery_hint">On Samsung, also check Settings → Battery → Background usage limits: the app must not be among the sleeping apps.</string>
     <string name="alert_channel">Weather alerts</string>
     <string name="alert_channel_description">Civil Protection alerts for the place in use</string>
     <string name="alert_notify_title">%1$s · %2$s</string>

@@ -5,8 +5,9 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
+import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
 import android.location.Address
 import android.location.Geocoder
 import android.net.Uri
@@ -17,6 +18,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.RadioButton
@@ -104,10 +106,69 @@ class SettingsActivity : Activity() {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) search()
             actionId == EditorInfo.IME_ACTION_SEARCH
         }
+        findViewById<Button>(R.id.battery_fix).setOnClickListener { BatteryGuard.open(this) }
         refreshSummary()
         refreshFavorites()
         buildAppearance()
         showBuildInfo()
+        refreshBattery()
+        applyTheme()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::store.isInitialized) refreshBattery() // back from the system's battery choice
+    }
+
+    /** Battery state: a line saying whether the widget is held back, and the button only while it is. */
+    private fun refreshBattery() {
+        val limited = BatteryGuard.isRestricted(this)
+        findViewById<TextView>(R.id.battery_status).setText(if (limited) R.string.battery_status_limited else R.string.battery_status_ok)
+        findViewById<Button>(R.id.battery_fix).visibility = if (limited) View.VISIBLE else View.GONE
+    }
+
+    // --- Theme ----------------------------------------------------------------------------------
+
+    /** The page, system bars and every control in the colours of the chosen theme and accent. */
+    private fun applyTheme(root: View = findViewById(android.R.id.content)) {
+        val palette = AppearanceStore(this).palette()
+        window.decorView.setBackgroundColor(palette.pageBackground)
+        palette.styleSystemBars(window)
+        style(root, palette)
+    }
+
+    private fun style(view: View, p: Palette) {
+        val checkedOrNot = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
+        when (view) {
+            is Switch -> {
+                view.setTextColor(p.text)
+                view.thumbTintList = ColorStateList(checkedOrNot, intArrayOf(p.accent, p.textSecondary))
+                view.trackTintList = ColorStateList(checkedOrNot, intArrayOf(Palette.blend(p.cardBackground, p.accent, 0.45f), p.raised(0.2f)))
+            }
+            is RadioButton -> {
+                view.setTextColor(p.text)
+                view.buttonTintList = ColorStateList(checkedOrNot, intArrayOf(p.accent, p.textSecondary))
+            }
+            is CompoundButton -> view.setTextColor(p.text)
+            is Button -> {
+                view.setTextColor(p.text)
+                view.background = RippleDrawable(
+                    ColorStateList.valueOf(p.raised(0.2f)),
+                    rounded(Palette.blend(p.cardBackground, p.accent, 0.25f), dp(10).toFloat()), null,
+                )
+            }
+            is EditText -> {
+                view.setTextColor(p.text)
+                view.setHintTextColor(Palette.blend(p.cardBackground, p.text, 0.5f))
+                view.backgroundTintList = ColorStateList.valueOf(p.textSecondary)
+                view.highlightColor = Palette.blend(p.cardBackground, p.accent, 0.4f)
+            }
+            is TextView -> {
+                view.setTextColor(if (view.tag == "section") p.accent else p.text)
+                if (view.compoundDrawablesRelative.any { it != null }) view.compoundDrawableTintList = ColorStateList.valueOf(p.text)
+            }
+        }
+        if (view is ViewGroup) for (i in 0 until view.childCount) style(view.getChildAt(i), p)
     }
 
     /** "Version 1.0.42 · build #42 · 08/10/2026 14:05 · a1b2c3d" from the values baked in by CI. */
@@ -296,6 +357,7 @@ class SettingsActivity : Activity() {
         list.removeAllViews()
         val current = store.current()
         val favorites = FavoritesStore(this).all()
+        val palette = AppearanceStore(this).palette()
         if (favorites.isEmpty()) {
             list.addView(TextView(this).apply {
                 text = getString(R.string.favorites_empty)
@@ -310,7 +372,7 @@ class SettingsActivity : Activity() {
                 gravity = Gravity.CENTER_VERTICAL
                 minimumHeight = dp(44)
                 setPadding(dp(10), 0, dp(10), 0)
-                if (selected) background = rounded(SELECTED_ROW, dp(10).toFloat())
+                if (selected) background = rounded(Palette.blend(palette.cardBackground, palette.accent, 0.22f), dp(10).toFloat())
                 setOnClickListener { selectFavorite(fav) }
                 setOnLongClickListener { confirmRemove(fav); true }
             }
@@ -335,6 +397,7 @@ class SettingsActivity : Activity() {
             })
             list.addView(row)
         }
+        style(list, palette)
     }
 
     private fun selectFavorite(fav: Favorite) {
@@ -461,6 +524,7 @@ class SettingsActivity : Activity() {
                     onPick(item)
                     SunWidgetProvider.updateAll(this@SettingsActivity)
                     swatches(row, items, item, label, color, onPick)
+                    applyTheme() // the page follows the new theme or accent at once
                 }
             }
             cell.addView(View(this).apply {
@@ -468,7 +532,8 @@ class SettingsActivity : Activity() {
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL
                     setColor(color(item))
-                    if (item == selected) setStroke(dp(3), Color.WHITE) else setStroke(dp(1), 0x40FFFFFF)
+                    val ring = AppearanceStore(this@SettingsActivity).palette()
+                    if (item == selected) setStroke(dp(3), ring.text) else setStroke(dp(1), Palette.blend(ring.pageBackground, ring.text, 0.3f))
                 }
             })
             cell.addView(TextView(this).apply {
@@ -499,7 +564,6 @@ class SettingsActivity : Activity() {
     companion object {
         private const val REQUEST_LOCATION = 1
         private const val MAX_RESULTS = 6
-        private const val SELECTED_ROW = 0x33FFB547
         private const val REQUEST_EXPORT = 2
         private const val REQUEST_IMPORT = 3
         private const val REQUEST_NOTIFICATIONS = 4

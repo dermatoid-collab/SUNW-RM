@@ -80,7 +80,7 @@ Implementata in `SunMoonActivity` (cursore ±6 mesi confermato), poi riorganizza
 - **Calcoli:** quelli già verificati dell'app (SunCalculator, MoonCalculator), non le formule
   semplificate del prototipo.
 
-## 5. Avviso sulla batteria — concordato, da sviluppare
+## 5. Avviso sulla batteria — sviluppato
 
 - **Perché:** il risparmio energetico di One UI (e le «App in stop») può rimandare l'allarme
   del widget e fermarne gli aggiornamenti.

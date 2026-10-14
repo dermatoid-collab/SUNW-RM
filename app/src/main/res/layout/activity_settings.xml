@@ -36,6 +36,7 @@
         <!-- Position -->
         <TextView
             style="@style/SectionHeader"
+            android:tag="section"
             android:text="@string/section_position" />
 
         <Switch
@@ -105,6 +106,7 @@
         <!-- Favourites -->
         <TextView
             style="@style/SectionHeader"
+            android:tag="section"
             android:text="@string/section_favorites" />
 
         <LinearLayout
@@ -133,6 +135,7 @@
         <!-- Appearance -->
         <TextView
             style="@style/SectionHeader"
+            android:tag="section"
             android:text="@string/section_appearance" />
 
         <TextView
@@ -179,6 +182,7 @@
         <!-- Weather alerts -->
         <TextView
             style="@style/SectionHeader"
+            android:tag="section"
             android:text="@string/section_alerts" />
 
         <Switch
@@ -196,9 +200,36 @@
             android:text="@string/alert_notifications_hint"
             android:textSize="12sp" />
 
+        <!-- Battery -->
+        <TextView
+            style="@style/SectionHeader"
+            android:tag="section"
+            android:text="@string/section_battery" />
+
+        <TextView
+            android:id="@+id/battery_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/battery_fix"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="@string/battery_fix" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.6"
+            android:text="@string/battery_hint"
+            android:textSize="12sp" />
+
         <!-- Backup -->
         <TextView
             style="@style/SectionHeader"
+            android:tag="section"
             android:text="@string/section_backup" />
 
         <LinearLayout
@@ -232,6 +263,7 @@
         <!-- About -->
         <TextView
             style="@style/SectionHeader"
+            android:tag="section"
             android:text="@string/section_about" />
 
         <TextView

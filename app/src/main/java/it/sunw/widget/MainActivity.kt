@@ -102,13 +102,34 @@ class MainActivity : Activity() {
      * permission to notify (it can be changed later in Settings).
      */
     private fun setUpAlertNotifications() {
-        if (!AlertNotifier.isEnabled(this)) return
-        AlertJobService.schedule(this)
-        val prefs = getSharedPreferences("alert_notifications", MODE_PRIVATE)
-        if (!AlertNotifier.hasPermission(this) && !prefs.getBoolean("asked", false)) {
-            prefs.edit().putBoolean("asked", true).apply()
-            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+        if (AlertNotifier.isEnabled(this)) {
+            AlertJobService.schedule(this)
+            val prefs = getSharedPreferences("alert_notifications", MODE_PRIVATE)
+            if (!AlertNotifier.hasPermission(this) && !prefs.getBoolean("asked", false)) {
+                prefs.edit().putBoolean("asked", true).apply()
+                // The battery question follows the answer, so the two prompts don't pile up.
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+                return
+            }
         }
+        askAboutBattery()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_NOTIFICATIONS) askAboutBattery()
+    }
+
+    /** Once, when battery saving limits the app: explains why and sends the user to the "unrestricted" choice. */
+    private fun askAboutBattery() {
+        if (isFinishing || BatteryGuard.wasAsked(this) || !BatteryGuard.isRestricted(this)) return
+        BatteryGuard.markAsked(this)
+        android.app.AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+            .setTitle(R.string.battery_dialog_title)
+            .setMessage(R.string.battery_dialog_message)
+            .setPositiveButton(R.string.battery_dialog_open) { _, _ -> BatteryGuard.open(this) }
+            .setNegativeButton(R.string.battery_dialog_later, null)
+            .show()
     }
 
     /** Extra height given to the sun tile so the page fills the screen exactly. */

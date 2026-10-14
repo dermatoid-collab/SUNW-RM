@@ -42,7 +42,9 @@ L'icona ⚙ apre le **impostazioni**:
 - **Crepuscoli**: curva come «Accento» più tre fasce sotto l'orizzonte (civile 0…−6°, nautico −6…−12°, astronomico −12…−18°).
 
 Colori d'accento: Ambra, Material You, Ghiaccio, Alpino, Corallo, Bianco, Tokyo giallo, Tokyo blu.
-Sfondi (temi): **SUNW-RM Legacy** (l'aspetto originale, ex «Antracite»), Nero, Vetro (semitrasparente), Material You, Tokyo Night (con la scala «Cielo» ricavata dalla palette Tokyo Night), Catppuccin, Nord, Dracula, Rosé Pine e, come in HRV-RM, Gruvbox Dark, One Dark, Solarized Dark; poi cinque temi scuri dai toni medi e colorati (Everforest, Night Owl, Palenight, Ayu Mirage, Vino) e sei temi chiari: Solarized Light, Catppuccin Latte, Gruvbox Light, Ardesia chiaro, Salvia e Duna. Nei temi chiari le barre di sistema hanno icone scure e l'accento troppo chiaro (ambra, bianco) viene scurito per restare leggibile.
+Sfondi (temi): **SUNW-RM Legacy** (l'aspetto originale, ex «Antracite»), Nero, Vetro (semitrasparente), Material You, Tokyo Night (con la scala «Cielo» ricavata dalla palette Tokyo Night), Catppuccin, Nord, Dracula, Rosé Pine e, come in HRV-RM, Gruvbox Dark, One Dark, Solarized Dark; poi cinque temi scuri dai toni medi e colorati (Everforest, Night Owl, Palenight, Ayu Mirage, Vino) e sei temi chiari: Solarized Light, Catppuccin Latte, Gruvbox Light, Ardesia chiaro, Salvia e Duna. Nei temi chiari le barre di sistema hanno icone scure e l'accento troppo chiaro (ambra, bianco) viene scurito per restare leggibile. La pagina Impostazioni segue il tema e l'accento scelti, subito dopo la selezione.
+
+**Batteria:** al primo avvio (dopo la richiesta delle notifiche), se il risparmio energetico limita l'app, un avviso spiega perché il widget ne ha bisogno e porta alla scelta di sistema «senza restrizioni»; in Impostazioni → Batteria si vede lo stato e si può riaprire la scelta. Le «App in stop» di Samsung non sono rilevabili e sono solo nominate nel testo.
 
 ## Come funziona
 
