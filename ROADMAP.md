@@ -14,6 +14,11 @@ nella tile meteo della pagina principale (a sinistra delle pillole max/min).
   pacchetto a pagamento e ha sfondo bianco): curva della temperatura con fasce giorno/notte,
   barre della pioggia, velocità e frecce del vento, linea dell'ora attuale.
 - **Dove:** pulsante sulla card meteo → pagina dedicata; tocco su un giorno → pagina del giorno.
+- **Andamento della giornata** (pagina del giorno, sopra le righe orarie): striscia a passi di 3 ore (ora, icona,
+  temperatura, pioggia, vento medio, raffica, direzione) sopra un grafico orario di temperatura e pioggia con le stesse
+  colonne; tocco lungo e trascinamento leggono i valori dell'ora. In alto a destra un pallino con la percentuale di
+  prevedibilità di MeteoBlue (verde da 80 %, giallo da 60 %, rosso sotto; assente se il dato manca). Le raffiche orarie
+  vengono da Open-Meteo (`wind_gusts_10m`), non da MeteoBlue: senza di esse la riga delle raffiche non compare.
 
 ## 2. Allerte meteo — prima versione sviluppata (Italia)
 

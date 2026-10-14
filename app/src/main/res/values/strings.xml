@@ -142,6 +142,13 @@
     <string name="detail_rain">Rain %1$d%% · %2$s</string>
     <string name="detail_wind">Wind %1$s up to %2$d km/h</string>
     <string name="detail_felt">Feels %1$s</string>
+    <string name="detail_chart">Day trend</string>
+    <string name="detail_reliability">Forecast reliability</string>
+    <string name="dc_hint">Long press and drag to read the values</string>
+    <string name="dc_wind">wind</string>
+    <string name="dc_gust">gust</string>
+    <string name="dc_cursor_wind">Wind %1$s %2$d km/h</string>
+    <string name="dc_cursor_gust">gust %1$d km/h</string>
     <string name="detail_no_hours">No hourly data for this day.</string>
     <string name="detail_no_data">No forecast downloaded yet: open the main page while online.</string>
     <string name="rainspot_label">Rain around</string>

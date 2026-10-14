@@ -142,6 +142,13 @@
     <string name="detail_rain">Pioggia %1$d%% · %2$s</string>
     <string name="detail_wind">Vento %1$s fino a %2$d km/h</string>
     <string name="detail_felt">Perc. %1$s</string>
+    <string name="detail_chart">Andamento della giornata</string>
+    <string name="detail_reliability">Affidabilità della previsione</string>
+    <string name="dc_hint">Tocco lungo e trascina per leggere i valori</string>
+    <string name="dc_wind">vento</string>
+    <string name="dc_gust">raffica</string>
+    <string name="dc_cursor_wind">Vento %1$s %2$d km/h</string>
+    <string name="dc_cursor_gust">raffica %1$d km/h</string>
     <string name="detail_no_hours">Nessun dato orario per questo giorno.</string>
     <string name="detail_no_data">Previsioni non ancora scaricate: apri la pagina principale con la connessione attiva.</string>
     <string name="rainspot_label">Pioggia nei dintorni</string>

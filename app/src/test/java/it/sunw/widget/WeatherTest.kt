@@ -120,6 +120,26 @@ class WeatherTest {
     }
 
     @Test
+    fun predictabilityIsParsedWhenTheDayHasIt() {
+        val root = JSONObject(sampleJson())
+        assertEquals(null, Forecast.parse(root.toString(), java.time.Instant.now()).days[0].predictability)
+        root.getJSONObject("data_day").put("predictability", JSONArray(listOf(78, 55, 120)))
+        val days = Forecast.parse(root.toString(), java.time.Instant.now()).days
+        assertEquals(listOf<Int?>(78, 55, null), days.map { it.predictability }) // out of range → none
+    }
+
+    @Test
+    fun gustsAreParsedPerHour() {
+        val json = """{"hourly":{"time":["2026-10-18T13:00","2026-10-18T14:00","2026-10-18T15:00"],"wind_gusts_10m":[30.2,null,36.5]}}"""
+        val gusts = it.sunw.widget.weather.Gusts.parse(json)
+        assertEquals(30.2, gusts[java.time.LocalDateTime.of(2026, 10, 18, 13, 0)]!!, 0.001)
+        assertEquals(null, gusts[java.time.LocalDateTime.of(2026, 10, 18, 14, 0)])
+        assertEquals(36.5, gusts[java.time.LocalDateTime.of(2026, 10, 18, 15, 0)]!!, 0.001)
+        assertTrue(it.sunw.widget.weather.GustRepository.url(44.8, 10.33).contains("hourly=wind_gusts_10m"))
+        assertTrue(runCatching { it.sunw.widget.weather.Gusts.parse("""{"error":true,"reason":"nope"}""") }.isFailure)
+    }
+
+    @Test
     fun rainspotRunsSouthToNorth() {
         // Decoded from a Meteoblue screenshot (Pannocchia, 21:00): rain to the south, dry north.
         val spot = "1111111111111111191119119900009000000000000000000"

@@ -45,6 +45,8 @@ data class Forecast(
         val windDirection: Int,
         val uvIndex: Int,
         val rainspot: String? = null,
+        /** MeteoBlue's predictability of the day's forecast, 0–100 %; null when the response has none. */
+        val predictability: Int? = null,
     )
 
     /** Local date-time at the forecast location for an instant. */
@@ -109,6 +111,7 @@ data class Forecast(
                     windDirection = d.optJSONArray("winddirection")?.optInt(i, 0) ?: 0,
                     uvIndex = d.optJSONArray("uvindex")?.optInt(i, 0) ?: 0,
                     rainspot = rainspot(d, i),
+                    predictability = d.optJSONArray("predictability")?.takeIf { !it.isNull(i) }?.optInt(i, -1)?.takeIf { it in 0..100 },
                 )
             }
             return Forecast(

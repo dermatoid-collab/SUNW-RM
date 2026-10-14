@@ -54,6 +54,7 @@ class WeatherDayActivity : Activity() {
     private lateinit var forecast: Forecast
     private lateinit var selected: LocalDate
     private var stepHours = 1
+    private var gusts: Gusts? = null
     private val zone: ZoneId get() = ZoneId.systemDefault()
     private val density get() = resources.displayMetrics.density
     private fun dp(v: Int) = (v * density).roundToInt()
@@ -86,17 +87,18 @@ class WeatherDayActivity : Activity() {
             compoundDrawableTintList = ColorStateList.valueOf(palette.text)
             setOnClickListener { finish() }
         }
-        for (id in listOf(R.id.day_hero, R.id.day_info_card, R.id.day_hourly_card)) {
+        for (id in listOf(R.id.day_hero, R.id.day_info_card, R.id.day_chart_card, R.id.day_hourly_card)) {
             findViewById<View>(id).background =
                 (getDrawable(R.drawable.card_background)!!.mutate() as GradientDrawable).apply { setColor(palette.cardBackground) }
         }
         findViewById<TextView>(R.id.day_hourly_title).setTextColor(palette.text)
+        findViewById<TextView>(R.id.day_chart_title).setTextColor(palette.text)
         findViewById<TextView>(R.id.day_status).setTextColor(palette.textSecondary)
 
         val cached = WeatherRepository(this).cached(place)
         if (cached == null || cached.days.isEmpty()) {
             findViewById<TextView>(R.id.day_status).text = getString(R.string.detail_no_data)
-            listOf(R.id.day_hero, R.id.day_info_card, R.id.day_hourly_card).forEach { findViewById<View>(it).visibility = View.GONE }
+            listOf(R.id.day_hero, R.id.day_info_card, R.id.day_chart_card, R.id.day_hourly_card).forEach { findViewById<View>(it).visibility = View.GONE }
             return
         }
         forecast = cached
@@ -114,6 +116,21 @@ class WeatherDayActivity : Activity() {
             }
         }
         render()
+        loadGusts(place)
+    }
+
+    /** The gusts come from Open-Meteo; the chart is drawn without them first and again when they arrive. */
+    private fun loadGusts(place: it.sunw.widget.Place) {
+        val repo = GustRepository(this)
+        gusts = repo.cached(place)
+        if (gusts != null) showChart()
+        if (gusts == null || !repo.isFresh()) {
+            repo.refresh(place) { result ->
+                result.getOrNull()?.let { fresh ->
+                    runOnUiThread { if (!isDestroyed) { gusts = fresh; showChart() } }
+                }
+            }
+        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -166,6 +183,7 @@ class WeatherDayActivity : Activity() {
         showTabs()
         showHero()
         showInfo()
+        showChart()
         showHours()
         val updated = DateTimeFormatter.ofPattern("HH:mm").format(forecast.fetchedAt.atZone(zone))
         findViewById<TextView>(R.id.day_status).text = getString(R.string.weather_source, updated)
@@ -338,6 +356,34 @@ class WeatherDayActivity : Activity() {
         return this
     }
 
+    /** Strip and chart of the day, and MeteoBlue's predictability of the forecast as a dot and a percentage. */
+    private fun showChart() {
+        val card = findViewById<View>(R.id.day_chart_card)
+        val hours = hoursOf(selected)
+        if (hours.isEmpty()) {
+            card.visibility = View.GONE
+            return
+        }
+        card.visibility = View.VISIBLE
+        val known = gusts
+        findViewById<DayChartView>(R.id.day_chart).show(palette, hours) { known?.get(it) }
+        findViewById<TextView>(R.id.day_reliability).apply {
+            val value = day().predictability
+            if (value == null) {
+                visibility = View.GONE
+                return@apply
+            }
+            visibility = View.VISIBLE
+            val dot = if (value >= 80) RELIABLE else if (value >= 60) FAIR else UNRELIABLE
+            text = SpannableStringBuilder("●").apply {
+                setSpan(android.text.style.ForegroundColorSpan(dot), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                append(" $value %")
+            }
+            setTextColor(palette.text)
+            contentDescription = getString(R.string.detail_reliability) + " $value %"
+        }
+    }
+
     private fun hoursOf(date: LocalDate): List<Forecast.Hour> = forecast.hours.filter { it.time.toLocalDate() == date }
 
     /** Current hour's row (today only): highlighted and brought into view. */
@@ -460,6 +506,9 @@ class WeatherDayActivity : Activity() {
         private const val STATE_DATE = "date"
         private const val STATE_STEP = "step"
         private const val RAIN_TEXT = 0xFF8FB8F2.toInt()
+        private const val RELIABLE = 0xFF4FC36A.toInt()
+        private const val FAIR = 0xFFE0B73A.toInt()
+        private const val UNRELIABLE = 0xFFE0624A.toInt()
         private const val SWIPE_MIN_DP = 80
         /** How far (share of the width) the new day starts from; the pages use 12 %. */
         private const val SLIDE_FRACTION = 0.25f

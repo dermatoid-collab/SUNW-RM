@@ -8,6 +8,8 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import it.sunw.widget.weather.Condition
+import it.sunw.widget.weather.DayChartView
+import it.sunw.widget.weather.GustRepository
 import it.sunw.widget.weather.WeatherDayActivity
 import it.sunw.widget.weather.WeatherIcons
 import org.junit.Assert.assertEquals
@@ -34,6 +36,7 @@ class WeatherDayActivityTest {
 
     @Before
     fun seedCache() {
+        GustRepository.executor = java.util.concurrent.Executor { } // no network in the tests
         LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
         File(context.cacheDir, "meteoblue.json").writeText(WeatherTest.sampleJson())
         context.getSharedPreferences("weather", Context.MODE_PRIVATE).edit()
@@ -96,11 +99,97 @@ class WeatherDayActivityTest {
         spots.forEach { assertOpensRadar(activity, it) }
     }
 
+    /** The sample response with MeteoBlue's predictability per day. */
+    private fun seedPredictability(vararg values: Int) {
+        val root = org.json.JSONObject(WeatherTest.sampleJson())
+        root.getJSONObject("data_day").put("predictability", org.json.JSONArray(values.toList()))
+        File(context.cacheDir, "meteoblue.json").writeText(root.toString())
+    }
+
+    /** Open-Meteo gusts for the sample's hours, cached as the repository would have left them. */
+    private fun seedGusts(kmh: Double) {
+        val times = (0 until 48).map { java.time.LocalDate.of(2026, 10, 8).atStartOfDay().plusHours(it.toLong()).toString().take(16) }
+        val json = org.json.JSONObject().put("hourly", org.json.JSONObject()
+            .put("time", org.json.JSONArray(times))
+            .put("wind_gusts_10m", org.json.JSONArray(times.map { kmh })))
+        File(context.cacheDir, "gusts.json").writeText(json.toString())
+        context.getSharedPreferences("weather", Context.MODE_PRIVATE).edit()
+            .putLong("gust_fetched", System.currentTimeMillis())
+            .putLong("gust_lat", 44.80.toRawBits())
+            .putLong("gust_lon", 10.33.toRawBits())
+            .commit()
+    }
+
+    @Test
+    fun theChartCardSitsBetweenTheInfoTileAndTheHourlyRows() {
+        val activity = open("2026-10-09")
+        val content = activity.findViewById<LinearLayout>(R.id.day_content)
+        val info = content.indexOfChild(activity.findViewById(R.id.day_info_card))
+        val chart = content.indexOfChild(activity.findViewById(R.id.day_chart_card))
+        val hourly = content.indexOfChild(activity.findViewById(R.id.day_hourly_card))
+        assertTrue("info=$info chart=$chart hourly=$hourly", info in 0 until chart && chart == hourly - 1)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.day_chart_card).visibility)
+        assertEquals(24, activity.findViewById<DayChartView>(R.id.day_chart).hourCount)
+    }
+
+    @Test
+    fun reliabilityShowsADotWithTheWrittenPercentage() {
+        seedPredictability(78, 55, 91)
+        val activity = open("2026-10-08")
+        val label = activity.findViewById<TextView>(R.id.day_reliability)
+        assertEquals(View.VISIBLE, label.visibility)
+        assertEquals("● 78 %", label.text.toString())
+        activity.showDay(1)
+        assertEquals("● 55 %", label.text.toString())
+    }
+
+    @Test
+    fun withoutPredictabilityTheDotIsHidden() {
+        val activity = open("2026-10-09")
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.day_reliability).visibility)
+    }
+
+    @Test
+    fun theCursorReadsTheValuesOfTheHour() {
+        seedGusts(36.0)
+        val activity = open("2026-10-09")
+        val chart = activity.findViewById<DayChartView>(R.id.day_chart)
+        val label = chart.cursorLabel(14)!!
+        assertTrue(label.first, label.first.contains("14:00"))
+        assertTrue(label.second, label.second.contains("°") && label.second.contains("%") && label.second.contains("mm"))
+        assertTrue(label.third, label.third.contains("km/h") && label.third.contains("36"))
+    }
+
+    @Test
+    fun withoutGustsTheCursorShowsTheMeanWindOnly() {
+        val activity = open("2026-10-09")
+        val label = activity.findViewById<DayChartView>(R.id.day_chart).cursorLabel(14)!!
+        assertTrue(label.third, label.third.contains("km/h") && !label.third.contains("gust"))
+    }
+
+    @Test
+    fun longPressOnTheDayChartMovesItsCursor() {
+        val activity = open("2026-10-09")
+        val chart = activity.findViewById<DayChartView>(R.id.day_chart)
+        chart.measure(View.MeasureSpec.makeMeasureSpec(1000, View.MeasureSpec.EXACTLY), View.MeasureSpec.UNSPECIFIED)
+        chart.layout(0, 0, chart.measuredWidth, chart.measuredHeight)
+        fun event(action: Int, x: Float) = android.view.MotionEvent.obtain(0, 0, action, x, 100f, 0)
+        chart.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_DOWN, 100f))
+        assertEquals(-1, chart.cursorIndex)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(1500))
+        assertTrue(chart.cursorIndex >= 0)
+        val first = chart.cursorIndex
+        chart.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_MOVE, 700f))
+        assertTrue(chart.cursorIndex > first)
+        chart.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_UP, 700f))
+        assertEquals(-1, chart.cursorIndex)
+    }
+
     @Test
     fun theTilesSitCloserTogether() {
         val activity = open("2026-10-09")
         val d = activity.resources.displayMetrics.density
-        for (id in listOf(R.id.day_hero, R.id.day_info_card, R.id.day_hourly_card)) {
+        for (id in listOf(R.id.day_hero, R.id.day_info_card, R.id.day_chart_card, R.id.day_hourly_card)) {
             val gap = (activity.findViewById<View>(id).layoutParams as android.view.ViewGroup.MarginLayoutParams).topMargin
             assertTrue("tile gap $gap", gap <= (6 * d).toInt())
         }
