@@ -80,6 +80,31 @@ Implementata in `SunMoonActivity` (cursore ±6 mesi confermato), poi riorganizza
 - **Calcoli:** quelli già verificati dell'app (SunCalculator, MoonCalculator), non le formule
   semplificate del prototipo.
 
+## 5. Avviso sulla batteria — concordato, da sviluppare
+
+- **Perché:** il risparmio energetico di One UI (e le «App in stop») può rimandare l'allarme
+  del widget e fermarne gli aggiornamenti.
+- **Rilevare:** `PowerManager.isIgnoringBatteryOptimizations` e `ActivityManager.isBackgroundRestricted`;
+  le «App in stop» di Samsung non sono rilevabili, quindi il testo le nomina.
+- **Avviso una tantum** dopo la richiesta delle notifiche al primo avvio, con «Impostazioni» e «Non ora»;
+  la richiesta di sistema (`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`, permesso nel manifest) o, se non
+  disponibile, la pagina batteria dell'app.
+- **Riga fissa nelle Impostazioni** con lo stato (limitata o libera) che apre la stessa richiesta.
+- **Niente banner permanente** sulla pagina principale.
+
+## Altre cose in sospeso
+
+- **Icone orarie:** la mappatura dai codici icona di MeteoBlue alle nostre categorie (`Condition.kt`) è
+  approssimata (nel confronto di domenica le icone differivano in 6 ore su 9): serve vedere il codice grezzo.
+- **Vento:** l'app mostra solo il minimo del vento medio; MeteoBlue mostra anche il massimo (intervallo).
+- **Grafico della Luna** (minuti sopra l'orizzonte): la curva ha gradini reali dovuti alla finestra
+  00:00–24:00; un'eventuale media mobile su 3 giorni è da decidere.
+- **RainSPOT:** verificare l'allineamento su altre giornate dopo la rimozione dello spostamento a est.
+- **Pallino di affidabilità:** da controllare nell'APK se MeteoBlue manda davvero il dato di prevedibilità.
+- **Widget:** se anche con «Senza restrizioni» resta lento, aggiornare all'accensione dello schermo
+  (richiede un servizio in primo piano: da proporre solo su richiesta).
+- **Meteoalarm** per le località fuori Italia (già indicato nella sezione 2).
+
 ## Note
 
 - Dall'ambiente cloud di sviluppo questi servizi non sono raggiungibili (proxy): indirizzi
