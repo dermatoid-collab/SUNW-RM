@@ -47,6 +47,24 @@ enum class Condition(val label: Int) {
             else -> PARTLY_CLOUDY
         }
 
+        /** Open-Meteo's WMO weather codes (0 clear … 99 thunderstorm with hail). */
+        fun fromWmoCode(code: Int): Condition = when (code) {
+            0 -> CLEAR
+            1 -> MOSTLY_CLEAR
+            2 -> PARTLY_CLOUDY
+            3 -> OVERCAST
+            45, 48 -> FOG
+            51, 53, 55, 61 -> LIGHT_RAIN
+            56, 57, 66, 67 -> SLEET
+            63 -> RAIN
+            80, 81 -> SHOWERS
+            65, 82 -> HEAVY_RAIN
+            71, 73, 75, 77 -> SNOW
+            85, 86 -> SNOW_SHOWERS
+            95, 96, 99 -> THUNDERSTORM
+            else -> PARTLY_CLOUDY
+        }
+
         /** Daily pictocodes 1–17 (meteoblue "pictocode" for data_day). */
         fun fromDailyPictocode(code: Int): Condition = when (code) {
             1 -> CLEAR

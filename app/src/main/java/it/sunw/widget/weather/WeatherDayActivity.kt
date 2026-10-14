@@ -54,7 +54,7 @@ class WeatherDayActivity : Activity() {
     private lateinit var forecast: Forecast
     private lateinit var selected: LocalDate
     private var stepHours = 1
-    private var gusts: Gusts? = null
+    private var model: OpenMeteoHours? = null
     private val zone: ZoneId get() = ZoneId.systemDefault()
     private val density get() = resources.displayMetrics.density
     private fun dp(v: Int) = (v * density).roundToInt()
@@ -116,21 +116,30 @@ class WeatherDayActivity : Activity() {
             }
         }
         render()
-        loadGusts(place)
+        loadModelHours(place)
     }
 
-    /** The gusts come from Open-Meteo; the chart is drawn without them first and again when they arrive. */
-    private fun loadGusts(place: it.sunw.widget.Place) {
-        val repo = GustRepository(this)
-        gusts = repo.cached(place)
-        if (gusts != null) showChart()
-        if (gusts == null || !repo.isFresh()) {
+    /**
+     * Open-Meteo's hours: the gusts, and the values of the hours already gone today. The page is drawn
+     * first with MeteoBlue alone and again when they arrive.
+     */
+    private fun loadModelHours(place: it.sunw.widget.Place) {
+        val repo = OpenMeteoHoursRepository(this)
+        model = repo.cached(place)
+        if (model != null) refreshHours()
+        if (model == null || !repo.isFresh()) {
             repo.refresh(place) { result ->
                 result.getOrNull()?.let { fresh ->
-                    runOnUiThread { if (!isDestroyed) { gusts = fresh; showChart() } }
+                    runOnUiThread { if (!isDestroyed) { model = fresh; refreshHours() } }
                 }
             }
         }
+    }
+
+    private fun refreshHours() {
+        showChart()
+        showHours()
+        if (focusedRow != null) scrollToFocusedHour()
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -365,8 +374,9 @@ class WeatherDayActivity : Activity() {
             return
         }
         card.visibility = View.VISIBLE
-        val known = gusts
-        findViewById<DayChartView>(R.id.day_chart).show(palette, hours) { known?.get(it) }
+        val known = model
+        val nowLocal = forecast.localTime(Instant.now())
+        findViewById<DayChartView>(R.id.day_chart).show(palette, hours, nowLocal.takeIf { selected == it.toLocalDate() }) { known?.get(it)?.gust }
         findViewById<TextView>(R.id.day_reliability).apply {
             val value = day().predictability
             if (value == null) {
@@ -384,7 +394,31 @@ class WeatherDayActivity : Activity() {
         }
     }
 
-    private fun hoursOf(date: LocalDate): List<Forecast.Hour> = forecast.hours.filter { it.time.toLocalDate() == date }
+    /**
+     * The hours of [date]. For today, the hours already gone take Open-Meteo's values (temperature, feels
+     * like, rain, wind, icon) when it has them, as in the meteogram; the rain probability and the
+     * rainSPOT stay MeteoBlue's, and so does everything from the current hour on.
+     */
+    private fun hoursOf(date: LocalDate): List<Forecast.Hour> {
+        val day = forecast.hours.filter { it.time.toLocalDate() == date }
+        val now = forecast.localTime(Instant.now())
+        val known = model ?: return day
+        return day.map { h ->
+            val s = known[h.time]
+            if (s == null || !isPast(h, now)) h else h.copy(
+                temperature = s.temperature ?: h.temperature,
+                feltTemperature = s.feltTemperature ?: h.feltTemperature,
+                precipitation = s.precipitation ?: h.precipitation,
+                windSpeed = s.windSpeed ?: h.windSpeed,
+                windDirection = s.windDirection ?: h.windDirection,
+                condition = s.weatherCode?.let { Condition.fromWmoCode(it) } ?: h.condition,
+            )
+        }
+    }
+
+    /** Whether [h] is an hour already gone today (its row is dimmed). */
+    private fun isPast(h: Forecast.Hour, now: java.time.LocalDateTime) =
+        h.time.toLocalDate() == now.toLocalDate() && h.time.isBefore(now.truncatedTo(java.time.temporal.ChronoUnit.HOURS))
 
     /** Current hour's row (today only): highlighted and brought into view. */
     private var focusedRow: View? = null
@@ -414,6 +448,7 @@ class WeatherDayActivity : Activity() {
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(6), dp(ROW_PAD_DP), dp(6), dp(ROW_PAD_DP))
                 val isNow = isToday && h.time.hour == focusHour
+                if (isPast(h, nowLocal)) alpha = PAST_ROW_ALPHA
                 if (isNow) {
                     focusedRow = this
                     background = GradientDrawable().apply {
@@ -506,6 +541,7 @@ class WeatherDayActivity : Activity() {
         private const val STATE_DATE = "date"
         private const val STATE_STEP = "step"
         private const val RAIN_TEXT = 0xFF8FB8F2.toInt()
+        private const val PAST_ROW_ALPHA = 0.6f
         private const val RELIABLE = 0xFF4FC36A.toInt()
         private const val FAIR = 0xFFE0B73A.toInt()
         private const val UNRELIABLE = 0xFFE0624A.toInt()

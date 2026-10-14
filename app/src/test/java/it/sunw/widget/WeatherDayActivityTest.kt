@@ -9,7 +9,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import it.sunw.widget.weather.Condition
 import it.sunw.widget.weather.DayChartView
-import it.sunw.widget.weather.GustRepository
+import it.sunw.widget.weather.OpenMeteoHoursRepository
 import it.sunw.widget.weather.WeatherDayActivity
 import it.sunw.widget.weather.WeatherIcons
 import org.junit.Assert.assertEquals
@@ -36,7 +36,7 @@ class WeatherDayActivityTest {
 
     @Before
     fun seedCache() {
-        GustRepository.executor = java.util.concurrent.Executor { } // no network in the tests
+        OpenMeteoHoursRepository.executor = java.util.concurrent.Executor { } // no network in the tests
         LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
         File(context.cacheDir, "meteoblue.json").writeText(WeatherTest.sampleJson())
         context.getSharedPreferences("weather", Context.MODE_PRIVATE).edit()
@@ -106,19 +106,33 @@ class WeatherDayActivityTest {
         File(context.cacheDir, "meteoblue.json").writeText(root.toString())
     }
 
-    /** Open-Meteo gusts for the sample's hours, cached as the repository would have left them. */
-    private fun seedGusts(kmh: Double) {
-        val times = (0 until 48).map { java.time.LocalDate.of(2026, 10, 8).atStartOfDay().plusHours(it.toLong()).toString().take(16) }
+    /**
+     * Open-Meteo's hours as the repository would have left them in its cache, for every hour of [first] and
+     * the day after: [temperature] and the rest are the same for every hour so that they can be told apart
+     * from the MeteoBlue sample's (15–26° rising with the hour, 9 km/h wind, no rain, partly cloudy).
+     */
+    private fun seedModelHours(first: java.time.LocalDate = java.time.LocalDate.of(2026, 10, 8), temperature: Double = 3.0, gust: Double = 36.0) {
+        val times = (0 until 48).map { first.atStartOfDay().plusHours(it.toLong()).toString().take(16) }
+        fun column(value: Double) = org.json.JSONArray(times.map { value })
         val json = org.json.JSONObject().put("hourly", org.json.JSONObject()
             .put("time", org.json.JSONArray(times))
-            .put("wind_gusts_10m", org.json.JSONArray(times.map { kmh })))
-        File(context.cacheDir, "gusts.json").writeText(json.toString())
+            .put("temperature_2m", column(temperature))
+            .put("apparent_temperature", column(temperature - 2))
+            .put("precipitation", column(1.4))
+            .put("wind_speed_10m", column(21.0))
+            .put("wind_direction_10m", column(90.0))
+            .put("wind_gusts_10m", column(gust))
+            .put("weather_code", column(65.0)))
+        File(context.cacheDir, "openmeteo_hours.json").writeText(json.toString())
         context.getSharedPreferences("weather", Context.MODE_PRIVATE).edit()
-            .putLong("gust_fetched", System.currentTimeMillis())
-            .putLong("gust_lat", 44.80.toRawBits())
-            .putLong("gust_lon", 10.33.toRawBits())
+            .putLong("omh_fetched", System.currentTimeMillis())
+            .putLong("omh_lat", 44.80.toRawBits())
+            .putLong("omh_lon", 10.33.toRawBits())
             .commit()
     }
+
+    private val today get() = Instant.now().atOffset(ZoneOffset.ofHours(2)).toLocalDate() // the sample's UTC offset is +2 h
+    private val nowHour get() = Instant.now().atOffset(ZoneOffset.ofHours(2)).hour
 
     @Test
     fun theChartCardSitsBetweenTheInfoTileAndTheHourlyRows() {
@@ -151,7 +165,7 @@ class WeatherDayActivityTest {
 
     @Test
     fun theCursorReadsTheValuesOfTheHour() {
-        seedGusts(36.0)
+        seedModelHours()
         val activity = open("2026-10-09")
         val chart = activity.findViewById<DayChartView>(R.id.day_chart)
         val label = chart.cursorLabel(14)!!
@@ -252,5 +266,70 @@ class WeatherDayActivityTest {
         assertTrue(activity.showDay(-1))          // back to today: current hour again
         shadowOf(Looper.getMainLooper()).idle()
         assertTrue("back to today scrollY=${page.scrollY}", page.scrollY > 0)
+    }
+    private fun openToday(): WeatherDayActivity {
+        File(context.cacheDir, "meteoblue.json").writeText(WeatherTest.sampleJson(today))
+        seedModelHours(first = today)
+        return open(today.toString())
+    }
+
+    private fun rowPill(activity: WeatherDayActivity, row: Int): String {
+        val hours = activity.findViewById<LinearLayout>(R.id.day_hours)
+        val first = (hours.getChildAt(row * 2) as LinearLayout).getChildAt(0) as LinearLayout
+        return (first.getChildAt(1) as TextView).text.toString()
+    }
+
+    @Test
+    fun theHoursGoneTodayTakeOpenMeteosValuesAndTheRestStaysMeteoBlues() {
+        org.junit.Assume.assumeTrue(nowHour in 1..22) // needs a past hour and a future one
+        val activity = openToday()
+        val chart = activity.findViewById<DayChartView>(R.id.day_chart)
+        // Hour 0 is gone: Open-Meteo's 3°, feels 1°, 1.4 mm and 21 km/h with its gust.
+        val past = chart.cursorLabel(0)!!
+        assertTrue(past.second, past.second.startsWith("3° · ") && past.second.contains("1°") && past.second.contains("1.4 mm"))
+        assertTrue(past.third, past.third.contains("21 km/h") && past.third.contains("36"))
+        assertTrue(past.first, past.first.endsWith(activity.getString(R.string.mg_cursor_past)))
+        // Hour 23 is ahead: MeteoBlue's own values (26°, 9 km/h, no rain).
+        val future = chart.cursorLabel(23)!!
+        assertTrue(future.second, future.second.startsWith("26° · ") && future.second.contains("0 mm"))
+        assertTrue(future.third, future.third.contains("9 km/h"))
+        assertTrue(future.first, future.first.endsWith(activity.getString(R.string.mg_cursor_forecast)))
+        // The rain probability is MeteoBlue's for every hour (Open-Meteo has none for the past).
+        assertTrue(past.second, past.second.endsWith("10 %"))
+    }
+
+    @Test
+    fun theHourRowsFollowTheSameRuleAndTheGoneOnesAreDimmed() {
+        org.junit.Assume.assumeTrue(nowHour in 1..22)
+        val activity = openToday()
+        assertEquals("3°", rowPill(activity, 0)) // hour 0, gone
+        assertEquals("26°", rowPill(activity, 23)) // hour 23, ahead
+        val hours = activity.findViewById<LinearLayout>(R.id.day_hours)
+        assertTrue("past row alpha", hours.getChildAt(0).alpha < 1f)
+        assertEquals(1f, hours.getChildAt(23 * 2).alpha, 0f)
+        assertEquals(nowHour, activity.findViewById<DayChartView>(R.id.day_chart).pastHours)
+    }
+
+    @Test
+    fun theCurrentHourAndOtherDaysAreLeftToMeteoBlue() {
+        org.junit.Assume.assumeTrue(nowHour in 1..22)
+        val activity = openToday()
+        val chart = activity.findViewById<DayChartView>(R.id.day_chart)
+        val now = chart.cursorLabel(nowHour)!!
+        assertTrue(now.second, !now.second.startsWith("3° · "))
+        assertTrue(now.first, now.first.endsWith(activity.getString(R.string.mg_cursor_now)))
+        activity.showDay(1) // tomorrow: nothing is past
+        assertEquals(0, chart.pastHours)
+        assertTrue(chart.cursorLabel(0)!!.second, !chart.cursorLabel(0)!!.second.startsWith("3° · "))
+        assertEquals(1f, activity.findViewById<LinearLayout>(R.id.day_hours).getChildAt(0).alpha, 0f)
+    }
+
+    @Test
+    fun withoutOpenMeteoThePastKeepsMeteoBluesValuesButStillDimmed() {
+        org.junit.Assume.assumeTrue(nowHour in 1..22)
+        File(context.cacheDir, "meteoblue.json").writeText(WeatherTest.sampleJson(today))
+        val activity = open(today.toString())
+        assertEquals("15°", rowPill(activity, 0)) // MeteoBlue: 15 + hour % 12
+        assertTrue(activity.findViewById<LinearLayout>(R.id.day_hours).getChildAt(0).alpha < 1f)
     }
 }

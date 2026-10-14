@@ -129,14 +129,43 @@ class WeatherTest {
     }
 
     @Test
-    fun gustsAreParsedPerHour() {
-        val json = """{"hourly":{"time":["2026-10-18T13:00","2026-10-18T14:00","2026-10-18T15:00"],"wind_gusts_10m":[30.2,null,36.5]}}"""
-        val gusts = it.sunw.widget.weather.Gusts.parse(json)
-        assertEquals(30.2, gusts[java.time.LocalDateTime.of(2026, 10, 18, 13, 0)]!!, 0.001)
-        assertEquals(null, gusts[java.time.LocalDateTime.of(2026, 10, 18, 14, 0)])
-        assertEquals(36.5, gusts[java.time.LocalDateTime.of(2026, 10, 18, 15, 0)]!!, 0.001)
-        assertTrue(it.sunw.widget.weather.GustRepository.url(44.8, 10.33).contains("hourly=wind_gusts_10m"))
-        assertTrue(runCatching { it.sunw.widget.weather.Gusts.parse("""{"error":true,"reason":"nope"}""") }.isFailure)
+    fun openMeteoHoursAreParsedPerHourAndToleratedWhenPartial() {
+        val json = """{"hourly":{"time":["2026-10-18T13:00","2026-10-18T14:00","2026-10-18T15:00"],
+            "temperature_2m":[16.4,null,17.0],"apparent_temperature":[14.0,14.5,15.0],"precipitation":[0.0,0.3,null],
+            "wind_speed_10m":[12.2,13.0,14.0],"wind_direction_10m":[200,210,220],"wind_gusts_10m":[30.2,null,36.5],
+            "weather_code":[3,61,95]}}"""
+        val hours = it.sunw.widget.weather.OpenMeteoHours.parse(json)
+        val first = hours[java.time.LocalDateTime.of(2026, 10, 18, 13, 0)]!!
+        assertEquals(16.4, first.temperature!!, 0.001)
+        assertEquals(14.0, first.feltTemperature!!, 0.001)
+        assertEquals(12.2, first.windSpeed!!, 0.001)
+        assertEquals(200, first.windDirection)
+        assertEquals(30.2, first.gust!!, 0.001)
+        assertEquals(3, first.weatherCode)
+        val second = hours[java.time.LocalDateTime.of(2026, 10, 18, 14, 0)]!!
+        assertEquals(null, second.temperature) // a missing value stays missing
+        assertEquals(null, second.gust)
+        assertEquals(0.3, second.precipitation!!, 0.001)
+        assertEquals(null, hours[java.time.LocalDateTime.of(2026, 10, 18, 16, 0)])
+        // Only some variables are enough.
+        val gustsOnly = it.sunw.widget.weather.OpenMeteoHours.parse("""{"hourly":{"time":["2026-10-18T13:00"],"wind_gusts_10m":[30.2]}}""")
+        assertEquals(30.2, gustsOnly[java.time.LocalDateTime.of(2026, 10, 18, 13, 0)]!!.gust!!, 0.001)
+        assertEquals(null, gustsOnly[java.time.LocalDateTime.of(2026, 10, 18, 13, 0)]!!.temperature)
+        val url = it.sunw.widget.weather.OpenMeteoHoursRepository.url(44.8, 10.33)
+        assertTrue(url, url.contains("wind_gusts_10m") && url.contains("weather_code") && url.contains("apparent_temperature"))
+        assertTrue(runCatching { it.sunw.widget.weather.OpenMeteoHours.parse("""{"error":true,"reason":"nope"}""") }.isFailure)
+    }
+
+    @Test
+    fun wmoWeatherCodesBecomeOurConditions() {
+        val expected = mapOf(
+            0 to Condition.CLEAR, 1 to Condition.MOSTLY_CLEAR, 2 to Condition.PARTLY_CLOUDY, 3 to Condition.OVERCAST,
+            45 to Condition.FOG, 51 to Condition.LIGHT_RAIN, 61 to Condition.LIGHT_RAIN, 63 to Condition.RAIN,
+            65 to Condition.HEAVY_RAIN, 80 to Condition.SHOWERS, 82 to Condition.HEAVY_RAIN, 71 to Condition.SNOW,
+            85 to Condition.SNOW_SHOWERS, 66 to Condition.SLEET, 95 to Condition.THUNDERSTORM, 99 to Condition.THUNDERSTORM,
+        )
+        for ((code, condition) in expected) assertEquals("WMO $code", condition, Condition.fromWmoCode(code))
+        assertEquals(Condition.PARTLY_CLOUDY, Condition.fromWmoCode(1234)) // unknown: neutral
     }
 
     @Test

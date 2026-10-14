@@ -43,6 +43,10 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
     private var hasRain = false
     private var hasGusts = false
 
+    /** Today: the hours before this one are gone (drawn dimmed); [nowAt] is the current moment in hours. Otherwise -1 / 0. */
+    private var pastBefore = 0
+    private var nowAt = -1.0
+
     private var cursor = -1
     private var pressing = false
     private var downX = 0f
@@ -54,12 +58,21 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
     /** Hour under the cursor, or -1. */
     internal val cursorIndex: Int get() = cursor
 
+    /** Hours before this one are in the past (0 when the day is not today). */
+    internal val pastHours: Int get() = pastBefore
+
     /** How many of the day's 24 hours the forecast has. */
     internal val hourCount: Int get() = slots.count { it != null }
 
-    /** [hours] are the forecast hours of one day; [gust] gives the gust (km/h) of an hour, when known. */
-    fun show(palette: Palette, hours: List<Forecast.Hour>, gust: (LocalDateTime) -> Double?) {
+    /**
+     * [hours] are the hours of one day; [now] is the current local time when that day is today (the hours
+     * before it are drawn dimmed, with a line at "now") and null otherwise; [gust] gives the gust (km/h)
+     * of an hour, when known.
+     */
+    fun show(palette: Palette, hours: List<Forecast.Hour>, now: LocalDateTime?, gust: (LocalDateTime) -> Double?) {
         this.palette = palette
+        pastBefore = now?.hour ?: 0
+        nowAt = now?.let { it.hour + it.minute / 60.0 } ?: -1.0
         slots = Array(24) { h -> hours.firstOrNull { it.time.hour == h } }
         gusts = Array(24) { h -> slots[h]?.let { gust(it.time) } }
         hasRain = slots.any { (it?.precipitation ?: 0.0) >= RAIN_MIN }
@@ -92,6 +105,9 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     private fun windColor(p: Palette) = if (p.isLight) 0xFFB36B00.toInt() else 0xFFE6B36A.toInt()
     private fun rainColor(p: Palette) = if (p.isLight) 0xFF2F6FB0.toInt() else 0xFF5AA7E6.toInt()
+
+    /** A colour pulled towards the card, for the hours already gone. */
+    private fun fade(color: Int, p: Palette) = Palette.blend(p.cardBackground, color, PAST_SHARE)
 
     private fun drawText(canvas: Canvas, value: String, cx: Float, baseline: Float, sizeSp: Float, color: Int, bold: Boolean = false, align: Paint.Align = Paint.Align.CENTER) {
         paint.style = Paint.Style.FILL
@@ -138,22 +154,24 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
         for (h in COLUMN_HOURS) {
             val hour = slots[h] ?: continue
             val cx = x(h)
-            drawText(canvas, "%02d".format(h), cx, dp(12f), 11.5f, p.textSecondary)
-            icon(WeatherIcons.icon(hour.condition, !hour.isDaylight), p.text)?.let {
+            val gone = h < pastBefore
+            fun tone(color: Int) = if (gone) fade(color, p) else color
+            drawText(canvas, "%02d".format(h), cx, dp(12f), 11.5f, tone(p.textSecondary))
+            icon(WeatherIcons.icon(hour.condition, !hour.isDaylight), tone(p.text))?.let {
                 val size = dp(26f).roundToInt()
                 val left = (cx - size / 2f).roundToInt()
                 val top = dp(18f).roundToInt()
                 it.setBounds(left, top, left + size, top + size)
                 it.draw(canvas)
             }
-            drawText(canvas, WeatherCard.deg(hour.temperature), cx, dp(62f), 16f, p.text, bold = true)
-            if (hour.precipitation >= RAIN_MIN) drawText(canvas, String.format(Locale.getDefault(), "%.1f", hour.precipitation), cx, dp(78f), 11f, rainColor(p))
-            drawText(canvas, hour.windSpeed.roundToInt().toString(), cx, dp(98f), 13f, p.text, bold = true)
+            drawText(canvas, WeatherCard.deg(hour.temperature), cx, dp(62f), 16f, tone(p.text), bold = true)
+            if (hour.precipitation >= RAIN_MIN) drawText(canvas, String.format(Locale.getDefault(), "%.1f", hour.precipitation), cx, dp(78f), 11f, tone(rainColor(p)))
+            drawText(canvas, hour.windSpeed.roundToInt().toString(), cx, dp(98f), 13f, tone(p.text), bold = true)
             if (hasGusts) {
-                drawText(canvas, gusts[h]?.roundToInt()?.toString() ?: "—", cx, dp(114f), 11.5f, gustColor)
-                drawArrow(canvas, cx, dp(131f), hour.windDirection, p.textSecondary)
+                drawText(canvas, gusts[h]?.roundToInt()?.toString() ?: "—", cx, dp(114f), 11.5f, tone(gustColor))
+                drawArrow(canvas, cx, dp(131f), hour.windDirection, tone(p.textSecondary))
             } else {
-                drawArrow(canvas, cx, dp(114f), hour.windDirection, p.textSecondary)
+                drawArrow(canvas, cx, dp(114f), hour.windDirection, tone(p.textSecondary))
             }
         }
     }
@@ -176,6 +194,14 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
 
         drawTemperature(canvas, p)
         if (hasRain) drawRain(canvas, p)
+        if (nowAt >= 0) {
+            // "Now": from here on the values are forecasts.
+            val nx = pad + nowAt.toFloat() * slotWidth
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = dp(1.5f)
+            paint.color = p.accent
+            canvas.drawLine(nx, top, nx, bottom, paint)
+        }
     }
 
     private fun drawTemperature(canvas: Canvas, p: Palette) {
@@ -206,7 +232,8 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
             if (b != a + 1) continue
             val ta = slots[a]!!.temperature
             val tb = slots[b]!!.temperature
-            paint.color = WeatherCard.temperatureColor((ta + tb) / 2)
+            val tone = WeatherCard.temperatureColor((ta + tb) / 2)
+            paint.color = if (b < pastBefore) fade(tone, p) else tone
             canvas.drawLine(x(a), y(ta), x(b), y(tb), paint)
         }
         // Warmest and coldest hours.
@@ -233,11 +260,11 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
         val scale = max(peak, 1.0)
         val barWidth = slotWidth * 0.62f
         paint.style = Paint.Style.FILL
-        paint.color = rainColor(p)
         var peakHour = -1
         for (h in 0..23) {
             val mm = slots[h]?.precipitation ?: continue
             if (mm < RAIN_MIN) continue
+            paint.color = if (h < pastBefore) fade(rainColor(p), p) else rainColor(p)
             val height = max(dp(2f), (mm / scale).toFloat() * (bottom - top - dp(10f)))
             canvas.drawRoundRect(RectF(x(h) - barWidth / 2, bottom - height, x(h) + barWidth / 2, bottom), dp(1.5f), dp(1.5f), paint)
             if (mm >= peak) peakHour = h
@@ -308,8 +335,13 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
      */
     internal fun cursorLabel(hour: Int): Triple<String, String, String>? {
         val h = slots.getOrNull(hour) ?: return null
+        val kind = when {
+            hour < pastBefore -> R.string.mg_cursor_past
+            nowAt >= 0 && hour == pastBefore -> R.string.mg_cursor_now
+            else -> R.string.mg_cursor_forecast
+        }
         val whenText = DateTimeFormatter.ofPattern("EEE dd/MM · HH:mm", Locale.getDefault()).format(h.time)
-            .replace(".", "").replaceFirstChar { it.titlecase() }
+            .replace(".", "").replaceFirstChar { it.titlecase() } + " · " + context.getString(kind)
         val rain = if (h.precipitation < RAIN_MIN) "0 mm" else String.format(Locale.getDefault(), "%.1f mm", h.precipitation)
         val values = listOf(
             WeatherCard.deg(h.temperature),
@@ -378,6 +410,8 @@ class DayChartView @JvmOverloads constructor(context: Context, attrs: AttributeS
         /** The hours of the strip: the middle of each three-hour block, as the Windy and Meteoblue strips. */
         internal val COLUMN_HOURS = listOf(2, 5, 8, 11, 14, 17, 20, 23)
         private const val RAIN_MIN = 0.05
+        /** Share of the colour kept for an hour already gone (the rest is the card's). */
+        private const val PAST_SHARE = 0.5f
         private const val READOUT_DP = 58f
     }
 }

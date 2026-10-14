@@ -19,6 +19,9 @@ nella tile meteo della pagina principale (a sinistra delle pillole max/min).
   colonne; tocco lungo e trascinamento leggono i valori dell'ora. In alto a destra un pallino con la percentuale di
   prevedibilità di MeteoBlue (verde da 80 %, giallo da 60 %, rosso sotto; assente se il dato manca). Le raffiche orarie
   vengono da Open-Meteo (`wind_gusts_10m`), non da MeteoBlue: senza di esse la riga delle raffiche non compare.
+  Per oggi le ore già trascorse prendono da Open-Meteo anche temperatura, percepita, pioggia, vento, direzione e icona
+  (codici WMO), come nel meteogramma; probabilità di pioggia e rainSPOT restano di MeteoBlue, come tutto dall'ora attuale
+  in poi. Le ore trascorse sono attenuate (card e righe orarie) e c'è una linea «adesso» nel grafico.
 
 ## 2. Allerte meteo — prima versione sviluppata (Italia)
 
