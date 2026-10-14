@@ -6,6 +6,7 @@ import android.widget.ImageView
 import it.sunw.widget.weather.Forecast
 import it.sunw.widget.weather.MeteogramActivity
 import it.sunw.widget.weather.MeteogramView
+import it.sunw.widget.weather.OpenMeteoHoursRepository
 import it.sunw.widget.weather.PastTemperatures
 import it.sunw.widget.weather.WeatherCard
 import it.sunw.widget.weather.WeatherDayActivity
@@ -44,6 +45,7 @@ class MeteogramTest {
 
     @Before
     fun seedCache() {
+        OpenMeteoHoursRepository.executor = java.util.concurrent.Executor { } // no network for Open-Meteo's hours
         LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
         File(context.cacheDir, "meteoblue.json").writeText(json())
         context.getSharedPreferences("weather", Context.MODE_PRIVATE).edit()
@@ -166,6 +168,65 @@ class MeteogramTest {
         assertTrue(!hourly.hasFine)
         assertEquals(2, hourly.last24h(now).size)
         assertTrue(it.sunw.widget.weather.PastTemperatureRepository.url(44.8, 10.33).contains("minutely_15=temperature_2m"))
+    }
+
+    /** Open-Meteo's other hours for yesterday, today and tomorrow: 2 mm of rain, 15 km/h, WMO 61 (light rain), every hour. */
+    private fun seedModel() {
+        val times = (-1..1).flatMap { d -> (0 until 24).map { h -> today.plusDays(d.toLong()).atTime(h, 0).toString().take(16) } }
+        fun column(value: Double) = JSONArray(times.map { value })
+        val json = JSONObject().put("hourly", JSONObject()
+            .put("time", JSONArray(times))
+            .put("temperature_2m", column(7.0)).put("apparent_temperature", column(5.0))
+            .put("precipitation", column(2.0)).put("wind_speed_10m", column(15.0))
+            .put("wind_direction_10m", column(270.0)).put("wind_gusts_10m", column(30.0)).put("weather_code", column(61.0)))
+        File(context.cacheDir, "openmeteo_hours.json").writeText(json.toString())
+        context.getSharedPreferences("weather", Context.MODE_PRIVATE).edit()
+            .putLong("omh_fetched", System.currentTimeMillis())
+            .putLong("omh_lat", 44.80.toRawBits())
+            .putLong("omh_lon", 10.33.toRawBits())
+            .commit()
+    }
+
+    private val utcHour get() = Instant.now().atOffset(java.time.ZoneOffset.UTC).hour
+
+    @Test
+    fun theLast24HoursGetRainWindAndIconsFromOpenMeteo() {
+        org.junit.Assume.assumeTrue(utcHour in 1..21) // the sample's +2 h offset keeps "today" the same date
+        seedPast()
+        seedModel()
+        val chart = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get().findViewById<MeteogramView>(R.id.mg_chart)
+        assertTrue(chart.leadingSlots in 1..24)
+        assertEquals(chart.leadingSlots, chart.detailedLeadingSlots) // every leading hour has its detail
+        val yesterday = chart.hourAt(0)!!
+        assertEquals(2.0, yesterday.precipitation, 0.001)
+        assertEquals(15.0, yesterday.windSpeed, 0.001)
+        assertEquals(it.sunw.widget.weather.Condition.LIGHT_RAIN, yesterday.condition)
+        assertEquals(0, yesterday.precipitationProbability) // none for the past
+    }
+
+    @Test
+    fun todaysHoursGoneAlsoTakeOpenMeteosRainWindAndIcon() {
+        org.junit.Assume.assumeTrue(utcHour in 1..21)
+        seedPast()
+        seedModel()
+        val chart = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get().findViewById<MeteogramView>(R.id.mg_chart)
+        val midnight = chart.hourAt(chart.leadingSlots)!! // today 00:00, already gone
+        assertEquals(2.0, midnight.precipitation, 0.001)
+        assertEquals(it.sunw.widget.weather.Condition.LIGHT_RAIN, midnight.condition)
+        assertEquals(10, midnight.precipitationProbability) // MeteoBlue's probability stays
+        // The last hour of the day is still ahead: MeteoBlue's own (no rain, partly cloudy).
+        val ahead = chart.hourAt(chart.leadingSlots + 23)!!
+        assertEquals(0.0, ahead.precipitation, 0.001)
+    }
+
+    @Test
+    fun withoutOpenMeteoHoursTheLeadingSlotsKeepOnlyTheirTemperature() {
+        org.junit.Assume.assumeTrue(utcHour in 1..21)
+        seedPast()
+        val chart = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get().findViewById<MeteogramView>(R.id.mg_chart)
+        assertTrue(chart.leadingSlots in 1..24)
+        assertEquals(0, chart.detailedLeadingSlots)
+        assertEquals(0.0, chart.hourAt(0)!!.precipitation, 0.0)
     }
 
     @Test

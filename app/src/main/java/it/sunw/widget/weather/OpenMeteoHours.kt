@@ -130,11 +130,11 @@ class OpenMeteoHoursRepository(context: Context) {
         @Volatile
         internal var executor: Executor = Executors.newSingleThreadExecutor()
 
-        /** Today (from midnight) and the next days at the place, in the place's own time zone, speeds in km/h. */
+        /** Yesterday, today and the next days at the place, in the place's own time zone, speeds in km/h. */
         fun url(latitude: Double, longitude: Double): String = String.format(
             Locale.ROOT,
             "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f" +
-                "&hourly=${OpenMeteoHours.VARIABLES}&wind_speed_unit=kmh&forecast_days=8&timezone=auto",
+                "&hourly=${OpenMeteoHours.VARIABLES}&wind_speed_unit=kmh&past_days=1&forecast_days=8&timezone=auto",
             latitude, longitude,
         )
     }

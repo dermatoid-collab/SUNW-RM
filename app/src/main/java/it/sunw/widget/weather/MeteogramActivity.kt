@@ -78,12 +78,14 @@ class MeteogramActivity : Activity() {
         }
         val chart = findViewById<MeteogramView>(R.id.mg_chart)
         val pastRepo = PastTemperatureRepository(this)
+        val modelRepo = OpenMeteoHoursRepository(this)
+        var model = modelRepo.cached(place)
         val now = forecast.localTime(Instant.now())
         val updated = DateTimeFormatter.ofPattern("HH:mm").format(forecast.fetchedAt.atZone(java.time.ZoneId.systemDefault()))
 
         // The last 24 hours (Open-Meteo) sit to the left of "now"; they arrive after the first draw when not cached.
         fun draw(past: PastTemperatures?) {
-            chart.show(palette, forecast, now, past)
+            chart.show(palette, forecast, now, past, model)
             showLast24(palette, forecast, past, now)
             status.text = getString(if (past == null) R.string.weather_source else R.string.weather_source_past, updated)
         }
@@ -91,6 +93,12 @@ class MeteogramActivity : Activity() {
         if (!pastRepo.isFresh() || pastRepo.cached(place)?.hasFine != true) {
             pastRepo.refresh(place) { result ->
                 result.getOrNull()?.let { fresh -> runOnUiThread { if (!isDestroyed) draw(fresh) } }
+            }
+        }
+        // Open-Meteo's other hours (rain, wind, icon) complete the last 24 hours and today's hours already gone.
+        if (model == null || !modelRepo.isFresh()) {
+            modelRepo.refresh(place) { result ->
+                result.getOrNull()?.let { fresh -> runOnUiThread { if (!isDestroyed) { model = fresh; draw(pastRepo.cached(place)) } } }
             }
         }
         chart.onDayTap = { date ->

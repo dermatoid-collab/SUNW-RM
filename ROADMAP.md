@@ -22,6 +22,8 @@ nella tile meteo della pagina principale (a sinistra delle pillole max/min).
   Per oggi le ore già trascorse prendono da Open-Meteo anche temperatura, percepita, pioggia, vento, direzione e icona
   (codici WMO), come nel meteogramma; probabilità di pioggia e rainSPOT restano di MeteoBlue, come tutto dall'ora attuale
   in poi. Le ore trascorse sono attenuate (card e righe orarie) e c'è una linea «adesso» nel grafico.
+  Lo stesso vale per il meteogramma: le ultime 24 ore e le ore di oggi già trascorse hanno icone, pioggia e vento di
+  Open-Meteo (attenuati), non solo la temperatura; la richiesta a Open-Meteo include ieri (`past_days=1`).
 
 ## 2. Allerte meteo — prima versione sviluppata (Italia)
 

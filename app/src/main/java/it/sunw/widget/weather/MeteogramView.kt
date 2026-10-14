@@ -38,8 +38,11 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
     private var days = emptyList<Forecast.Day>()
     private var now: LocalDateTime? = null
 
-    /** Leading slots before the forecast starts: only the dimmed temperature of the last 24 hours. */
+    /** Leading slots before the forecast starts: the last 24 hours (Open-Meteo), drawn dimmed. */
     private var pastCount = 0
+
+    /** Per slot: whether it has more than a temperature (icon, rain, wind); the leading slots without Open-Meteo's hours do not. */
+    private var detailed = BooleanArray(0)
 
     /** Slot under the finger after a long press, or -1. */
     private var cursor = -1
@@ -48,25 +51,33 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
     var onDayTap: ((LocalDate) -> Unit)? = null
 
     /**
-     * [past] (Open-Meteo) adds the last 24 hours to the left of the forecast and replaces the
-     * forecast temperatures of the hours already gone; everything before "now" is drawn dimmed.
+     * [past] and [model] (both Open-Meteo) add the last 24 hours to the left of the forecast and replace the
+     * forecast of the hours already gone today (temperature from [past], then everything else Open-Meteo has:
+     * rain, wind, icon); everything before "now" is drawn dimmed. The rain probability stays MeteoBlue's.
      */
-    fun show(palette: Palette, forecast: Forecast, now: LocalDateTime, past: PastTemperatures? = null) {
+    fun show(palette: Palette, forecast: Forecast, now: LocalDateTime, past: PastTemperatures? = null, model: OpenMeteoHours? = null) {
         this.palette = palette
         val start = now.toLocalDate().atStartOfDay()
         val ahead = forecast.hours.filter { !it.time.isBefore(start) }.take(MAX_HOURS)
         val thisHour = now.truncatedTo(java.time.temporal.ChronoUnit.HOURS)
         val lead = ArrayList<Forecast.Hour>()
-        if (past != null && ahead.isNotEmpty()) {
+        val leadDetail = ArrayList<Boolean>()
+        if ((past != null || model != null) && ahead.isNotEmpty()) {
             val daylight = ahead.take(24).associate { it.time.hour to it.isDaylight }
             var t = thisHour.minusHours(24)
             while (t.isBefore(start)) {
-                past[t]?.let { lead += blank(t, it, daylight[t.hour] ?: (t.hour in 7..18)) }
+                val sample = model?.get(t)
+                val temperature = past?.get(t) ?: sample?.temperature
+                if (temperature != null) {
+                    lead += gone(t, temperature, daylight[t.hour] ?: (t.hour in 7..18), sample)
+                    leadDetail += sample != null
+                }
                 t = t.plusHours(1)
             }
         }
         pastCount = lead.size
-        hours = lead + ahead.map { h -> if (past != null && h.time.isBefore(thisHour)) past[h.time]?.let { h.copy(temperature = it) } ?: h else h }
+        hours = lead + ahead.map { h -> if (h.time.isBefore(thisHour)) goneToday(h, past, model) else h }
+        detailed = BooleanArray(hours.size) { it >= pastCount || leadDetail[it] }
         cursor = -1
         days = forecast.days.filter { !it.date.isBefore(now.toLocalDate()) }
         this.now = now
@@ -75,11 +86,34 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         invalidate()
     }
 
-    private fun blank(time: LocalDateTime, temperature: Double, daylight: Boolean) = Forecast.Hour(
-        time = time, temperature = temperature, feltTemperature = temperature, precipitation = 0.0,
-        precipitationProbability = 0, windSpeed = 0.0, windDirection = 0, condition = Condition.CLEAR,
+    /** A leading hour: Open-Meteo's values, or just the temperature when it has no hour for it. */
+    private fun gone(time: LocalDateTime, temperature: Double, daylight: Boolean, s: OpenMeteoHours.Sample?) = Forecast.Hour(
+        time = time, temperature = temperature, feltTemperature = s?.feltTemperature ?: temperature,
+        precipitation = s?.precipitation ?: 0.0, precipitationProbability = 0,
+        windSpeed = s?.windSpeed ?: 0.0, windDirection = s?.windDirection ?: 0,
+        condition = s?.weatherCode?.let { Condition.fromWmoCode(it) } ?: Condition.CLEAR,
         uvIndex = 0, isDaylight = daylight,
     )
+
+    /** An hour of today already gone: MeteoBlue's hour with whatever Open-Meteo has instead. */
+    private fun goneToday(h: Forecast.Hour, past: PastTemperatures?, model: OpenMeteoHours?): Forecast.Hour {
+        val s = model?.get(h.time)
+        return h.copy(
+            temperature = past?.get(h.time) ?: s?.temperature ?: h.temperature,
+            feltTemperature = s?.feltTemperature ?: h.feltTemperature,
+            precipitation = s?.precipitation ?: h.precipitation,
+            windSpeed = s?.windSpeed ?: h.windSpeed,
+            windDirection = s?.windDirection ?: h.windDirection,
+            condition = s?.weatherCode?.let { Condition.fromWmoCode(it) } ?: h.condition,
+        )
+    }
+
+    /** The three-hour blocks of the icon and wind rows: from each hour divisible by 3 (the first block may be shorter). */
+    private fun blocks(): List<IntRange> {
+        val starts = hours.indices.filter { hours[it].time.hour % 3 == 0 }.toMutableList()
+        if (hours.isNotEmpty() && (starts.isEmpty() || starts.first() != 0)) starts.add(0, 0)
+        return starts.mapIndexed { k, from -> from until (starts.getOrNull(k + 1) ?: hours.size) }
+    }
 
     private fun dp(v: Float) = v * resources.displayMetrics.density
     private fun sp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, v, resources.displayMetrics)
@@ -115,6 +149,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         val windTop = rainBottom
         val windBottom = windTop + dp(WIND_DP)
         val n = hours.size
+        val elapsed = now?.let { slot(it).toInt() } ?: 0
 
         // Night shading behind every panel.
         paint.style = Paint.Style.FILL
@@ -125,12 +160,15 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
 
         // What the weather does, every 3 hours: the most significant condition of the three.
         val iconPx = dp(ICON_SIZE_DP).roundToInt()
-        for (i in pastCount until hours.size step 3) {
-            val block = hours.subList(i, minOf(i + 3, hours.size))
+        for (range in blocks()) {
+            val withDetail = range.filter { detailed[it] }
+            if (withDetail.isEmpty()) continue
+            val block = withDetail.map { hours[it] }
             val mid = block[block.size / 2]
             val condition = block.maxBy { it.condition.severity }.condition
             val d = icon(WeatherIcons.icon(condition, !mid.isDaylight), p.text) ?: continue
-            val cx = x(i + block.size / 2.0).roundToInt()
+            d.alpha = if (range.last < elapsed) PAST_ALPHA else 255
+            val cx = x((range.first + range.last + 1) / 2.0).roundToInt()
             val top = (iconTop + (dp(ICON_DP) - iconPx) / 2).roundToInt()
             d.setBounds(cx - iconPx / 2, top, cx + iconPx / 2, top + iconPx)
             d.draw(canvas)
@@ -196,7 +234,6 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = dp(2.5f)
         paint.strokeCap = Paint.Cap.ROUND
-        val elapsed = now?.let { slot(it).toInt() } ?: 0
         for (i in 0 until n - 1) {
             paint.color = WeatherCard.temperatureColor((temps[i] + temps[i + 1]) / 2)
             paint.alpha = if (i < elapsed) PAST_ALPHA else 255
@@ -226,7 +263,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         for ((i, h) in hours.withIndex()) {
             if (h.precipitation < 0.05) continue
             paint.color = RAIN
-            paint.alpha = (90 + 165 * h.precipitationProbability / 100.0).roundToInt().coerceIn(90, 255)
+            paint.alpha = if (i < elapsed) PAST_ALPHA else (90 + 165 * h.precipitationProbability / 100.0).roundToInt().coerceIn(90, 255)
             val top = rainBottom - (h.precipitation / maxRain * (rainBottom - rainTop - dp(4f))).toFloat()
             canvas.drawRect(x(i.toDouble()) + dp(0.5f), top, x(i + 1.0) - dp(0.5f), rainBottom, paint)
         }
@@ -237,12 +274,15 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         canvas.drawLine(0f, rainBottom, width.toFloat(), rainBottom, paint)
 
         // Wind every 3 hours: an arrow where it blows to, km/h below, stronger winds brighter.
-        for (i in pastCount until hours.size step 3) {
-            val block = hours.subList(i, minOf(i + 3, hours.size))
+        for (range in blocks()) {
+            val withDetail = range.filter { detailed[it] }
+            if (withDetail.isEmpty()) continue
+            val block = withDetail.map { hours[it] }
             val mid = block[block.size / 2]
             val speed = block.maxOf { it.windSpeed }
-            val cx = x(i + block.size / 2.0)
-            val color = windColor(speed, p)
+            val cx = x((range.first + range.last + 1) / 2.0)
+            val base = windColor(speed, p)
+            val color = if (range.last < elapsed) (base and 0x00FFFFFF) or (PAST_ALPHA shl 24) else base
             drawArrow(canvas, cx, windTop + dp(11f), mid.windDirection, color)
             paint.style = Paint.Style.FILL
             paint.color = color
@@ -336,6 +376,10 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
 
     internal val cursorSlot: Int get() = cursor
     internal val leadingSlots: Int get() = pastCount
+
+    /** How many of the leading slots have icon, rain and wind (Open-Meteo's hours), not just a temperature. */
+    internal val detailedLeadingSlots: Int get() = (0 until pastCount).count { detailed[it] }
+    internal fun hourAt(i: Int): Forecast.Hour? = hours.getOrNull(i)
     internal val slots: Int get() = hours.size
 
     /** Calm winds dim, fresh ones in the text colour, strong ones orange, gales red. */

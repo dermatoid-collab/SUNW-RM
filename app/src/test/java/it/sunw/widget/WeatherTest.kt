@@ -152,7 +152,7 @@ class WeatherTest {
         assertEquals(30.2, gustsOnly[java.time.LocalDateTime.of(2026, 10, 18, 13, 0)]!!.gust!!, 0.001)
         assertEquals(null, gustsOnly[java.time.LocalDateTime.of(2026, 10, 18, 13, 0)]!!.temperature)
         val url = it.sunw.widget.weather.OpenMeteoHoursRepository.url(44.8, 10.33)
-        assertTrue(url, url.contains("wind_gusts_10m") && url.contains("weather_code") && url.contains("apparent_temperature"))
+        assertTrue(url, url.contains("wind_gusts_10m") && url.contains("past_days=1") && url.contains("weather_code") && url.contains("apparent_temperature"))
         assertTrue(runCatching { it.sunw.widget.weather.OpenMeteoHours.parse("""{"error":true,"reason":"nope"}""") }.isFailure)
     }
 
