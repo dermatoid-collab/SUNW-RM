@@ -251,6 +251,15 @@
     <string name="battery_status_limited">Battery: limited, the widget may update late</string>
     <string name="battery_fix">Allow unrestricted use</string>
     <string name="battery_hint">On Samsung, also check Settings → Battery → Background usage limits: the app must not be among the sleeping apps.</string>
+    <string name="wr_diag">Widget last redrawn at %1$s (%2$s) · next check at %3$s</string>
+    <string name="wr_diag_none">Widget: no redraw recorded yet</string>
+    <string name="wr_alarm">alarm</string>
+    <string name="wr_system">system update</string>
+    <string name="wr_job">background job</string>
+    <string name="wr_screen">screen on</string>
+    <string name="wr_app">app opened</string>
+    <string name="wr_time">clock change</string>
+    <string name="wr_resize">resize</string>
     <string name="alert_channel">Weather alerts</string>
     <string name="alert_channel_description">Civil Protection alerts for the place in use</string>
     <string name="alert_notify_title">%1$s · %2$s</string>

@@ -252,6 +252,15 @@
     <string name="battery_status_limited">Batteria: limitata, il widget può aggiornarsi in ritardo</string>
     <string name="battery_fix">Consenti senza restrizioni</string>
     <string name="battery_hint">Su Samsung controlla anche Impostazioni → Batteria → Limiti uso in background: l\'app non deve essere tra quelle in stop.</string>
+    <string name="wr_diag">Widget ridisegnato alle %1$s (%2$s) · prossimo controllo alle %3$s</string>
+    <string name="wr_diag_none">Widget: ancora nessun aggiornamento registrato</string>
+    <string name="wr_alarm">allarme</string>
+    <string name="wr_system">aggiornamento di sistema</string>
+    <string name="wr_job">job in background</string>
+    <string name="wr_screen">schermo acceso</string>
+    <string name="wr_app">app aperta</string>
+    <string name="wr_time">cambio d\'orario</string>
+    <string name="wr_resize">ridimensionamento</string>
     <string name="alert_channel">Allerte meteo</string>
     <string name="alert_channel_description">Allerte della Protezione Civile per la località in uso</string>
     <string name="alert_notify_title">%1$s · %2$s</string>

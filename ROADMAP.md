@@ -106,8 +106,10 @@ Implementata in `SunMoonActivity` (cursore ±6 mesi confermato), poi riorganizza
   00:00–24:00; un'eventuale media mobile su 3 giorni è da decidere.
 - **RainSPOT:** verificare l'allineamento su altre giornate dopo la rimozione dello spostamento a est.
 - **Pallino di affidabilità:** da controllare nell'APK se MeteoBlue manda davvero il dato di prevedibilità.
-- **Widget:** se anche con «Senza restrizioni» resta lento, aggiornare all'accensione dello schermo
-  (richiede un servizio in primo piano: da proporre solo su richiesta).
+- **Widget:** tre trigger indipendenti (aggiornamento di sistema ogni 30 minuti, job ogni 15 minuti, allarme
+  con risveglio, esatto ad alba e tramonto) più l'accensione dello schermo finché il processo è vivo; in Impostazioni → Batteria
+  una riga mostra quando e perché è stato ridisegnato per l'ultima volta. Se anche così resta fermo, resta l'opzione di un
+  servizio in primo piano (notifica fissa): da proporre solo su richiesta.
 - **Meteoalarm** per le località fuori Italia (già indicato nella sezione 2).
 
 ## Note

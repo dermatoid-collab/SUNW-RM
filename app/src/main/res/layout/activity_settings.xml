@@ -212,6 +212,14 @@
             android:layout_height="wrap_content"
             android:textSize="15sp" />
 
+        <TextView
+            android:id="@+id/widget_diag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:alpha="0.8"
+            android:textSize="13sp" />
+
         <Button
             android:id="@+id/battery_fix"
             android:layout_width="wrap_content"

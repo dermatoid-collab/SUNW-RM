@@ -125,6 +125,19 @@ class SettingsActivity : Activity() {
         val limited = BatteryGuard.isRestricted(this)
         findViewById<TextView>(R.id.battery_status).setText(if (limited) R.string.battery_status_limited else R.string.battery_status_ok)
         findViewById<Button>(R.id.battery_fix).visibility = if (limited) View.VISIBLE else View.GONE
+        showWidgetDiagnostics()
+    }
+
+    /** When and why the widget was last redrawn, and when the next check is due: shows which triggers work on this phone. */
+    private fun showWidgetDiagnostics() {
+        val zone = ZoneId.systemDefault()
+        val last = WidgetRefresh.diagnostics(this)
+        findViewById<TextView>(R.id.widget_diag).text = if (last == null) getString(R.string.wr_diag_none) else getString(
+            R.string.wr_diag,
+            Formatters.time(this, last.at, zone),
+            last.source?.let { getString(it.label) } ?: "?",
+            last.next?.let { Formatters.time(this, it, zone) } ?: "—",
+        )
     }
 
     // --- Theme ----------------------------------------------------------------------------------
