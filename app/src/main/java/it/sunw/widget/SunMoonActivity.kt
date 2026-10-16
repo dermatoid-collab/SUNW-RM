@@ -19,7 +19,6 @@ import android.view.ViewConfiguration
 import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
 import android.widget.ImageButton
 import android.widget.ScrollView
 import android.widget.ImageView
@@ -431,19 +430,7 @@ class SunMoonActivity : Activity() {
         val delta = (target - offset).coerceIn(-1, 1)
         offset = target
         touched = null
-        render()
-        if (animate) slideIn(delta)
-    }
-
-    private fun slideIn(delta: Int) {
-        val content = findViewById<View>(R.id.sm_content)
-        content.animate().cancel()
-        content.translationX = delta * content.width * SLIDE_FRACTION
-        content.alpha = SLIDE_START_ALPHA
-        content.animate().translationX(0f).alpha(1f)
-            .setDuration(resources.getInteger(R.integer.page_transition_ms).toLong())
-            .setInterpolator(AnimationUtils.loadInterpolator(this, android.R.interpolator.fast_out_slow_in))
-            .start()
+        DaySlide.run(findViewById(R.id.sm_content), if (animate) delta else 0) { render() }
     }
 
     /** What the page needs for one day and is slow to compute: the Sun's facts, the Moon's rise and set, the next quarters. */
@@ -823,11 +810,9 @@ class SunMoonActivity : Activity() {
         private const val LEGEND_TODAY = "|"
         private const val LEGEND_DOT = "●"
         private const val LEGEND_RING = "○"
-        private const val SLIDE_FRACTION = 0.25f
         private const val SWIPE_MIN_DP = 80
         private const val SWIPE_MIN_VELOCITY = 600f
         private const val SWIPE_FLICK_DP = 24
-        private const val SLIDE_START_ALPHA = 0.35f
         private const val DASH = "—"
         private const val MOON_LIT = 0xFFECE6D2.toInt()
     }

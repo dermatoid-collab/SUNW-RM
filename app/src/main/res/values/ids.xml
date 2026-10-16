@@ -7,4 +7,6 @@
     <item name="wc_name" type="id" />
     <item name="wc_address" type="id" />
     <item name="wc_image" type="id" />
+    <!-- Tag holding the running day-change animation (see DaySlide). -->
+    <item name="day_slide_animator" type="id" />
 </resources>

@@ -16,7 +16,6 @@ import android.view.MotionEvent
 import android.view.Gravity
 import android.view.View
 import android.view.ViewTreeObserver
-import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
@@ -24,6 +23,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import it.sunw.widget.AppearanceStore
 import it.sunw.widget.Formatters
+import it.sunw.widget.DaySlide
 import it.sunw.widget.LocationStore
 import it.sunw.widget.MainActivity
 import it.sunw.widget.MoonCalculator
@@ -156,29 +156,12 @@ class WeatherDayActivity : Activity() {
         return e.rawY >= loc[1] && e.rawY <= loc[1] + tabs.height
     }
 
-    /**
-     * Slides the new day in from the side it comes from (from the right for a later day), with
-     * the same motion, duration and curve as the page transitions; [delta] 0 means no movement.
-     */
-    private fun slideIn(delta: Int) {
-        if (delta == 0) return
-        val content = findViewById<View>(R.id.day_content)
-        content.animate().cancel()
-        content.translationX = delta * content.width * SLIDE_FRACTION
-        content.alpha = 0f
-        content.animate().translationX(0f).alpha(1f)
-            .setDuration(resources.getInteger(R.integer.page_transition_ms).toLong())
-            .setInterpolator(AnimationUtils.loadInterpolator(this, android.R.interpolator.fast_out_slow_in))
-            .start()
-    }
-
     /** Moves [delta] days (±1); false at either end of the forecast. */
     internal fun showDay(delta: Int): Boolean {
         val index = forecast.days.indexOfFirst { it.date == selected } + delta
         if (index !in forecast.days.indices) return false
         selected = forecast.days[index].date
-        render()
-        slideIn(delta)
+        DaySlide.run(findViewById(R.id.day_content), delta) { render() }
         return true
     }
 
@@ -218,8 +201,7 @@ class WeatherDayActivity : Activity() {
                 setOnClickListener {
                     val delta = day.date.compareTo(selected).coerceIn(-1, 1)
                     selected = day.date
-                    render()
-                    slideIn(delta)
+                    DaySlide.run(findViewById(R.id.day_content), delta) { render() }
                 }
                 addView(text(dayFormat.format(day.date).trimEnd('.').replaceFirstChar { it.titlecase() }, 15.5f,
                     if (isSelected) palette.text else palette.textSecondary, Gravity.CENTER_HORIZONTAL))
@@ -547,7 +529,6 @@ class WeatherDayActivity : Activity() {
         private const val UNRELIABLE = 0xFFE0624A.toInt()
         private const val SWIPE_MIN_DP = 80
         /** How far (share of the width) the new day starts from; the pages use 12 %. */
-        private const val SLIDE_FRACTION = 0.25f
         private const val SWIPE_MIN_VELOCITY = 600f
 
         /** Space above and below each hour row, as tight as the Meteoblue app's table (was 8). */
