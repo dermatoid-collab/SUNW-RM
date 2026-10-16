@@ -128,16 +128,22 @@ class SettingsActivity : Activity() {
         showWidgetDiagnostics()
     }
 
-    /** When and why the widget was last redrawn, and when the next check is due: shows which triggers work on this phone. */
+    /**
+     * For each cause (alarm, job, screen on, system, app…) when it last redrew the widget and how many times, and
+     * when the next check is due: shows which triggers really work on this phone. Opening the app is one cause among
+     * the others, so it does not hide what they did while the phone was idle.
+     */
     private fun showWidgetDiagnostics() {
         val zone = ZoneId.systemDefault()
-        val last = WidgetRefresh.diagnostics(this)
-        findViewById<TextView>(R.id.widget_diag).text = if (last == null) getString(R.string.wr_diag_none) else getString(
-            R.string.wr_diag,
-            Formatters.time(this, last.at, zone),
-            last.source?.let { getString(it.label) } ?: "?",
-            last.next?.let { Formatters.time(this, it, zone) } ?: "—",
-        )
+        val entries = WidgetRefresh.entries(this)
+        val next = WidgetRefresh.diagnostics(this)?.next
+        findViewById<TextView>(R.id.widget_diag).text = if (entries.isEmpty()) getString(R.string.wr_diag_none) else buildString {
+            append(getString(R.string.wr_diag_head))
+            for (e in entries) {
+                append('\n').append(getString(R.string.wr_diag_line, getString(e.source.label), Formatters.time(this@SettingsActivity, e.at, zone), e.count))
+            }
+            next?.let { append('\n').append(getString(R.string.wr_diag_next, Formatters.time(this@SettingsActivity, it, zone))) }
+        }
     }
 
     // --- Theme ----------------------------------------------------------------------------------

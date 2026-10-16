@@ -6,7 +6,8 @@ import java.time.Instant
 /**
  * Why and when the widgets were last redrawn, kept so that Settings can show which of the triggers
  * (alarm, background job, screen on, the system's own update, the app, a clock change) really fire on
- * this phone, and the app's own wake-ups are not counted twice.
+ * this phone. Each cause keeps its own last time and a count: opening the app (which redraws the widgets
+ * itself) therefore does not hide what the other triggers did while the phone was idle.
  */
 object WidgetRefresh {
 
@@ -22,14 +23,29 @@ object WidgetRefresh {
 
     class Diagnostics(val at: Instant, val source: Source?, val next: Instant?)
 
+    /** One cause: when it last redrew the widgets and how many times since the app was installed. */
+    class Entry(val source: Source, val at: Instant, val count: Int)
+
     private fun prefs(context: Context) = context.getSharedPreferences("widget_refresh", Context.MODE_PRIVATE)
 
     fun record(context: Context, source: Source, next: Instant?, now: Instant = Instant.now()) {
-        prefs(context).edit()
+        val p = prefs(context)
+        p.edit()
             .putLong(KEY_AT, now.toEpochMilli())
             .putString(KEY_SOURCE, source.key)
             .putLong(KEY_NEXT, next?.toEpochMilli() ?: 0L)
+            .putLong(KEY_AT + source.key, now.toEpochMilli())
+            .putInt(KEY_COUNT + source.key, p.getInt(KEY_COUNT + source.key, 0) + 1)
             .apply()
+    }
+
+    /** The causes that have redrawn the widgets, most recent first. */
+    fun entries(context: Context): List<Entry> {
+        val p = prefs(context)
+        return Source.values().mapNotNull { source ->
+            val at = p.getLong(KEY_AT + source.key, 0L)
+            if (at == 0L) null else Entry(source, Instant.ofEpochMilli(at), p.getInt(KEY_COUNT + source.key, 0))
+        }.sortedByDescending { it.at }
     }
 
     /** The last redraw, or null when none has been recorded yet. */
@@ -53,6 +69,7 @@ object WidgetRefresh {
     }
 
     private const val KEY_AT = "at"
+    private const val KEY_COUNT = "count_"
     private const val KEY_SOURCE = "source"
     private const val KEY_NEXT = "next"
     private const val SCREEN_DEBOUNCE_MS = 60_000L

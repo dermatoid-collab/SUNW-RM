@@ -252,7 +252,9 @@
     <string name="battery_status_limited">Batteria: limitata, il widget può aggiornarsi in ritardo</string>
     <string name="battery_fix">Consenti senza restrizioni</string>
     <string name="battery_hint">Su Samsung controlla anche Impostazioni → Batteria → Limiti uso in background: l\'app non deve essere tra quelle in stop.</string>
-    <string name="wr_diag">Widget ridisegnato alle %1$s (%2$s) · prossimo controllo alle %3$s</string>
+    <string name="wr_diag_head">Ultimo ridisegno del widget, per causa:</string>
+    <string name="wr_diag_line">• %1$s: %2$s (×%3$d)</string>
+    <string name="wr_diag_next">Prossimo controllo previsto alle %1$s</string>
     <string name="wr_diag_none">Widget: ancora nessun aggiornamento registrato</string>
     <string name="wr_alarm">allarme</string>
     <string name="wr_system">aggiornamento di sistema</string>

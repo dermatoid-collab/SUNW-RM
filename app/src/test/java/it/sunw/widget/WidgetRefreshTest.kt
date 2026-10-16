@@ -56,7 +56,7 @@ class WidgetRefreshTest {
         shownAfterUpdate()
         val alarm = shadowOf(context.getSystemService(AlarmManager::class.java)).nextScheduledAlarm
         assertNotNull(alarm)
-        assertEquals(AlarmManager.RTC_WAKEUP, alarm.type)
+        assertEquals(AlarmManager.RTC_WAKEUP, alarm!!.type)
         val wait = alarm.triggerAtTime - System.currentTimeMillis()
         assertTrue("wait ${wait / 1000}s", wait in 0..(16 * 60 * 1000L))
     }
@@ -65,7 +65,7 @@ class WidgetRefreshTest {
     fun aFifteenMinuteJobBacksTheAlarmUpAndSurvivesReboots() {
         shownAfterUpdate()
         assertTrue(WidgetRefreshJobService.isScheduled(context))
-        val job = shadowOf(context.getSystemService(JobScheduler::class.java)).allPendingJobs.single { it.service.className == WidgetRefreshJobService::class.java.name }
+        val job = context.getSystemService(JobScheduler::class.java).allPendingJobs.single { it.service.className == WidgetRefreshJobService::class.java.name }
         assertTrue(job.isPeriodic)
         assertEquals(WidgetRefreshJobService.PERIOD_MS, job.intervalMillis)
         assertTrue(job.isPersisted)
@@ -92,14 +92,30 @@ class WidgetRefreshTest {
     }
 
     @Test
-    fun settingsReportsTheLastRedrawAndItsSource() {
+    fun settingsReportsEachCauseWithItsLastTimeAndCount() {
         val before = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
         assertEquals(before.getString(R.string.wr_diag_none), before.findViewById<TextView>(R.id.widget_diag).text.toString())
 
         shownAfterUpdate(WidgetRefresh.Source.ALARM)
+        shownAfterUpdate(WidgetRefresh.Source.ALARM)
+        shownAfterUpdate(WidgetRefresh.Source.JOB)
         val after = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
-        val line = after.findViewById<TextView>(R.id.widget_diag).text.toString()
-        assertTrue(line, line.contains(after.getString(R.string.wr_alarm)))
-        assertTrue(line, !line.contains("—")) // the next check is known
+        val text = after.findViewById<TextView>(R.id.widget_diag).text.toString()
+        assertTrue(text, text.contains(after.getString(R.string.wr_alarm)) && text.contains("×2"))
+        assertTrue(text, text.contains(after.getString(R.string.wr_job)) && text.contains("×1"))
+        assertEquals(text, 4, text.lines().size) // heading, the two causes, and the next check
+    }
+
+    @Test
+    fun openingTheAppDoesNotHideWhatTheOtherCausesDid() {
+        shownAfterUpdate(WidgetRefresh.Source.ALARM)
+        shownAfterUpdate(WidgetRefresh.Source.JOB)
+        shownAfterUpdate(WidgetRefresh.Source.APP) // opening the app redraws the widgets too
+        val entries = WidgetRefresh.entries(context)
+        assertEquals(setOf(WidgetRefresh.Source.ALARM, WidgetRefresh.Source.JOB, WidgetRefresh.Source.APP), entries.map { it.source }.toSet())
+        assertEquals(WidgetRefresh.Source.APP, WidgetRefresh.diagnostics(context)!!.source) // the last one overall
+        assertTrue(entries.all { it.count == 1 })
+        val first = entries.first()
+        assertTrue(entries.all { first.at >= it.at }) // most recent first
     }
 }

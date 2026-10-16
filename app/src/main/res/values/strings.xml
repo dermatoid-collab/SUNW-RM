@@ -251,7 +251,9 @@
     <string name="battery_status_limited">Battery: limited, the widget may update late</string>
     <string name="battery_fix">Allow unrestricted use</string>
     <string name="battery_hint">On Samsung, also check Settings → Battery → Background usage limits: the app must not be among the sleeping apps.</string>
-    <string name="wr_diag">Widget last redrawn at %1$s (%2$s) · next check at %3$s</string>
+    <string name="wr_diag_head">Widget last redrawn, by cause:</string>
+    <string name="wr_diag_line">• %1$s: %2$s (×%3$d)</string>
+    <string name="wr_diag_next">Next check due at %1$s</string>
     <string name="wr_diag_none">Widget: no redraw recorded yet</string>
     <string name="wr_alarm">alarm</string>
     <string name="wr_system">system update</string>
