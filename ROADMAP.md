@@ -110,6 +110,12 @@ Implementata in `SunMoonActivity` (cursore ±6 mesi confermato), poi riorganizza
   con risveglio, esatto ad alba e tramonto) più l'accensione dello schermo finché il processo è vivo; in Impostazioni → Batteria
   una riga mostra quando e perché è stato ridisegnato per l'ultima volta. Se anche così resta fermo, resta l'opzione di un
   servizio in primo piano (notifica fissa): da proporre solo su richiesta.
+- **Swipe tra i giorni (Sole e Luna, meteo giornaliero):** sviluppato come un pager (`DayPager.kt`): la pagina
+  segue il dito, il giorno vicino è già disegnato come immagine e le scorre accanto, quindi non resta uno spazio
+  vuoto. La direzione si decide durante il gesto (orizzontale: lo scroll verticale viene annullato; verticale: niente
+  swipe). Fuori dal gesto (schede dei giorni, slider, «Oggi») resta la dissolvenza incrociata di `DaySlide.kt`, con lo
+  stesso movimento delle transizioni tra pagine. Da verificare sul telefono: fluidità, qualche istante senza il vicino
+  subito dopo un cambio (le immagini vengono preparate in secondo piano), scatti nel meteo giornaliero.
 - **Meteoalarm** per le località fuori Italia (già indicato nella sezione 2).
 
 ## Note

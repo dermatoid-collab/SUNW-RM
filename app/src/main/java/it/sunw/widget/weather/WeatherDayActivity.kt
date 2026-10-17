@@ -11,7 +11,6 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.DynamicDrawableSpan
 import android.text.style.ImageSpan
-import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.Gravity
 import android.view.View
@@ -23,6 +22,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import it.sunw.widget.AppearanceStore
 import it.sunw.widget.Formatters
+import it.sunw.widget.DayPager
 import it.sunw.widget.DaySlide
 import it.sunw.widget.LocationStore
 import it.sunw.widget.MainActivity
@@ -39,7 +39,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -59,19 +58,22 @@ class WeatherDayActivity : Activity() {
     private val density get() = resources.displayMetrics.density
     private fun dp(v: Int) = (v * density).roundToInt()
 
-    /** Horizontal flings anywhere on the page (except the tab strip) move to the next/previous day. */
-    private val swipe by lazy {
-        GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-                val start = e1 ?: return false
-                val dx = e2.x - start.x
-                val dy = e2.y - start.y
-                if (abs(dx) < dp(SWIPE_MIN_DP) || abs(dx) < 1.5f * abs(dy) || abs(velocityX) < SWIPE_MIN_VELOCITY) return false
-                if (isOverTabs(start)) return false
-                return showDay(if (dx < 0) 1 else -1)
-            }
-        })
+    /**
+     * Horizontal drags anywhere on the page (except the tab strip and the chart, which use them
+     * themselves): the page follows the finger with the neighbouring day beside it and, let go past a
+     * threshold or flicked, moves to the next/previous day.
+     */
+    private val pager by lazy {
+        DayPager(
+            this, { findViewById(R.id.day_content) },
+            hasDay = { d -> dayIndex() + d in forecast.days.indices },
+            startsOnControl = { e -> isOverTabs(e) || isOver(R.id.day_chart, e) },
+            capture = this::captureDay,
+            change = { d -> selected = forecast.days[dayIndex() + d].date; render(scroll = false) },
+        )
     }
+
+    private fun dayIndex() = forecast.days.indexOfFirst { it.date == selected }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,6 +118,7 @@ class WeatherDayActivity : Activity() {
             }
         }
         render()
+        pager.prepare()
         loadModelHours(place)
     }
 
@@ -140,14 +143,15 @@ class WeatherDayActivity : Activity() {
         showChart()
         showHours()
         if (focusedRow != null) scrollToFocusedHour()
+        pager.prepare()
     }
 
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (::selected.isInitialized && swipe.onTouchEvent(ev)) {
-            // Let the page know the gesture ended so it doesn't keep a half-finished scroll.
-            ev.action = MotionEvent.ACTION_CANCEL
-        }
-        return super.dispatchTouchEvent(ev)
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean =
+        if (::selected.isInitialized) pager.dispatch(ev) { super@WeatherDayActivity.dispatchTouchEvent(it) } else super.dispatchTouchEvent(ev)
+
+    private fun isOver(id: Int, e: MotionEvent): Boolean {
+        val r = android.graphics.Rect()
+        return findViewById<View>(id).getGlobalVisibleRect(r) && r.contains(e.rawX.toInt(), e.rawY.toInt())
     }
 
     private fun isOverTabs(e: MotionEvent): Boolean {
@@ -162,6 +166,7 @@ class WeatherDayActivity : Activity() {
         if (index !in forecast.days.indices) return false
         selected = forecast.days[index].date
         DaySlide.run(findViewById(R.id.day_content), delta) { render() }
+        pager.prepare()
         return true
     }
 
@@ -171,15 +176,34 @@ class WeatherDayActivity : Activity() {
         outState.putInt(STATE_STEP, stepHours)
     }
 
-    private fun render() {
+    private fun render(scroll: Boolean = true) {
         showTabs()
+        renderContent()
+        if (scroll) scrollToFocusedHour()
+    }
+
+    /** Everything under the tabs, for the selected day. */
+    private fun renderContent() {
         showHero()
         showInfo()
         showChart()
         showHours()
         val updated = DateTimeFormatter.ofPattern("HH:mm").format(forecast.fetchedAt.atZone(zone))
         findViewById<TextView>(R.id.day_status).text = getString(R.string.weather_source, updated)
-        scrollToFocusedHour()
+    }
+
+    /** Draws the day [delta] away into a picture for the drag, and puts the page back as it was. */
+    private fun captureDay(delta: Int): android.graphics.Bitmap? {
+        val index = dayIndex() + delta
+        if (index !in forecast.days.indices) return null
+        val keep = selected
+        selected = forecast.days[index].date
+        renderContent()
+        val picture = DayPager.snapshot(findViewById(R.id.day_content))
+        selected = keep
+        renderContent()
+        findViewById<View>(R.id.day_content).requestLayout()
+        return picture
     }
 
     private fun showTabs() {
@@ -202,6 +226,7 @@ class WeatherDayActivity : Activity() {
                     val delta = day.date.compareTo(selected).coerceIn(-1, 1)
                     selected = day.date
                     DaySlide.run(findViewById(R.id.day_content), delta) { render() }
+                    pager.prepare()
                 }
                 addView(text(dayFormat.format(day.date).trimEnd('.').replaceFirstChar { it.titlecase() }, 15.5f,
                     if (isSelected) palette.text else palette.textSecondary, Gravity.CENTER_HORIZONTAL))
@@ -527,9 +552,6 @@ class WeatherDayActivity : Activity() {
         private const val RELIABLE = 0xFF4FC36A.toInt()
         private const val FAIR = 0xFFE0B73A.toInt()
         private const val UNRELIABLE = 0xFFE0624A.toInt()
-        private const val SWIPE_MIN_DP = 80
-        /** How far (share of the width) the new day starts from; the pages use 12 %. */
-        private const val SWIPE_MIN_VELOCITY = 600f
 
         /** Space above and below each hour row, as tight as the Meteoblue app's table (was 8). */
         private const val ROW_PAD_DP = 6

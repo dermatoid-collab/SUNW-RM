@@ -15,8 +15,6 @@ import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import android.view.Gravity
 import android.view.MotionEvent
-import android.view.ViewConfiguration
-import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
@@ -33,7 +31,6 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlin.math.abs
-import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.tan
 
@@ -94,6 +91,7 @@ class SunMoonActivity : Activity() {
         setUpYear()
         setUpSlider()
         render()
+        pager.prepare()
         if (savedInstanceState == null && intent.getStringExtra(EXTRA_ENTRY) == ENTRY_MOON) scrollToBottom()
     }
 
@@ -114,83 +112,36 @@ class SunMoonActivity : Activity() {
         findViewById<View>(id).getGlobalVisibleRect(r) && r.contains(e.rawX.toInt(), e.rawY.toInt())
     }
 
-    // Horizontal drag anywhere but on the charts, curve and slider: the page follows the finger and,
-    // let go past a threshold (or flicked), switches to the next day (left) or the previous (right).
-    private var dragCandidate = false
-    private var dragging = false
-    private var downX = 0f
-    private var downY = 0f
-    private var velocity: VelocityTracker? = null
-    private val touchSlop by lazy { ViewConfiguration.get(this).scaledTouchSlop }
-
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        when (ev.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                dragCandidate = !startsOnControl(ev)
-                dragging = false
-                downX = ev.x
-                downY = ev.y
-                velocity?.recycle()
-                velocity = VelocityTracker.obtain().also { it.addMovement(ev) }
-            }
-            MotionEvent.ACTION_MOVE -> {
-                velocity?.addMovement(ev)
-                if (dragCandidate) {
-                    val dx = ev.x - downX
-                    val dy = ev.y - downY
-                    if (!dragging && abs(dx) > 2 * touchSlop && abs(dx) > 1.5f * abs(dy)) {
-                        dragging = true
-                        // The children (page scroll, buttons) lose the gesture.
-                        val cancel = MotionEvent.obtain(ev).also { it.action = MotionEvent.ACTION_CANCEL }
-                        super.dispatchTouchEvent(cancel)
-                        cancel.recycle()
-                        findViewById<View>(R.id.sm_content).animate().cancel()
-                    }
-                    if (dragging) {
-                        dragTo(dx)
-                        return true
-                    }
-                    if (abs(dy) > touchSlop) dragCandidate = false // a vertical scroll
-                }
-            }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                val wasDragging = dragging
-                val dx = ev.x - downX
-                velocity?.addMovement(ev)
-                velocity?.computeCurrentVelocity(1000)
-                val vx = velocity?.xVelocity ?: 0f
-                velocity?.recycle()
-                velocity = null
-                dragging = false
-                dragCandidate = false
-                if (wasDragging) {
-                    finishDrag(dx, vx, canceled = ev.actionMasked == MotionEvent.ACTION_CANCEL)
-                    return true
-                }
-            }
-        }
-        return super.dispatchTouchEvent(ev)
+    // Horizontal drag anywhere but on the charts, curve and slider: the page follows the finger with the
+    // neighbouring day beside it and, let go past a threshold (or flicked), switches to the next day
+    // (left) or the previous (right).
+    private val pager by lazy {
+        DayPager(
+            this, { findViewById(R.id.sm_content) },
+            hasDay = { d -> offset + d in -RANGE_DAYS..RANGE_DAYS },
+            startsOnControl = this::startsOnControl,
+            capture = this::captureDay,
+            change = { d -> offset += d; touched = null; render() },
+        )
     }
 
-    /** The content moves with the finger and fades a little; against the ends of the range it resists. */
-    private fun dragTo(dx: Float) {
-        val content = findViewById<View>(R.id.sm_content)
-        val target = offset + if (dx < 0) 1 else -1
-        val resist = if (target in -RANGE_DAYS..RANGE_DAYS) 0.9f else 0.25f
-        content.translationX = dx * resist
-        content.alpha = 1f - 0.5f * min(abs(dx) / content.width, 1f)
-    }
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean = pager.dispatch(ev) { super@SunMoonActivity.dispatchTouchEvent(it) }
 
-    private fun finishDrag(dx: Float, velocityX: Float, canceled: Boolean) {
-        val target = offset + if (dx < 0) 1 else -1
-        val far = abs(dx) >= dp(SWIPE_MIN_DP)
-        val flick = abs(velocityX) >= SWIPE_MIN_VELOCITY && abs(dx) >= dp(SWIPE_FLICK_DP)
-        if (!canceled && (far || flick) && target in -RANGE_DAYS..RANGE_DAYS) {
-            select(target)
-        } else {
-            findViewById<View>(R.id.sm_content).animate().translationX(0f).alpha(1f)
-                .setDuration(resources.getInteger(R.integer.page_transition_ms).toLong()).start()
-        }
+    /** Draws the day [delta] away into a picture for the drag, and puts the page back as it was. */
+    private fun captureDay(delta: Int): android.graphics.Bitmap? {
+        val target = offset + delta
+        if (target !in -RANGE_DAYS..RANGE_DAYS) return null
+        val keepOffset = offset
+        val keepTouched = touched
+        offset = target
+        touched = null
+        render()
+        val picture = DayPager.snapshot(findViewById(R.id.sm_content))
+        offset = keepOffset
+        touched = keepTouched
+        render()
+        findViewById<View>(R.id.sm_content).requestLayout()
+        return picture
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -431,6 +382,7 @@ class SunMoonActivity : Activity() {
         offset = target
         touched = null
         DaySlide.run(findViewById(R.id.sm_content), if (animate) delta else 0) { render() }
+        pager.prepare()
     }
 
     /** What the page needs for one day and is slow to compute: the Sun's facts, the Moon's rise and set, the next quarters. */
@@ -810,9 +762,6 @@ class SunMoonActivity : Activity() {
         private const val LEGEND_TODAY = "|"
         private const val LEGEND_DOT = "●"
         private const val LEGEND_RING = "○"
-        private const val SWIPE_MIN_DP = 80
-        private const val SWIPE_MIN_VELOCITY = 600f
-        private const val SWIPE_FLICK_DP = 24
         private const val DASH = "—"
         private const val MOON_LIT = 0xFFECE6D2.toInt()
     }

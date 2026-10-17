@@ -239,6 +239,31 @@ class WeatherDayActivityTest {
         assertTrue(!activity.showDay(1))           // last day
     }
 
+    /** A horizontal drag of [dxDp] across the day's header card (negative: to the left), fast enough to count as a flick. */
+    private fun drag(activity: WeatherDayActivity, dxDp: Float) {
+        val r = android.graphics.Rect().also { activity.findViewById<android.view.View>(R.id.day_hero).getGlobalVisibleRect(it) }
+        val y = r.exactCenterY()
+        val density = activity.resources.displayMetrics.density
+        val x0 = r.exactCenterX() - dxDp / 2 * density
+        fun event(action: Int, x: Float, t: Long) = android.view.MotionEvent.obtain(0, t, action, x, y, 0)
+        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_DOWN, x0, 0))
+        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_MOVE, x0 + dxDp / 2 * density, 40))
+        activity.dispatchTouchEvent(event(android.view.MotionEvent.ACTION_UP, x0 + dxDp * density, 80))
+    }
+
+    @Test
+    fun draggingAcrossThePageMovesToTheNextAndPreviousDay() {
+        val activity = open("2026-10-08")
+        val title = activity.findViewById<TextView>(R.id.day_title)
+        val first = title.text.toString()
+        drag(activity, -160f) // to the left: next day
+        assertTrue(first != title.text.toString())
+        drag(activity, 160f)  // and back
+        assertEquals(first, title.text.toString())
+        drag(activity, 160f)  // nothing before the first day
+        assertEquals(first, title.text.toString())
+    }
+
     @Test
     fun hourRowsShowAllHoursOfTheDay() {
         val activity = open("2026-10-09")

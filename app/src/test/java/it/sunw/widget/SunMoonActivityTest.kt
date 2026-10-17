@@ -166,9 +166,8 @@ class SunMoonActivityTest {
     fun theContentFollowsTheFingerAndComesBackWhenLetGoTooSoon() {
         val activity = open()
         val content = drag(activity, -30f to 0f, -60f to 0f)
-        // Still down: the page has moved with the finger and faded a little, the day is unchanged.
+        // Still down: the page has moved with the finger, the day is unchanged.
         assertTrue(content.translationX < 0f)
-        assertTrue(content.alpha < 1f)
         assertEquals(0, activity.offset)
         release(activity, -60f, 0f, 1600) // slow and short: back to the same day
         assertEquals(0, activity.offset)
