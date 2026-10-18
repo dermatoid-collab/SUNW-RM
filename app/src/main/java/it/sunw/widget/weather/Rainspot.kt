@@ -15,7 +15,8 @@ import android.graphics.RectF
  * 0–6 are the bottom row, 42–48 the top row — and west to east within a row (the same reading
  * as openHAB's meteoblue binding). Digits: 0 none, 9 traces/showers, 1 light, 2 moderate,
  * 3 heavy. Colours for 9 and 1 were measured from a Meteoblue screenshot; 2 and 3 continue
- * Meteoblue's green → teal → blue → violet precipitation scale.
+ * Meteoblue's green → teal → blue precipitation scale. Heavy (3) is not violet: measured from the Meteoblue app it is a
+ * dark steel blue, rgb(52, 93, 137).
  */
 object Rainspot {
 
@@ -26,7 +27,7 @@ object Rainspot {
     private const val TRACES = 0xFF388F74.toInt()   // '9'
     private const val LIGHT = 0xFF3C9DA8.toInt()    // '1'
     private const val MODERATE = 0xFF3D7EA6.toInt() // '2'
-    private const val HEAVY = 0xFF6A4FB8.toInt()    // '3'
+    private const val HEAVY = 0xFF345D89.toInt()    // '3': the dark blue Meteoblue draws for heavy rain (measured, 18/10 05:00)
     private const val WHITE = 0xFFF8F8F8.toInt()
 
     fun color(code: Char): Int? = when (code) {
