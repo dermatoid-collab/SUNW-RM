@@ -31,6 +31,8 @@ class WidgetRefreshTest {
     fun placeAndWidget() {
         LocationStore(context).save(44.80, 10.33, automatic = false, name = "Parma")
         shadowOf(AppWidgetManager.getInstance(context)).createWidget(SunWidgetProvider::class.java, R.layout.widget_sun)
+        // Creating the widget already makes the system draw it once; the tests start from nothing recorded.
+        context.getSharedPreferences("widget_refresh", Context.MODE_PRIVATE).edit().clear().commit()
     }
 
     private fun shownAfterUpdate(source: WidgetRefresh.Source = WidgetRefresh.Source.APP): WidgetRefresh.Diagnostics {

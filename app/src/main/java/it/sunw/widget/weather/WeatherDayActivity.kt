@@ -225,7 +225,8 @@ class WeatherDayActivity : Activity() {
                 setOnClickListener {
                     val delta = day.date.compareTo(selected).coerceIn(-1, 1)
                     selected = day.date
-                    DaySlide.run(findViewById(R.id.day_content), delta) { render() }
+                    // Not the tab's own findViewById (we are inside its apply block): the page's content is in the activity.
+                    DaySlide.run(this@WeatherDayActivity.findViewById(R.id.day_content), delta) { render() }
                     pager.prepare()
                 }
                 addView(text(dayFormat.format(day.date).trimEnd('.').replaceFirstChar { it.titlecase() }, 15.5f,
