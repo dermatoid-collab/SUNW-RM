@@ -63,7 +63,9 @@ class MeteogramTest {
         val spot = main.findViewById<ImageView>(R.id.weather_today_spot)
         assertEquals(View.VISIBLE, spot.visibility)
         spot.performClick()
-        assertEquals(MeteogramActivity::class.java.name, shadowOf(main).nextStartedActivity.component?.className)
+        val intent = shadowOf(main).nextStartedActivity
+        assertEquals(MeteogramActivity::class.java.name, intent.component?.className)
+        assertEquals(null, intent.getStringExtra(MeteogramActivity.EXTRA_FOCUS)) // the page from the top
     }
 
     @Test
@@ -78,7 +80,25 @@ class MeteogramTest {
         assertEquals(target, pills.parent)
         assertEquals(target, main.findViewById<View>(R.id.weather_today_spot).parent)
         target.performClick()
-        assertEquals(MeteogramActivity::class.java.name, shadowOf(main).nextStartedActivity.component?.className)
+        val intent = shadowOf(main).nextStartedActivity
+        assertEquals(MeteogramActivity::class.java.name, intent.component?.className)
+        assertEquals(MeteogramActivity.FOCUS_CHARTS, intent.getStringExtra(MeteogramActivity.EXTRA_FOCUS)) // scrolled to the charts
+    }
+
+    @Test
+    fun openedFromThePillsThePageScrollsToTheTemperatureChart() {
+        seedPast()
+        val intent = android.content.Intent(context, MeteogramActivity::class.java).putExtra(MeteogramActivity.EXTRA_FOCUS, MeteogramActivity.FOCUS_CHARTS)
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java, intent).setup().get()
+        shadowOf(android.os.Looper.getMainLooper()).idle()
+        val page = activity.findViewById<android.widget.ScrollView>(R.id.mg_page)
+        val card = activity.findViewById<View>(R.id.mg_last24)
+        assertEquals(View.VISIBLE, card.visibility)
+        // Either the card is at the top, or the page could not scroll that far (its content is shorter than the screen in this test).
+        assertTrue(page.scrollY > 0 || card.top <= 0 || page.getChildAt(0).height <= page.height)
+        // Opened from the spot, the page starts at the top.
+        val plain = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        assertEquals(0, plain.findViewById<android.widget.ScrollView>(R.id.mg_page).scrollY)
     }
 
     @Test

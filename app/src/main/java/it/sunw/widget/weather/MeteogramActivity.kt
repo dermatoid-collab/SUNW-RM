@@ -13,6 +13,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.HorizontalScrollView
+import android.widget.ScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -70,6 +71,7 @@ class MeteogramActivity : Activity() {
         setUpWebcams(palette, place)
         setUpMap(palette, place, savedInstanceState?.getString(STATE_LAYER)?.let { runCatching { Layer.valueOf(it) }.getOrNull() })
 
+        focusCharts = savedInstanceState == null && intent.getStringExtra(EXTRA_FOCUS) == FOCUS_CHARTS
         val forecast = WeatherRepository(this).cached(place)
         if (forecast == null || forecast.hours.isEmpty()) {
             findViewById<View>(R.id.mg_card).visibility = View.GONE
@@ -88,6 +90,7 @@ class MeteogramActivity : Activity() {
             chart.show(palette, forecast, now, past, model)
             showLast24(palette, forecast, past, now)
             showPressure24(palette, forecast, model, now)
+            scrollToCharts()
             status.text = getString(if (past == null) R.string.weather_source else R.string.weather_source_past, updated)
         }
         draw(pastRepo.cached(place))
@@ -304,7 +307,39 @@ class MeteogramActivity : Activity() {
         show(saved ?: Layer.RADAR)
     }
 
+    /** Opened from the max/min pills: the page is scrolled to the temperature charts, until the user touches it. */
+    private var focusCharts = false
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        if (ev.actionMasked == android.view.MotionEvent.ACTION_DOWN) focusCharts = false
+        return super.dispatchTouchEvent(ev)
+    }
+
+    /** Scrolls the page to the top of the temperature chart (or, until it has data, of the meteogram). */
+    private fun scrollToCharts() {
+        if (!focusCharts) return
+        val page = findViewById<ScrollView>(R.id.mg_page)
+        val last24 = findViewById<View>(R.id.mg_last24)
+        val target = if (last24.visibility == View.VISIBLE) last24 else findViewById<View>(R.id.mg_card)
+        if (last24.visibility == View.VISIBLE) focusCharts = false // placed for good once the card is there
+        page.viewTreeObserver.addOnGlobalLayoutListener(object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                page.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                var y = 0
+                var v: View = target
+                while (v !== page) {
+                    y += v.top
+                    v = v.parent as? View ?: return
+                }
+                page.scrollTo(0, (y - (8 * resources.displayMetrics.density).toInt()).coerceAtLeast(0))
+            }
+        })
+        page.requestLayout()
+    }
+
     companion object {
+        const val EXTRA_FOCUS = "focus"
+        const val FOCUS_CHARTS = "charts"
         private const val STATE_LAYER = "layer"
         private const val WINDY_EMBED_HOST = "embed.windy.com"
 

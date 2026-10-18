@@ -84,16 +84,19 @@ class WeatherCard(private val activity: Activity) {
 
     /**
      * Today's rainspot beside the pills, sized to their height (a radar icon when MeteoBlue sends
-     * none); a tap on the spot or on the max/min pills → radar and meteogram.
+     * none); a tap on the spot → the radar and meteogram page from the top (the map); a tap on the
+     * max/min pills → the same page scrolled to the temperature charts.
      */
     private fun showTodaySpot(palette: Palette, spot: String?) {
         val view = find<ImageView>(R.id.weather_today_spot)
         view.visibility = View.VISIBLE
-        // The whole target (spot and pills) opens the page, not just the spot.
-        val open = View.OnClickListener { activity.startActivity(Intent(activity, MeteogramActivity::class.java)) }
-        view.setOnClickListener(open)
+        // The spot opens the page at the map; the rest of the tile (the pills and what is around them) opens it at the charts.
+        view.setOnClickListener { activity.startActivity(Intent(activity, MeteogramActivity::class.java)) }
+        val charts = View.OnClickListener {
+            activity.startActivity(Intent(activity, MeteogramActivity::class.java).putExtra(MeteogramActivity.EXTRA_FOCUS, MeteogramActivity.FOCUS_CHARTS))
+        }
         find<View>(R.id.weather_today_target).apply {
-            setOnClickListener(open)
+            setOnClickListener(charts)
             // A lighter, rounded tile makes the tap area visible.
             background = GradientDrawable().apply {
                 cornerRadius = dp(16).toFloat()
