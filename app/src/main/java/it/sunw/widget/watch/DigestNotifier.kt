@@ -54,6 +54,7 @@ object DigestNotifier {
         val notification = Notification.Builder(context, CHANNEL)
             .setSmallIcon(WeatherIcons.icon(worst, night))
             .setContentTitle(context.getString(R.string.digest_title, HOURS, place.name ?: context.getString(R.string.place_device)))
+            .setSubText(PlaceLabels.subText(context, place))
             .setContentText(text)
             .setStyle(Notification.BigTextStyle().bigText(text))
             .setContentIntent(open)

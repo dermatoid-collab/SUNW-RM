@@ -363,7 +363,7 @@
     <string name="we_fog">Nebbia</string>
     <string name="we_change">Sbalzo termico</string>
     <string name="we_escalation">In peggioramento: %1$s</string>
-    <string name="we_text">%1$s · %2$s · %3$s</string>
+    <string name="we_text">%1$s · %2$s</string>
     <string name="we_when_range">dalle %1$s alle %2$s</string>
     <string name="we_when_now">in corso, fino alle %1$s</string>
     <string name="we_peak_rain">fino a %1$s mm/h</string>
@@ -392,4 +392,6 @@
     <string name="digest_exists">Questo orario è già nell\'elenco.</string>
     <string name="we_hail">Possibile grandine</string>
     <string name="we_peak_hail">temporale con possibile grandine</string>
+    <string name="label_device">Dispositivo · %1$s</string>
+    <string name="label_place">📍 %1$s</string>
 </resources>

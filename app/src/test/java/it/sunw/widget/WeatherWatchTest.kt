@@ -11,6 +11,7 @@ import it.sunw.widget.watch.DigestScheduler
 import it.sunw.widget.watch.EventTracker
 import it.sunw.widget.watch.EventType
 import it.sunw.widget.watch.WatchData
+import it.sunw.widget.watch.PlaceLabels
 import it.sunw.widget.watch.WatchPrefs
 import it.sunw.widget.watch.WeatherWatch
 import it.sunw.widget.weather.Condition
@@ -245,6 +246,15 @@ class WeatherWatchTest {
         assertEquals(listOf(parma, device), WeatherWatch.placesToWatch(parma, device))
         assertEquals(listOf(parma), WeatherWatch.placesToWatch(parma, null))
         assertEquals(listOf(parma), WeatherWatch.placesToWatch(parma, Place(44.805, 10.335, automatic = true))) // the same place
+    }
+
+    @Test
+    fun theNotificationHeaderSaysWhetherItIsThePlaceSetOrTheDevice() {
+        assertEquals("📍 Parma", PlaceLabels.subText(context, Place(44.80, 10.33, automatic = false, name = "Parma")))
+        assertEquals("📍 44.80, 10.33", PlaceLabels.subText(context, Place(44.80, 10.33, automatic = false)))
+        // The device: its city when the geocoder knows it, otherwise the coordinates.
+        val device = PlaceLabels.subText(context, Place(45.46, 9.19, automatic = true))
+        assertTrue(device, device.startsWith("Device · "))
     }
 
     @Test

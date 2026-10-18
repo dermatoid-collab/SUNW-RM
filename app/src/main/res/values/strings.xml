@@ -362,7 +362,7 @@
     <string name="we_fog">Fog</string>
     <string name="we_change">Sharp temperature change</string>
     <string name="we_escalation">Getting worse: %1$s</string>
-    <string name="we_text">%1$s · %2$s · %3$s</string>
+    <string name="we_text">%1$s · %2$s</string>
     <string name="we_when_range">from %1$s to %2$s</string>
     <string name="we_when_now">under way, until %1$s</string>
     <string name="we_peak_rain">up to %1$s mm/h</string>
@@ -391,4 +391,6 @@
     <string name="digest_exists">That time is already in the list.</string>
     <string name="we_hail">Possible hail</string>
     <string name="we_peak_hail">thunderstorm with possible hail</string>
+    <string name="label_device">Device · %1$s</string>
+    <string name="label_place">📍 %1$s</string>
 </resources>

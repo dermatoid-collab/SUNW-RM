@@ -28,8 +28,7 @@ object WeatherNotifier {
                 .apply { description = context.getString(R.string.watch_channel_description) },
         )
         val title = context.getString(e.type.title).let { if (alert.escalation) context.getString(R.string.we_escalation, it) else it }
-        val placeName = place.name ?: context.getString(R.string.place_device)
-        val text = context.getString(R.string.we_text, placeName, whenText(context, e, local), peakText(context, e.type, e.peak))
+        val text = context.getString(R.string.we_text, whenText(context, e, local), peakText(context, e.type, e.peak))
         val key = EventTracker.placeKey(place.latitude, place.longitude) + "|" + e.id // the same event at two places is two notifications
         val open = PendingIntent.getActivity(
             context, key.hashCode(),
@@ -42,6 +41,7 @@ object WeatherNotifier {
             .setSmallIcon(e.type.icon)
             .setColor(if (e.level >= 2) STRONG else NORMAL)
             .setContentTitle(title)
+            .setSubText(PlaceLabels.subText(context, place)) // which place: the one set, or the device's position
             .setContentText(text)
             .setStyle(Notification.BigTextStyle().bigText(text))
             .setGroup(GROUP)
