@@ -152,7 +152,7 @@ class MeteogramActivity : Activity() {
         }
         findViewById<TextView>(R.id.mg_pressure24_legend).setTextColor(palette.textSecondary)
         val daylight = forecast.hours.take(24).associate { it.time.hour to it.isDaylight }
-        findViewById<Last24hView>(R.id.mg_pressure24_chart).show(palette, points, { daylight[it.hour] ?: (it.hour in 7..18) }, Last24hView.Kind.PRESSURE)
+        findViewById<Last24hView>(R.id.mg_pressure24_chart).show(palette, points, Last24hView.Kind.PRESSURE) { daylight[it.hour] ?: (it.hour in 7..18) }
     }
 
     /** Four previews of the nearest webcams and the button to the full page. */

@@ -19,7 +19,7 @@ import kotlin.math.roundToInt
  */
 internal object DaySlide {
     private const val FRACTION = 0.12f
-    private const val TAG = R.id.day_slide_animator
+    private val TAG = R.id.day_slide_animator // resource ids are not compile-time constants
 
     /** Runs [change] (which redraws [content] with the new day) and animates old into new; [delta] 0 only redraws. */
     fun run(content: View, delta: Int, change: () -> Unit) {

@@ -54,7 +54,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     internal val pointCount: Int get() = points.size
     internal val cursorIndex: Int get() = cursor
 
-    fun show(palette: Palette, points: List<Pair<LocalDateTime, Double>>, isDaylight: (LocalDateTime) -> Boolean, kind: Kind = Kind.TEMPERATURE) {
+    fun show(palette: Palette, points: List<Pair<LocalDateTime, Double>>, kind: Kind = Kind.TEMPERATURE, isDaylight: (LocalDateTime) -> Boolean) {
         this.kind = kind
         this.palette = palette
         this.points = points
