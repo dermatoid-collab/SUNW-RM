@@ -252,6 +252,20 @@ class WeatherDayActivityTest {
     }
 
     @Test
+    fun aQuickDragOverTheChartSwipesButWithTheCursorUpItMovesTheCursorInstead() {
+        val activity = open("2026-10-08")
+        val title = activity.findViewById<TextView>(R.id.day_title)
+        val first = title.text.toString()
+        val chart = activity.findViewById<DayChartView>(R.id.day_chart)
+        chart.setCursor(10) // the long-press cursor is up: the drag belongs to the chart
+        drag(activity, -160f)
+        assertEquals(first, title.text.toString())
+        chart.setCursor(-1) // no cursor: the same drag swipes
+        drag(activity, -160f)
+        assertTrue(first != title.text.toString())
+    }
+
+    @Test
     fun draggingAcrossThePageMovesToTheNextAndPreviousDay() {
         val activity = open("2026-10-08")
         val title = activity.findViewById<TextView>(R.id.day_title)

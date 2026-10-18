@@ -26,7 +26,8 @@ import kotlin.math.roundToInt
  * The page supplies [content] (the part that changes with the day), [hasDay] (is there a day [Int]
  * steps away), [startsOnControl] (charts and sliders that use horizontal drags themselves), [capture]
  * (draws the day [Int] steps away into a picture and leaves the page as it was) and [change] (moves
- * there, no animation).
+ * there, no animation). A chart with a long-press cursor is no control: a quick horizontal drag over it
+ * swipes like anywhere else, and only once its cursor is up ([isBusy]) does the drag belong to the chart.
  */
 internal class DayPager(
     private val activity: Activity,
@@ -35,6 +36,8 @@ internal class DayPager(
     private val startsOnControl: (MotionEvent) -> Boolean,
     private val capture: (Int) -> Bitmap?,
     private val change: (Int) -> Unit,
+    /** True while something on the page has taken the gesture (a chart's long-press cursor): no swipe then. */
+    private val isBusy: () -> Boolean = { false },
 ) {
     private val slop = ViewConfiguration.get(activity).scaledTouchSlop
     private val density = activity.resources.displayMetrics.density
@@ -72,7 +75,7 @@ internal class DayPager(
                 if (candidate) {
                     val dx = ev.x - downX
                     val dy = ev.y - downY
-                    if (!dragging && abs(dx) > 2 * slop && abs(dx) > 1.5f * abs(dy)) {
+                    if (!dragging && !isBusy() && abs(dx) > 2 * slop && abs(dx) > 1.5f * abs(dy)) {
                         dragging = true
                         val cancel = MotionEvent.obtain(ev).also { it.action = MotionEvent.ACTION_CANCEL }
                         superDispatch(cancel)

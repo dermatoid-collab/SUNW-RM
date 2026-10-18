@@ -59,16 +59,17 @@ class WeatherDayActivity : Activity() {
     private fun dp(v: Int) = (v * density).roundToInt()
 
     /**
-     * Horizontal drags anywhere on the page (except the tab strip and the chart, which use them
-     * themselves): the page follows the finger with the neighbouring day beside it and, let go past a
+     * Horizontal drags anywhere on the page (except the tab strip, which scrolls itself, and the
+     * chart once its long-press cursor is up): the page follows the finger with the neighbouring day beside it and, let go past a
      * threshold or flicked, moves to the next/previous day.
      */
     private val pager by lazy {
         DayPager(
             this, { findViewById(R.id.day_content) },
             hasDay = { d -> dayIndex() + d in forecast.days.indices },
-            startsOnControl = { e -> isOverTabs(e) || isOver(R.id.day_chart, e) },
+            startsOnControl = { e -> isOverTabs(e) },
             capture = this::captureDay,
+            isBusy = { findViewById<DayChartView>(R.id.day_chart).cursorIndex >= 0 }, // the chart's long-press cursor is up
             change = { d -> selected = forecast.days[dayIndex() + d].date; render(scroll = false) },
         )
     }
@@ -148,11 +149,6 @@ class WeatherDayActivity : Activity() {
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean =
         if (::selected.isInitialized) pager.dispatch(ev) { super@WeatherDayActivity.dispatchTouchEvent(it) } else super.dispatchTouchEvent(ev)
-
-    private fun isOver(id: Int, e: MotionEvent): Boolean {
-        val r = android.graphics.Rect()
-        return findViewById<View>(id).getGlobalVisibleRect(r) && r.contains(e.rawX.toInt(), e.rawY.toInt())
-    }
 
     private fun isOverTabs(e: MotionEvent): Boolean {
         val tabs = findViewById<HorizontalScrollView>(R.id.day_tabs_scroll) ?: return false
