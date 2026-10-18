@@ -178,7 +178,8 @@ class MeteogramTest {
             .put("time", JSONArray(times))
             .put("temperature_2m", column(7.0)).put("apparent_temperature", column(5.0))
             .put("precipitation", column(2.0)).put("wind_speed_10m", column(15.0))
-            .put("wind_direction_10m", column(270.0)).put("wind_gusts_10m", column(30.0)).put("weather_code", column(61.0)))
+            .put("wind_direction_10m", column(270.0)).put("wind_gusts_10m", column(30.0)).put("weather_code", column(61.0))
+            .put("pressure_msl", column(1012.5)))
         File(context.cacheDir, "openmeteo_hours.json").writeText(json.toString())
         context.getSharedPreferences("weather", Context.MODE_PRIVATE).edit()
             .putLong("omh_fetched", System.currentTimeMillis())
@@ -202,6 +203,29 @@ class MeteogramTest {
         assertEquals(15.0, yesterday.windSpeed, 0.001)
         assertEquals(it.sunw.widget.weather.Condition.LIGHT_RAIN, yesterday.condition)
         assertEquals(0, yesterday.precipitationProbability) // none for the past
+    }
+
+    @Test
+    fun theLast24HoursOfPressureHaveTheirCardAndTheMeteogramShowsTheLine() {
+        org.junit.Assume.assumeTrue(utcHour in 1..21)
+        seedPast()
+        seedModel()
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.mg_pressure24).visibility)
+        val chart = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_pressure24_chart)
+        assertTrue(chart.pointCount in 24..25) // 24 hours, one point per hour
+        assertTrue(chart.cursorLabel(chart.pointCount - 1).second.contains("1012.5") && chart.cursorLabel(0).second.contains("mbar"))
+        // The meteogram's label carries the pressure next to the temperature.
+        val meteogram = activity.findViewById<MeteogramView>(R.id.mg_chart)
+        assertTrue(meteogram.cursorLabel(0).second.contains("mbar"))
+    }
+
+    @Test
+    fun withoutPressureTheCardStaysHiddenAndTheLabelHasOnlyTheTemperature() {
+        seedPast()
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.mg_pressure24).visibility)
+        assertTrue(!activity.findViewById<MeteogramView>(R.id.mg_chart).cursorLabel(0).second.contains("mbar"))
     }
 
     @Test

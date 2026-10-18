@@ -36,6 +36,10 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     private var palette: Palette? = null
     private var points = emptyList<Pair<LocalDateTime, Double>>()
     private var daylight: (LocalDateTime) -> Boolean = { it.hour in 7..18 }
+    private var kind = Kind.TEMPERATURE
+
+    /** What the chart shows: the temperature (degrees, coloured by value) or the sea-level pressure (mbar). */
+    enum class Kind { TEMPERATURE, PRESSURE }
 
     private var cursor = -1
     private var pressing = false
@@ -50,7 +54,8 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     internal val pointCount: Int get() = points.size
     internal val cursorIndex: Int get() = cursor
 
-    fun show(palette: Palette, points: List<Pair<LocalDateTime, Double>>, isDaylight: (LocalDateTime) -> Boolean) {
+    fun show(palette: Palette, points: List<Pair<LocalDateTime, Double>>, isDaylight: (LocalDateTime) -> Boolean, kind: Kind = Kind.TEMPERATURE) {
+        this.kind = kind
         this.palette = palette
         this.points = points
         this.daylight = isDaylight
@@ -88,7 +93,10 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     private fun hi() = max(ceil(temps.max() + 1), lo() + 4)
     private fun y(t: Double) = (chartBottom - (t - lo()) / (hi() - lo()) * (chartBottom - chartTop)).toFloat()
 
-    private fun deg1(v: Double) = String.format(Locale.getDefault(), "%.1f°", v)
+    private fun deg1(v: Double) = String.format(Locale.getDefault(), if (kind == Kind.PRESSURE) "%.1f" else "%.1f°", v)
+
+    /** The trend tile compares with this long ago: an hour for the temperature, three for the pressure. */
+    private val trendMinutes get() = if (kind == Kind.PRESSURE) 180 else 60
     private val clock = DateTimeFormatter.ofPattern("HH:mm")
     private fun dayClock(t: LocalDateTime) =
         DateTimeFormatter.ofPattern("EEE HH:mm", Locale.getDefault()).format(t).replace(".", "").replaceFirstChar { it.titlecase() }
@@ -100,16 +108,16 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         val iMin = minIndex
         val iMax = maxIndex
         val last = n - 1
-        // Change over the last hour: against the point an hour before, when there is one.
-        val hourAgo = points.indices.lastOrNull { Duration.between(points[it].first, points[last].first).toMinutes() >= 60 }
+        // Change over the last hour (pressure: 3 hours): against the point that long before, when there is one.
+        val hourAgo = points.indices.lastOrNull { Duration.between(points[it].first, points[last].first).toMinutes() >= trendMinutes }
         val delta = hourAgo?.let { points[last].second - points[it].second }
 
         // Tiles.
         val tiles = listOf(
-            Triple(R.string.l24_min, deg1(points[iMin].second) to WeatherCard.MIN_PILL, dayClock(points[iMin].first)),
-            Triple(R.string.l24_max, deg1(points[iMax].second) to WeatherCard.MAX_PILL, dayClock(points[iMax].first)),
+            Triple(R.string.l24_min, deg1(points[iMin].second) to (if (kind == Kind.PRESSURE) p.text else WeatherCard.MIN_PILL), dayClock(points[iMin].first)),
+            Triple(R.string.l24_max, deg1(points[iMax].second) to (if (kind == Kind.PRESSURE) p.text else WeatherCard.MAX_PILL), dayClock(points[iMax].first)),
             Triple(R.string.l24_range, deg1(points[iMax].second - points[iMin].second) to p.text, context.getString(R.string.l24_in_24h)),
-            Triple(R.string.l24_hour, (delta?.let { (if (it >= 0) "+" else "−") + deg1(abs(it)) } ?: "—") to p.text,
+            Triple(if (kind == Kind.PRESSURE) R.string.l24_3h else R.string.l24_hour, (delta?.let { (if (it >= 0) "+" else "−") + deg1(abs(it)) } ?: "—") to p.text,
                 context.getString(R.string.l24_now, deg1(points[last].second))),
         )
         val gap = dp(6f)
@@ -150,7 +158,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
             paint.style = Paint.Style.FILL
             paint.color = p.textSecondary
             paint.textAlign = Paint.Align.LEFT
-            canvas.drawText("${g.roundToInt()}°", dp(2f), gy - dp(2f), paint)
+            canvas.drawText(if (kind == Kind.PRESSURE) "${g.roundToInt()}" else "${g.roundToInt()}°", dp(2f), gy - dp(2f), paint)
             g += step
         }
 
@@ -170,7 +178,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         paint.strokeWidth = dp(2.6f)
         paint.strokeCap = Paint.Cap.ROUND
         for (i in 0 until n - 1) {
-            paint.color = WeatherCard.temperatureColor((points[i].second + points[i + 1].second) / 2)
+            paint.color = if (kind == Kind.PRESSURE) PRESSURE_LINE else WeatherCard.temperatureColor((points[i].second + points[i + 1].second) / 2)
             canvas.drawLine(x(i), y(points[i].second), x(i + 1), y(points[i + 1].second), paint)
         }
 
@@ -181,7 +189,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
             val cx = x(i).coerceIn(dp(16f), width - dp(16f))
             val cy = y(points[i].second)
             paint.style = Paint.Style.FILL
-            paint.color = if (above) WeatherCard.MAX_PILL else WeatherCard.MIN_PILL
+            paint.color = if (kind == Kind.PRESSURE) PRESSURE_LINE else if (above) WeatherCard.MAX_PILL else WeatherCard.MIN_PILL
             canvas.drawCircle(x(i), cy, dp(4f), paint)
             canvas.drawText(deg1(points[i].second), cx, if (above) cy - dp(8f) else cy + dp(16f), paint)
         }
@@ -246,7 +254,8 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         val t = points[i].first
         val whenText = DateTimeFormatter.ofPattern("EEE dd/MM · HH:mm", Locale.getDefault()).format(t)
             .replace(".", "").replaceFirstChar { it.titlecase() }
-        return "$whenText · ${context.getString(R.string.mg_cursor_past)}" to deg1(points[i].second)
+        val value = if (kind == Kind.PRESSURE) deg1(points[i].second) + " " + context.getString(R.string.pressure_unit) else deg1(points[i].second)
+        return "$whenText · ${context.getString(R.string.mg_cursor_past)}" to value
     }
 
     private val startCursor = Runnable {
@@ -294,6 +303,8 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     }
 
     companion object {
+        /** The pressure curve: violet, apart from the temperature's blue-to-orange. */
+        internal const val PRESSURE_LINE = 0xFFB894FF.toInt()
         private const val TILES_DP = 62f
         private const val CHART_DP = 190f
     }

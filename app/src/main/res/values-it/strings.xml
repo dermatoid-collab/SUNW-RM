@@ -147,7 +147,7 @@
     <string name="section_about">Informazioni</string>
     <string name="build_info">Versione %1$s\nBuild GitHub n. %2$d del %3$s\nCommit %4$s</string>
     <string name="data_sources">Fonti dei dati</string>
-    <string name="sources">• Sole: equazioni del NOAA Solar Calculator (J. Meeus, «Astronomical Algorithms»), calcolate sul telefono.\n• Luna: algoritmo di Paul Schlyter («How to compute planetary positions»), calcolato sul telefono e verificato con PyEphem.\n• Meteo: meteoblue AG (pacchetto basic-1h / basic-day). Dati meteo © meteoblue.\n• Ricerca località: servizio di geocoding di Android (Google).\n• Icone meteo: Material Symbols di Google, licenza Apache 2.0.\n• Mappa radar e pioggia: mappa incorporata di Windy.com (mostrata così come la fornisce Windy, logo compreso).\n• Allerte meteo (Italia): Dipartimento della Protezione Civile, bollettino di criticità nazionale e zone di allerta, CC BY 4.0.\n• Temperatura delle ultime 24 ore: Open-Meteo.com (CC BY 4.0), valori del modello per il luogo.\n• Webcam: Windy Webcams API, webcam fornite da windy.com; le pagine di «Le mie webcam» appartengono ai rispettivi proprietari.</string>
+    <string name="sources">• Sole: equazioni del NOAA Solar Calculator (J. Meeus, «Astronomical Algorithms»), calcolate sul telefono.\n• Luna: algoritmo di Paul Schlyter («How to compute planetary positions»), calcolato sul telefono e verificato con PyEphem.\n• Meteo: meteoblue AG (pacchetto basic-1h / basic-day). Dati meteo © meteoblue.\n• Ricerca località: servizio di geocoding di Android (Google).\n• Icone meteo: Material Symbols di Google, licenza Apache 2.0.\n• Mappa radar e pioggia: mappa incorporata di Windy.com (mostrata così come la fornisce Windy, logo compreso).\n• Allerte meteo (Italia): Dipartimento della Protezione Civile, bollettino di criticità nazionale e zone di allerta, CC BY 4.0.\n• Temperatura e pressione delle ultime 24 ore: Open-Meteo.com (CC BY 4.0), valori del modello per il luogo.\n• Webcam: Windy Webcams API, webcam fornite da windy.com; le pagine di «Le mie webcam» appartengono ai rispettivi proprietari.</string>
     <string name="detail_back">%1$s</string>
     <string name="detail_hourly">Ora per ora</string>
     <string name="detail_step_1h">Ogni ora ▾</string>
@@ -216,7 +216,7 @@
     </string-array>
     <string name="mg_title">Meteogramma</string>
     <string name="mg_subtitle">%1$s · prossimi 7 giorni</string>
-    <string name="mg_legend">Tempo e vento ogni 3 ore · pioggia mm/h · tocco lungo e trascina per la temperatura · tocca un giorno per aprirlo</string>
+    <string name="mg_legend">Tempo e vento ogni 3 ore · pioggia mm/h · linea viola sottile: pressione (mbar) · tocco lungo e trascina per temperatura e pressione · tocca un giorno per aprirlo</string>
     <string name="weather_source_past">Aggiornato alle %1$s</string>
     <string name="mg_cursor_past">Passato</string>
     <string name="mg_cursor_forecast">previsione</string>
@@ -347,4 +347,8 @@
     <string name="wc_section_mine">Le mie webcam</string>
     <string name="wc_section_near">Vicine</string>
     <string name="wc_image_address">Indirizzo immagine (facoltativo)</string>
+    <string name="pressure_unit">mbar</string>
+    <string name="l24_3h">Ultime 3 h</string>
+    <string name="p24_title">Pressione, ultime 24 ore</string>
+    <string name="p24_legend">Pressione ridotta al livello del mare in mbar (= hPa), ogni ora. Tocco lungo e trascina per la pressione in quel momento.</string>
 </resources>

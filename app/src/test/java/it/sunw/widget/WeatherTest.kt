@@ -157,6 +157,17 @@ class WeatherTest {
     }
 
     @Test
+    fun openMeteoPressureIsReadPerHourAndListedForARange() {
+        val hours = it.sunw.widget.weather.OpenMeteoHours.parse("""{"hourly":{"time":["2026-10-18T13:00","2026-10-18T14:00","2026-10-18T15:00"],"pressure_msl":[1013.4,null,1011.9]}}""")
+        assertTrue(hours.hasPressure)
+        assertEquals(1013.4, hours[java.time.LocalDateTime.of(2026, 10, 18, 13, 0)]!!.pressure!!, 0.001)
+        val listed = hours.pressures(java.time.LocalDateTime.of(2026, 10, 18, 13, 0), java.time.LocalDateTime.of(2026, 10, 18, 15, 0))
+        assertEquals(listOf(1013.4, 1011.9), listed.map { it.second }) // the missing hour is left out
+        assertTrue(!it.sunw.widget.weather.OpenMeteoHours.parse("""{"hourly":{"time":["2026-10-18T13:00"],"wind_gusts_10m":[30.2]}}""").hasPressure)
+        assertTrue(it.sunw.widget.weather.OpenMeteoHoursRepository.url(44.8, 10.33).contains("pressure_msl"))
+    }
+
+    @Test
     fun wmoWeatherCodesBecomeOurConditions() {
         val expected = mapOf(
             0 to Condition.CLEAR, 1 to Condition.MOSTLY_CLEAR, 2 to Condition.PARTLY_CLOUDY, 3 to Condition.OVERCAST,

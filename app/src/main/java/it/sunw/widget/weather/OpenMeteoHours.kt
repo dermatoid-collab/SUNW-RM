@@ -32,11 +32,21 @@ class OpenMeteoHours(private val hours: Map<LocalDateTime, Sample>) {
         val gust: Double?,
         /** WMO weather code (0 clear … 99 thunderstorm with hail). */
         val weatherCode: Int?,
+        /** Pressure reduced to sea level, in hPa (the same number as mbar). */
+        val pressure: Double? = null,
     )
 
     operator fun get(time: LocalDateTime): Sample? = hours[time]
 
     val isEmpty: Boolean get() = hours.isEmpty()
+
+    /** False for a download made before the pressure was asked for. */
+    val hasPressure: Boolean get() = hours.values.any { it.pressure != null }
+
+    /** Sea-level pressure (mbar) of the hours from [from] to [to] included, oldest first; hours without it are left out. */
+    fun pressures(from: LocalDateTime, to: LocalDateTime): List<Pair<LocalDateTime, Double>> =
+        hours.entries.filter { !it.key.isBefore(from) && !it.key.isAfter(to) && it.value.pressure != null }
+            .sortedBy { it.key }.map { it.key to it.value.pressure!! }
 
     companion object {
         /** Parses an Open-Meteo response with the hourly variables of [VARIABLES]; throws on anything else. */
@@ -57,12 +67,13 @@ class OpenMeteoHours(private val hours: Map<LocalDateTime, Sample>) {
                     windDirection = number("wind_direction_10m", i)?.roundToInt(),
                     gust = number("wind_gusts_10m", i),
                     weatherCode = number("weather_code", i)?.roundToInt(),
+                    pressure = number("pressure_msl", i),
                 )
             }
             return OpenMeteoHours(map)
         }
 
-        const val VARIABLES = "temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code"
+        const val VARIABLES = "temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,pressure_msl"
     }
 }
 

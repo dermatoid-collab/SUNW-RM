@@ -116,6 +116,10 @@ Implementata in `SunMoonActivity` (cursore ±6 mesi confermato), poi riorganizza
   swipe). Fuori dal gesto (schede dei giorni, slider, «Oggi») resta la dissolvenza incrociata di `DaySlide.kt`, con lo
   stesso movimento delle transizioni tra pagine. Da verificare sul telefono: fluidità, qualche istante senza il vicino
   subito dopo un cambio (le immagini vengono preparate in secondo piano), scatti nel meteo giornaliero.
+- **Pressione:** scheda «Pressione, ultime 24 ore» e linea viola sottile nel meteogramma (Open-Meteo, `pressure_msl`,
+  mbar = hPa, oraria; è un valore del modello ridotto al livello del mare, non di una stazione). Da verificare sul
+  telefono: leggibilità della linea sopra la temperatura (scala propria, almeno 8 mbar di altezza) e confronto con la
+  pressione di una stazione vicina. MeteoBlue non è stato usato perché il pacchetto basic non la include.
 - **Meteoalarm** per le località fuori Italia (già indicato nella sezione 2).
 
 ## Note

@@ -44,6 +44,9 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
     /** Per slot: whether it has more than a temperature (icon, rain, wind); the leading slots without Open-Meteo's hours do not. */
     private var detailed = BooleanArray(0)
 
+    /** Sea-level pressure (mbar, Open-Meteo) of every slot, NaN where there is none. */
+    private var pressure = DoubleArray(0)
+
     /** Slot under the finger after a long press, or -1. */
     private var cursor = -1
 
@@ -78,6 +81,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         pastCount = lead.size
         hours = lead + ahead.map { h -> if (h.time.isBefore(thisHour)) goneToday(h, past, model) else h }
         detailed = BooleanArray(hours.size) { it >= pastCount || leadDetail[it] }
+        pressure = DoubleArray(hours.size) { model?.get(hours[it].time)?.pressure ?: Double.NaN }
         cursor = -1
         days = forecast.days.filter { !it.date.isBefore(now.toLocalDate()) }
         this.now = now
@@ -214,6 +218,25 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             }
         }
 
+        // Pressure: a thin violet line over the same panel, on a scale of its own (at least 8 mbar tall so
+        // a calm day does not look like a storm); the value is in the cursor's label.
+        val known = pressure.filter { !it.isNaN() }
+        val pLo = if (known.isEmpty()) 0.0 else floor(known.min())
+        val pHi = if (known.isEmpty()) 0.0 else max(ceil(known.max()), pLo + 8.0)
+        fun py(v: Double) = (tempBottom - dp(14f) - (v - pLo) / (pHi - pLo) * (tempBottom - tempTop - dp(34f))).toFloat()
+        if (known.size >= 2) {
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = dp(1.1f)
+            paint.strokeCap = Paint.Cap.ROUND
+            for (i in 0 until n - 1) {
+                if (pressure[i].isNaN() || pressure[i + 1].isNaN()) continue
+                paint.color = Last24hView.PRESSURE_LINE
+                paint.alpha = if (i < elapsed) PAST_ALPHA else 230
+                canvas.drawLine(x(i + 0.5), py(pressure[i]), x(i + 1.5), py(pressure[i + 1]), paint)
+            }
+            paint.alpha = 255
+        }
+
         // Temperature curve, coloured by value, with a soft fill.
         val temps = hours.map { it.temperature }
         val lo = floor(temps.min() - 1)
@@ -310,7 +333,15 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             }
         }
 
-        if (cursor in 0 until n) drawCursor(canvas, p, cursor, cxOf(cursor), ty(temps[cursor]), header, windBottom, elapsed)
+        if (cursor in 0 until n) {
+            drawCursor(canvas, p, cursor, cxOf(cursor), ty(temps[cursor]), header, windBottom, elapsed)
+            if (!pressure[cursor].isNaN()) {
+                // A violet dot on the pressure line, above the cursor's line.
+                paint.style = Paint.Style.FILL
+                paint.color = Last24hView.PRESSURE_LINE
+                canvas.drawCircle(cxOf(cursor), py(pressure[cursor]), dp(3.5f), paint)
+            }
+        }
     }
 
     /** Line, dot and a label with the time and temperature of slot [i], kept inside the visible part. */
@@ -365,7 +396,10 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             i == elapsed -> context.getString(R.string.mg_cursor_now)
             else -> context.getString(R.string.mg_cursor_forecast)
         }
-        return "$whenText · $kind" to String.format(Locale.getDefault(), "%.1f°", h.temperature)
+        val temperature = String.format(Locale.getDefault(), "%.1f°", h.temperature)
+        val mbar = pressure.getOrNull(i)?.takeUnless { it.isNaN() }
+        return "$whenText · $kind" to if (mbar == null) temperature
+        else temperature + " · " + String.format(Locale.getDefault(), "%.0f", mbar) + " " + context.getString(R.string.pressure_unit)
     }
 
     /** For tests: shows the cursor on slot [i] (or hides it with -1). */

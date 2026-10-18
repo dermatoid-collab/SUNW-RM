@@ -215,7 +215,7 @@
     </string-array>
     <string name="mg_title">Meteogram</string>
     <string name="mg_subtitle">%1$s · next 7 days</string>
-    <string name="mg_legend">Weather and wind every 3 hours · rain mm/h · long press and drag for the temperature · tap a day to open it</string>
+    <string name="mg_legend">Weather and wind every 3 hours · rain mm/h · thin violet line: pressure (mbar) · long press and drag for temperature and pressure · tap a day to open it</string>
     <string name="weather_source_past">Updated at %1$s</string>
     <string name="mg_cursor_past">Past</string>
     <string name="mg_cursor_forecast">forecast</string>
@@ -346,4 +346,8 @@
     <string name="wc_section_mine">My webcams</string>
     <string name="wc_section_near">Nearby</string>
     <string name="wc_image_address">Image address (optional)</string>
+    <string name="pressure_unit">mbar</string>
+    <string name="l24_3h">Last 3 h</string>
+    <string name="p24_title">Pressure, last 24 hours</string>
+    <string name="p24_legend">Sea-level pressure in mbar (= hPa), every hour. Long press and drag for the pressure at that time.</string>
 </resources>

@@ -87,6 +87,7 @@ class MeteogramActivity : Activity() {
         fun draw(past: PastTemperatures?) {
             chart.show(palette, forecast, now, past, model)
             showLast24(palette, forecast, past, now)
+            showPressure24(palette, forecast, model, now)
             status.text = getString(if (past == null) R.string.weather_source else R.string.weather_source_past, updated)
         }
         draw(pastRepo.cached(place))
@@ -96,7 +97,7 @@ class MeteogramActivity : Activity() {
             }
         }
         // Open-Meteo's other hours (rain, wind, icon) complete the last 24 hours and today's hours already gone.
-        if (model == null || !modelRepo.isFresh()) {
+        if (model == null || !modelRepo.isFresh() || model?.hasPressure != true) {
             modelRepo.refresh(place) { result ->
                 result.getOrNull()?.let { fresh -> runOnUiThread { if (!isDestroyed) { model = fresh; draw(pastRepo.cached(place)) } } }
             }
@@ -128,6 +129,27 @@ class MeteogramActivity : Activity() {
         // Day and night as the forecast has them, by hour of the day.
         val daylight = forecast.hours.take(24).associate { it.time.hour to it.isDaylight }
         findViewById<Last24hView>(R.id.mg_last24_chart).show(palette, points) { daylight[it.hour] ?: (it.hour in 7..18) }
+    }
+
+    /** The sea-level pressure of the last 24 hours, one point per hour, under the temperature card; hidden without data. */
+    private fun showPressure24(palette: Palette, forecast: Forecast, model: OpenMeteoHours?, now: java.time.LocalDateTime) {
+        val card = findViewById<View>(R.id.mg_pressure24)
+        val thisHour = now.truncatedTo(java.time.temporal.ChronoUnit.HOURS)
+        val points = model?.pressures(thisHour.minusHours(24), thisHour).orEmpty()
+        if (points.size < 2) {
+            card.visibility = View.GONE
+            return
+        }
+        card.visibility = View.VISIBLE
+        card.background = (getDrawable(R.drawable.card_background)!!.mutate() as GradientDrawable).apply { setColor(palette.cardBackground) }
+        findViewById<TextView>(R.id.mg_pressure24_title).setTextColor(palette.text)
+        findViewById<TextView>(R.id.mg_pressure24_step).apply {
+            setTextColor(palette.textSecondary)
+            text = getString(R.string.l24_step_hour)
+        }
+        findViewById<TextView>(R.id.mg_pressure24_legend).setTextColor(palette.textSecondary)
+        val daylight = forecast.hours.take(24).associate { it.time.hour to it.isDaylight }
+        findViewById<Last24hView>(R.id.mg_pressure24_chart).show(palette, points, { daylight[it.hour] ?: (it.hour in 7..18) }, Last24hView.Kind.PRESSURE)
     }
 
     /** Four previews of the nearest webcams and the button to the full page. */
