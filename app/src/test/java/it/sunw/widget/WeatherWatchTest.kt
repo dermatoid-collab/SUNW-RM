@@ -12,6 +12,7 @@ import it.sunw.widget.watch.EventTracker
 import it.sunw.widget.watch.EventType
 import it.sunw.widget.watch.WatchData
 import it.sunw.widget.watch.WatchPrefs
+import it.sunw.widget.watch.WeatherWatch
 import it.sunw.widget.weather.Condition
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -194,6 +195,69 @@ class WeatherWatchTest {
         }, fine, 0)
         val both = EventTracker.inMemory().update(heavy, at(10, 30), setOf(EventType.RAIN_SOON, EventType.RAIN_HEAVY))
         assertEquals(listOf(EventType.RAIN_HEAVY), both.map { it.event.type })
+    }
+
+    /** The hours 14 and 15 with a thunderstorm-ish sky: [code], rain probability, CAPE and height of the 0 °C level. */
+    private fun stormy(code: Int, probability: Double, cape: Double?, freezing: Double?) = WatchData(data().hours.map { h ->
+        if (h.time.toLocalDate() == day && h.time.hour in 14..15) WatchData.Hour(h.time, 22.0, 3.0, probability, 0.0, 40.0, 8000.0, 80.0, code, cape, freezing) else h
+    }, emptyList(), 0)
+
+    @Test
+    fun hailNeedsAHailCodeOrAThunderstormWithEnergyAndALowFreezingLevel() {
+        val hail = setOf(EventType.HAIL)
+        fun types(d: WatchData) = EventTracker.inMemory().update(d, at(11), hail).map { it.event.type }
+        assertEquals(listOf(EventType.HAIL), types(stormy(96, 30.0, null, null))) // the hail code alone
+        assertEquals(listOf(EventType.HAIL), types(stormy(95, 50.0, 1800.0, 3500.0))) // storm, energy, low freezing level
+        assertEquals(emptyList<EventType>(), types(stormy(95, 50.0, 1200.0, 3500.0))) // not enough energy
+        assertEquals(emptyList<EventType>(), types(stormy(95, 30.0, 1800.0, 3500.0))) // storm unlikely
+        assertEquals(emptyList<EventType>(), types(stormy(95, 50.0, 1800.0, 4800.0))) // freezing level too high
+        assertEquals(2, EventTracker.inMemory().update(stormy(99, 70.0, 900.0, 3000.0), at(11), hail).single().event.level) // heavy hail code
+        assertEquals(2, EventTracker.inMemory().update(stormy(95, 70.0, 2600.0, 3000.0), at(11), hail).single().event.level) // CAPE >= 2500
+        assertEquals(1, EventTracker.inMemory().update(stormy(96, 70.0, 2000.0, 3000.0), at(11), hail).single().event.level)
+    }
+
+    @Test
+    fun hailKeepsItsStateBetweenTheThresholdsAndEndsOnlyBelowTheOffOnes() {
+        val hail = setOf(EventType.HAIL)
+        val tracker = EventTracker.inMemory()
+        tracker.update(stormy(95, 50.0, 1800.0, 3500.0), at(11), hail)
+        tracker.update(stormy(95, 50.0, 1200.0, 3500.0), at(12), hail) // under ON (1500), over OFF (1000)
+        assertEquals(0, tracker.active(EventType.HAIL).single().offCount)
+        tracker.update(stormy(95, 50.0, 500.0, 3500.0), at(12, 20), hail) // OFF once
+        assertEquals(1, tracker.active(EventType.HAIL).single().offCount)
+        tracker.update(stormy(94, 50.0, 400.0, 3500.0), at(12, 50), hail) // different data: the second
+        assertEquals(EventTracker.State.RESOLVED, tracker.all.single().state)
+    }
+
+    @Test
+    fun hailTakesTheStormsNotification() {
+        val both = EventTracker.inMemory().update(stormy(96, 80.0, 1800.0, 3000.0), at(11), setOf(EventType.STORM, EventType.HAIL))
+        assertEquals(listOf(EventType.HAIL), both.map { it.event.type })
+        // A storm without hail is still a storm.
+        val storm = EventTracker.inMemory().update(stormy(95, 80.0, 800.0, 3000.0), at(11), setOf(EventType.STORM, EventType.HAIL))
+        assertEquals(listOf(EventType.STORM), storm.map { it.event.type })
+    }
+
+    @Test
+    fun theWatchCoversTheActivePlaceAndTheDevicePositionWhenTheyDiffer() {
+        val parma = Place(44.80, 10.33, automatic = false, name = "Parma")
+        val device = Place(45.46, 9.19, automatic = true)
+        assertEquals(listOf(parma, device), WeatherWatch.placesToWatch(parma, device))
+        assertEquals(listOf(parma), WeatherWatch.placesToWatch(parma, null))
+        assertEquals(listOf(parma), WeatherWatch.placesToWatch(parma, Place(44.805, 10.335, automatic = true))) // the same place
+    }
+
+    @Test
+    fun eachPlaceHasItsOwnStateFileAndThoseNoLongerWatchedAreDeleted() {
+        val a = EventTracker.placeKey(44.80, 10.33)
+        val b = EventTracker.placeKey(45.46, 9.19)
+        EventTracker.load(context, a).update(gustsAt(60.0, 12, 13), at(10), wind)
+        EventTracker.load(context, b).update(gustsAt(60.0, 12, 13), at(10), wind)
+        assertEquals(1, EventTracker.load(context, a).active(EventType.WIND).size)
+        assertEquals(1, EventTracker.load(context, b).active(EventType.WIND).size)
+        EventTracker.prune(context, listOf(a))
+        assertEquals(1, EventTracker.load(context, a).active(EventType.WIND).size)
+        assertTrue(EventTracker.load(context, b).all.isEmpty())
     }
 
     @Test

@@ -7,7 +7,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /** One value of an event's series, valid for [minutes] minutes from [time]; [value] null means the data is missing. */
-class Point(val time: LocalDateTime, val value: Double?, val aux: Double? = null, val minutes: Long = 60)
+class Point(val time: LocalDateTime, val value: Double?, val aux: Double? = null, val minutes: Long = 60, val flag: Boolean = false)
 
 /** A run of points over the ON threshold: when it starts and ends, how strong it gets and its strongest value. */
 class Episode(val start: LocalDateTime, val end: LocalDateTime, val level: Int, val peak: Double)
@@ -21,6 +21,7 @@ enum class EventType(val key: String, val title: Int, val icon: Int, val leadMin
     RAIN_SOON("rain_soon", R.string.we_rain_soon, R.drawable.wx_rainy_light, 60, "ON p>=70% & >=0.2 mm/h; OFF p<50% | <0.1 mm/h"),
     RAIN_HEAVY("rain_heavy", R.string.we_rain_heavy, R.drawable.wx_rainy_heavy, 180, "ON >=5 mm/h; OFF <3 mm/h"),
     STORM("storm", R.string.we_storm, R.drawable.wx_thunderstorm, 180, "ON p>=60% & thunderstorm code; OFF p<40% | no thunderstorm code"),
+    HAIL("hail", R.string.we_hail, R.drawable.wx_hail, 180, "ON code 96/99 | (thunderstorm p>=40% & CAPE>=1500 & 0 C level<=4200 m); OFF code<96 & CAPE<1000"),
     SNOW("snow", R.string.we_snow, R.drawable.wx_cloudy_snowing, 360, "ON >=1 cm in 3 h; OFF <0.5 cm in 3 h"),
     WIND("wind", R.string.we_wind, R.drawable.wx_air, 360, "ON gusts>=50 km/h; OFF <40 km/h"),
     HEAT("heat", R.string.we_heat, R.drawable.wx_sunny, 1440, "ON >=35 C; OFF <33 C"),
@@ -34,6 +35,12 @@ enum class EventType(val key: String, val title: Int, val icon: Int, val leadMin
         RAIN_SOON -> rainSeries(d)
         RAIN_HEAVY -> d.hours.map { Point(it.time, it.precipitation) }
         STORM -> d.hours.map { h -> Point(h.time, if (h.probability != null && h.code != null) h.probability else null, h.code?.toDouble()) }
+        HAIL -> d.hours.map { h ->
+            val code = h.code
+            val onFlag = code != null && (code == 96 || code == 99 ||
+                (code >= 95 && (h.probability ?: 0.0) >= 40 && (h.cape ?: 0.0) >= 1500 && (h.freezingLevel ?: Double.MAX_VALUE) <= 4200))
+            Point(h.time, if (code == null) null else h.cape ?: 0.0, code?.toDouble(), 60, onFlag)
+        }
         SNOW -> d.hours.mapIndexed { i, h ->
             val window = d.hours.subList(max(0, i - 2), i + 1)
             Point(h.time, if (window.size == 3 && window.all { it.snowfall != null }) window.sumOf { it.snowfall!! } else null)
@@ -76,6 +83,7 @@ enum class EventType(val key: String, val title: Int, val icon: Int, val leadMin
             RAIN_SOON -> v >= 0.2 && (p.aux ?: 0.0) >= 70
             RAIN_HEAVY -> v >= 5
             STORM -> v >= 60 && (p.aux ?: 0.0) >= 95
+            HAIL -> p.flag
             SNOW -> v >= 1.0
             WIND -> v >= 50
             HEAT -> v >= 35
@@ -93,6 +101,7 @@ enum class EventType(val key: String, val title: Int, val icon: Int, val leadMin
             RAIN_SOON -> (p.aux ?: 0.0) < 50 || v < 0.1
             RAIN_HEAVY -> v < 3
             STORM -> v < 40 || (p.aux ?: 0.0) < 95
+            HAIL -> (p.aux ?: 0.0) < 96 && v < 1000
             SNOW -> v < 0.5
             WIND -> v < 40
             HEAT -> v < 33
@@ -110,6 +119,7 @@ enum class EventType(val key: String, val title: Int, val icon: Int, val leadMin
             RAIN_SOON -> v >= 2.5
             RAIN_HEAVY -> v >= 10
             STORM -> v >= 85
+            HAIL -> p.aux == 99.0 || v >= 2500
             SNOW -> v >= 5
             WIND -> v >= 70
             HEAT -> v >= 38

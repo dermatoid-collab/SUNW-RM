@@ -390,4 +390,6 @@
     <string name="digest_remove">Elimina</string>
     <string name="digest_none">Nessun orario: il riepilogo è spento.</string>
     <string name="digest_exists">Questo orario è già nell\'elenco.</string>
+    <string name="we_hail">Possibile grandine</string>
+    <string name="we_peak_hail">temporale con possibile grandine</string>
 </resources>

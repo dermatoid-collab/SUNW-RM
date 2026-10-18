@@ -33,6 +33,10 @@ class WatchData(val hours: List<Hour>, val fine: List<Fine>, val utcOffsetSecond
         val humidity: Double?,
         /** WMO weather code. */
         val code: Int?,
+        /** Convective available potential energy, J/kg: the fuel of thunderstorms (and of hail). */
+        val cape: Double? = null,
+        /** Height of the 0 °C level, in metres. */
+        val freezingLevel: Double? = null,
     )
 
     /** Precipitation in mm over the 15 minutes ending at [time]. */
@@ -47,7 +51,7 @@ class WatchData(val hours: List<Hour>, val fine: List<Fine>, val utcOffsetSecond
         LocalDateTime.ofEpochSecond(now.epochSecond, 0, ZoneOffset.ofTotalSeconds(utcOffsetSeconds))
 
     companion object {
-        private const val HOURLY = "temperature_2m,precipitation,precipitation_probability,snowfall,wind_gusts_10m,visibility,relative_humidity_2m,weather_code"
+        private const val HOURLY = "temperature_2m,precipitation,precipitation_probability,snowfall,wind_gusts_10m,visibility,relative_humidity_2m,weather_code,cape,freezing_level_height"
 
         fun url(latitude: Double, longitude: Double): String = String.format(
             Locale.ROOT,
@@ -75,6 +79,8 @@ class WatchData(val hours: List<Hour>, val fine: List<Fine>, val utcOffsetSecond
                     visibility = number(hourly, "visibility", i),
                     humidity = number(hourly, "relative_humidity_2m", i),
                     code = number(hourly, "weather_code", i)?.toInt(),
+                    cape = number(hourly, "cape", i),
+                    freezingLevel = number(hourly, "freezing_level_height", i),
                 )
             }
             if (hours.isEmpty()) throw IOException("no hours")

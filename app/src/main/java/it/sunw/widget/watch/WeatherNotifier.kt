@@ -30,8 +30,9 @@ object WeatherNotifier {
         val title = context.getString(e.type.title).let { if (alert.escalation) context.getString(R.string.we_escalation, it) else it }
         val placeName = place.name ?: context.getString(R.string.place_device)
         val text = context.getString(R.string.we_text, placeName, whenText(context, e, local), peakText(context, e.type, e.peak))
+        val key = EventTracker.placeKey(place.latitude, place.longitude) + "|" + e.id // the same event at two places is two notifications
         val open = PendingIntent.getActivity(
-            context, e.id.hashCode(),
+            context, key.hashCode(),
             Intent(context, WeatherDayActivity::class.java)
                 .putExtra(WeatherDayActivity.EXTRA_DATE, e.start.toLocalDate().toString())
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
@@ -47,7 +48,7 @@ object WeatherNotifier {
             .setContentIntent(open)
             .setAutoCancel(true)
             .build()
-        manager.notify(BASE_ID + (e.id.hashCode() and 0xFFF), notification)
+        manager.notify(BASE_ID + (key.hashCode() and 0xFFF), notification)
     }
 
     /** "from 15:00 to 18:00" (with the weekday when it is not today), or "until 18:00" when it is under way. */
@@ -61,6 +62,7 @@ object WeatherNotifier {
     internal fun peakText(context: Context, type: EventType, peak: Double): String = when (type) {
         EventType.RAIN_SOON, EventType.RAIN_HEAVY -> context.getString(R.string.we_peak_rain, String.format(Locale.getDefault(), "%.1f", peak))
         EventType.STORM -> context.getString(R.string.we_peak_prob, peak.roundToInt())
+        EventType.HAIL -> context.getString(R.string.we_peak_hail)
         EventType.SNOW -> context.getString(R.string.we_peak_snow, String.format(Locale.getDefault(), "%.1f", peak))
         EventType.WIND -> context.getString(R.string.we_peak_gust, peak.roundToInt())
         EventType.HEAT, EventType.COLD, EventType.ICE -> context.getString(R.string.we_peak_temp, peak.roundToInt())

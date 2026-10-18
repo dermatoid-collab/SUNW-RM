@@ -103,7 +103,8 @@ class EventTracker private constructor(private val file: File?, private val plac
             if (e.notifiedLevel == 0 && inWindow) {
                 val last = lastNotified[e.type]
                 val repeated = last != null && nowMs - last.first < DEDUP_MS && e.level <= last.second
-                val superseded = e.type == EventType.RAIN_SOON && active(EventType.RAIN_HEAVY).any { !it.start.isAfter(e.end) && !it.end.isBefore(e.start) }
+                val stronger = SUPERSEDED_BY[e.type]
+                val superseded = stronger != null && active(stronger).any { !it.start.isAfter(e.end) && !it.end.isBefore(e.start) }
                 e.notifiedLevel = e.level
                 e.notifiedAt = nowMs
                 if (!repeated && !superseded) {
@@ -197,9 +198,24 @@ class EventTracker private constructor(private val file: File?, private val plac
         private val DEDUP_MS = Duration.ofHours(6).toMillis()
         private val KEEP_ENDED_MS = Duration.ofHours(12).toMillis()
 
-        /** The tracker saved for the place whose key is [placeKey] (empty for another place). */
+        /** Events that a stronger kind of event on the same hours replaces in the notifications (heavy rain over rain, hail over a storm). */
+        private val SUPERSEDED_BY = mapOf(EventType.RAIN_SOON to EventType.RAIN_HEAVY, EventType.STORM to EventType.HAIL)
+
+        private const val FILE_PREFIX = "weather_watch_"
+
+        private fun fileOf(context: Context, placeKey: String) = File(context.filesDir, FILE_PREFIX + placeKey.replace(',', '_') + ".json")
+
+        /** The tracker saved for the place whose key is [placeKey] (one file per place; empty for a place not seen before). */
         fun load(context: Context, placeKey: String): EventTracker =
-            EventTracker(File(context.filesDir, "weather_watch.json"), placeKey).also { it.load() }
+            EventTracker(fileOf(context, placeKey), placeKey).also { it.load() }
+
+        /** Deletes the saved states of places that are no longer watched (and the file of the first version). */
+        fun prune(context: Context, keep: Collection<String>) {
+            val keepNames = keep.map { fileOf(context, it).name }.toSet()
+            context.filesDir.listFiles()?.filter { f ->
+                (f.name.startsWith(FILE_PREFIX) && f.name.endsWith(".json") && f.name !in keepNames) || f.name == "weather_watch.json"
+            }?.forEach { it.delete() }
+        }
 
         /** A tracker that keeps nothing on disk, for tests. */
         fun inMemory(placeKey: String = "test"): EventTracker = EventTracker(null, placeKey)
