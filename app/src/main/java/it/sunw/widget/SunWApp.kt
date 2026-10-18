@@ -12,6 +12,11 @@ class SunWApp : Application() {
         super.onCreate()
         CrashLog.install(this)
         redrawWidgetsWhenTheScreenComesOn()
+        // The weather watch (every 30 minutes) and the next recurring summary.
+        runCatching {
+            it.sunw.widget.watch.WatchJobService.ensure(this)
+            it.sunw.widget.watch.DigestScheduler.scheduleNext(this)
+        }.onFailure { CrashLog.record(this, it) }
     }
 
     /**

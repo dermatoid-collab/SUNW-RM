@@ -14,7 +14,7 @@
     <uses-permission
         android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
         tools:ignore="BatteryLife" />
-    <!-- Exact alarms at sunrise and sunset for the widget (granted at install, no special access to switch on). -->
+    <!-- Exact alarms at sunrise and sunset for the widget and at the times of the recurring weather summaries (granted at install). -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
@@ -72,6 +72,22 @@
             android:name=".WidgetRefreshJobService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name=".watch.WatchJobService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- The recurring weather summaries: the alarm of the next one, and boot or clock changes that set it again. -->
+        <receiver
+            android:name=".watch.DigestReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".SunWidgetProvider"

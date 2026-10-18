@@ -3,6 +3,7 @@ package it.sunw.widget
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -18,6 +19,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -27,7 +29,12 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import it.sunw.widget.alerts.AlertNotifier
+import it.sunw.widget.watch.DigestScheduler
+import it.sunw.widget.watch.EventType
+import it.sunw.widget.watch.WatchJobService
+import it.sunw.widget.watch.WatchPrefs
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.io.IOException
 import java.util.Locale
@@ -100,6 +107,7 @@ class SettingsActivity : Activity() {
                 }
             }
         }
+        setUpWatch()
         findViewById<Button>(R.id.save).setOnClickListener { save() }
         findViewById<Button>(R.id.search).setOnClickListener { search() }
         searchQuery.setOnEditorActionListener { _, actionId, _ ->
@@ -147,6 +155,70 @@ class SettingsActivity : Activity() {
     }
 
     // --- Theme ----------------------------------------------------------------------------------
+
+    /** Weather notifications: the master switch, one box per event, and the list of recurring summary times. */
+    private fun setUpWatch() {
+        val events = findViewById<LinearLayout>(R.id.watch_events)
+        findViewById<Switch>(R.id.watch_notifications).apply {
+            isChecked = WatchPrefs.isEnabled(this@SettingsActivity)
+            events.alpha = if (isChecked) 1f else 0.4f
+            setOnCheckedChangeListener { _, checked ->
+                WatchPrefs.setEnabled(this@SettingsActivity, checked)
+                WatchJobService.ensure(this@SettingsActivity)
+                events.alpha = if (checked) 1f else 0.4f
+                if (checked && !AlertNotifier.hasPermission(this@SettingsActivity)) {
+                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+                }
+            }
+        }
+        for (type in EventType.values()) {
+            events.addView(CheckBox(this).apply {
+                text = getString(type.title)
+                tag = type.key
+                minHeight = dp(40)
+                isChecked = WatchPrefs.isOn(this@SettingsActivity, type)
+                setOnCheckedChangeListener { _, on -> WatchPrefs.setOn(this@SettingsActivity, type, on) }
+            })
+        }
+        findViewById<Button>(R.id.digest_add).setOnClickListener {
+            TimePickerDialog(this, { _, hour, minute ->
+                if (!DigestScheduler.add(this, LocalTime.of(hour, minute))) Toast.makeText(this, R.string.digest_exists, Toast.LENGTH_SHORT).show()
+                showDigestTimes()
+            }, 12, 0, true).show()
+        }
+        showDigestTimes()
+        style(events, AppearanceStore(this).palette())
+    }
+
+    /** One row per recurring summary time, each with its Delete button. */
+    internal fun showDigestTimes() {
+        val box = findViewById<LinearLayout>(R.id.digest_times)
+        box.removeAllViews()
+        val times = DigestScheduler.times(this)
+        if (times.isEmpty()) {
+            box.addView(TextView(this).apply { text = getString(R.string.digest_none); textSize = 14f })
+        }
+        for (time in times) {
+            box.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                tag = "digest_" + time
+                addView(TextView(this@SettingsActivity).apply {
+                    text = time.toString()
+                    textSize = 18f
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                })
+                addView(Button(this@SettingsActivity).apply {
+                    text = getString(R.string.digest_remove)
+                    setOnClickListener {
+                        DigestScheduler.remove(this@SettingsActivity, time)
+                        showDigestTimes()
+                    }
+                })
+            })
+        }
+        style(box, AppearanceStore(this).palette())
+    }
 
     /** The page, system bars and every control in the colours of the chosen theme and accent. */
     private fun applyTheme(root: View = findViewById(android.R.id.content)) {

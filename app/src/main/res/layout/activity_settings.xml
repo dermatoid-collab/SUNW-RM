@@ -200,6 +200,59 @@
             android:text="@string/alert_notifications_hint"
             android:textSize="12sp" />
 
+        <!-- Weather watch: significant weather and recurring summaries -->
+        <TextView
+            style="@style/SectionHeader"
+            android:tag="section"
+            android:text="@string/section_watch" />
+
+        <Switch
+            android:id="@+id/watch_notifications"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/watch_notifications"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:id="@+id/watch_events"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.6"
+            android:text="@string/watch_hint"
+            android:textSize="12sp" />
+
+        <TextView
+            style="@style/SectionHeader"
+            android:tag="section"
+            android:text="@string/section_digest" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.6"
+            android:text="@string/digest_hint"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:id="@+id/digest_times"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="vertical" />
+
+        <Button
+            android:id="@+id/digest_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="@string/digest_add" />
+
         <!-- Battery -->
         <TextView
             style="@style/SectionHeader"

@@ -351,4 +351,43 @@
     <string name="l24_3h">Ultime 3 h</string>
     <string name="p24_title">Pressione, ultime 24 ore</string>
     <string name="p24_legend">Pressione ridotta al livello del mare in mbar (= hPa), ogni ora. Tocco lungo e trascina per la pressione in quel momento.</string>
+    <!-- Sorveglianza meteo: notifiche sul meteo significativo e riepiloghi ricorrenti. -->
+    <string name="we_rain_soon">Pioggia in arrivo</string>
+    <string name="we_rain_heavy">Pioggia intensa</string>
+    <string name="we_storm">Temporale</string>
+    <string name="we_snow">Neve</string>
+    <string name="we_wind">Vento forte</string>
+    <string name="we_heat">Caldo intenso</string>
+    <string name="we_cold">Freddo intenso</string>
+    <string name="we_ice">Rischio ghiaccio</string>
+    <string name="we_fog">Nebbia</string>
+    <string name="we_change">Sbalzo termico</string>
+    <string name="we_escalation">In peggioramento: %1$s</string>
+    <string name="we_text">%1$s · %2$s · %3$s</string>
+    <string name="we_when_range">dalle %1$s alle %2$s</string>
+    <string name="we_when_now">in corso, fino alle %1$s</string>
+    <string name="we_peak_rain">fino a %1$s mm/h</string>
+    <string name="we_peak_prob">probabilità %1$d%%</string>
+    <string name="we_peak_snow">%1$s cm in 3 ore</string>
+    <string name="we_peak_gust">raffiche fino a %1$d km/h</string>
+    <string name="we_peak_temp">%1$d °C</string>
+    <string name="we_peak_vis">visibilità %1$d m</string>
+    <string name="we_peak_change">%1$d °C in 12 ore</string>
+    <string name="watch_channel">Meteo significativo</string>
+    <string name="watch_channel_description">Pioggia, temporali, neve, vento, caldo, freddo, ghiaccio, nebbia e sbalzi termici, annunciati in anticipo</string>
+    <string name="digest_channel">Riepilogo meteo</string>
+    <string name="digest_channel_description">Il meteo delle prossime ore, agli orari che scegli</string>
+    <string name="digest_title">Meteo delle prossime %1$d ore · %2$s</string>
+    <string name="digest_temp">%1$d–%2$d °C</string>
+    <string name="digest_rain_from">pioggia dalle %1$s (%2$s mm)</string>
+    <string name="digest_gust">raffiche fino a %1$d km/h</string>
+    <string name="section_watch">Notifiche meteo</string>
+    <string name="watch_notifications">Meteo significativo</string>
+    <string name="watch_hint">Ogni 30 minuti controlla la previsione (Open-Meteo) per la località in uso e ti avvisa in anticipo. Due soglie per evento evitano messaggi ripetuti quando la previsione oscilla.</string>
+    <string name="section_digest">Riepilogo meteo ricorrente</string>
+    <string name="digest_hint">Una notifica con il meteo delle prossime ore, ogni giorno a questi orari.</string>
+    <string name="digest_add">Aggiungi orario</string>
+    <string name="digest_remove">Elimina</string>
+    <string name="digest_none">Nessun orario: il riepilogo è spento.</string>
+    <string name="digest_exists">Questo orario è già nell\'elenco.</string>
 </resources>

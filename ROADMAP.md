@@ -97,6 +97,16 @@ Implementata in `SunMoonActivity` (cursore ±6 mesi confermato), poi riorganizza
 - **Riga fissa nelle Impostazioni** con lo stato (limitata o libera) che apre la stessa richiesta.
 - **Niente banner permanente** sulla pagina principale.
 
+## 6. Notifiche meteo significative e riepiloghi ricorrenti — prima versione sviluppata
+
+Vedi il README (sezione «Notifiche meteo»). Fonte unica Open-Meteo, solo la località in uso, nessuna ora di silenzio.
+Soglie ON/OFF, anticipi e livelli forti (pioggia 10 mm/h, raffiche 70 km/h, caldo 38 °C, freddo −10 °C, neve 5 cm, nebbia 100 m,
+sbalzo 12 °C) sono valori iniziali da calibrare. Da verificare sul telefono: il job ogni 30 minuti con le restrizioni della batteria,
+il numero di notifiche nei giorni di tempo instabile, la precisione della pioggia imminente (dati ogni 15 minuti solo dove
+Open-Meteo li ha), la «superficie bagnata» del ghiaccio (umidità ≥90% o pioggia nelle ultime 3 ore) e la nebbia (la
+visibilità del modello scende raramente sotto i 200 m). Non fatto: impostazioni delle soglie, ore di silenzio, località preferite,
+inclusione nel backup delle impostazioni.
+
 ## Altre cose in sospeso
 
 - **Icone orarie:** la mappatura dai codici icona di MeteoBlue alle nostre categorie (`Condition.kt`) è

@@ -56,6 +56,12 @@ Sfondi (temi): **SUNW-RM Legacy** (l'aspetto originale, ex «Antracite»), Nero,
 - Su Android 12+ i colori seguono la palette Material You dello sfondo.
 
 
+## Notifiche meteo
+
+Oltre alle allerte della Protezione Civile (che restano com'erano), l'app avvisa **in anticipo** sul meteo significativo della località in uso. Ogni 30 minuti (job di sistema, anche ad app chiusa) controlla la previsione di Open-Meteo e segue dieci eventi: pioggia in arrivo (probabilità ≥70% e ≥0,2 mm/h, dati ogni 15 minuti dove ci sono), pioggia intensa (≥5 mm/h), temporale, neve (≥1 cm in 3 ore), vento forte (raffiche ≥50 km/h), caldo (≥35 °C), freddo (≤−5 °C), ghiaccio (≤0 °C con superficie bagnata), nebbia (visibilità ≤200 m) e sbalzo termico (≥8 °C in 12 ore). Ogni evento ha due soglie, **ON** per partire e **OFF** per finire, e tra le due mantiene lo stato: finisce solo dopo due aggiornamenti OFF davvero diversi (almeno 15 minuti l'uno dall'altro e con dati cambiati, oppure 60 minuti). Un evento è un *episodio* (una serie di ore sopra la soglia), riconosciuto tra un aggiornamento e l'altro per sovrapposizione nel tempo e non per «ore da adesso»; si segue da quando supera ON e si notifica quando entra nel suo anticipo (da 1 ora per la pioggia imminente a 24 ore per caldo e freddo). Il peggioramento di livello notifica subito; un evento dello stesso tipo poco dopo una notifica (6 ore) non viene ripetuto se non è più forte; la pioggia intensa assorbe la pioggia in arrivo. Dati mancanti non cambiano lo stato. Lo stato (eventi, contatori, ultima notifica) è salvato su file, per località. Le icone sono quelle dell'app (pioggia, temporale, neve, nebbia…) più tre nuove (vento, termometro, sbalzo). In Impostazioni → **Notifiche meteo** c'è un interruttore generale e uno per ogni evento.
+
+Il **riepilogo meteo ricorrente** manda ogni giorno, agli orari dell'elenco (04:00, 12:00 e 20:00 all'inizio), una notifica con il meteo delle prossime 12 ore (tempo, temperature, pioggia, raffiche). In Impostazioni → **Riepilogo meteo ricorrente** gli orari si aggiungono (selettore dell'ora) e si eliminano; l'allarme è esatto e si reimposta dopo il riavvio e i cambi di ora.
+
 ## Lingua
 
 L'app è in italiano e in inglese e segue la lingua del telefono. Da Android 13 si può scegliere una lingua solo per l'app: Impostazioni → App → Alba · Tramonto → Lingua.
@@ -93,6 +99,7 @@ Ogni push su GitHub esegue la workflow **Android build**, che lancia i test e al
 | `weather/PastTemperatures.kt` | temperature di ieri e oggi da Open-Meteo, orarie e ogni 15 minuti (cache 30 minuti); `weather/Last24hView.kt` è il grafico delle ultime 24 ore |
 | `weather/MeteogramActivity.kt`, `weather/MeteogramView.kt` | pagina radar (mappa Windy) e meteogramma (7 giorni ora per ora) |
 | `alerts/` (`Bulletin.kt`, `AlertZones.kt`, `AlertRepository.kt`, `AlertUi.kt`, `AlertNotifier.kt`, `AlertJobService.kt`) | allerte della Protezione Civile: bollettino CAP, zone di allerta, download, icona e dettaglio, notifiche e controllo orario in background |
+| `watch/` (`EventType.kt`, `EventTracker.kt`, `WatchData.kt`, `WeatherWatch.kt`, `WatchJobService.kt`, `WeatherNotifier.kt`, `DigestScheduler.kt`, `DigestReceiver.kt`, `DigestNotifier.kt`) | notifiche sul meteo significativo (10 eventi con isteresi, controllo ogni 30 minuti con Open-Meteo) e riepiloghi meteo ricorrenti (04:00, 12:00 e 20:00 di partenza, modificabili) |
 | `SunDayFacts.kt`, `YearData.kt`, `SunMoonActivity.kt`, `SunMoonViews.kt` | pagina «Sole e Luna per data»: dati del giorno e dell'anno, pagina, curva, bussola e grafici annuali |
 | `WidgetRenderer.kt` | `RemoteViews` e disegno della curva |
 | `SunWidgetProvider.kt` | ciclo di vita del widget e pianificazione degli aggiornamenti |

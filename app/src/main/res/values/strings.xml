@@ -350,4 +350,43 @@
     <string name="l24_3h">Last 3 h</string>
     <string name="p24_title">Pressure, last 24 hours</string>
     <string name="p24_legend">Sea-level pressure in mbar (= hPa), every hour. Long press and drag for the pressure at that time.</string>
+    <!-- Weather watch: significant weather notifications and the recurring summaries. -->
+    <string name="we_rain_soon">Rain on the way</string>
+    <string name="we_rain_heavy">Heavy rain</string>
+    <string name="we_storm">Thunderstorm</string>
+    <string name="we_snow">Snow</string>
+    <string name="we_wind">Strong wind</string>
+    <string name="we_heat">Extreme heat</string>
+    <string name="we_cold">Extreme cold</string>
+    <string name="we_ice">Ice risk</string>
+    <string name="we_fog">Fog</string>
+    <string name="we_change">Sharp temperature change</string>
+    <string name="we_escalation">Getting worse: %1$s</string>
+    <string name="we_text">%1$s · %2$s · %3$s</string>
+    <string name="we_when_range">from %1$s to %2$s</string>
+    <string name="we_when_now">under way, until %1$s</string>
+    <string name="we_peak_rain">up to %1$s mm/h</string>
+    <string name="we_peak_prob">probability %1$d%%</string>
+    <string name="we_peak_snow">%1$s cm in 3 hours</string>
+    <string name="we_peak_gust">gusts up to %1$d km/h</string>
+    <string name="we_peak_temp">%1$d °C</string>
+    <string name="we_peak_vis">visibility %1$d m</string>
+    <string name="we_peak_change">%1$d °C in 12 hours</string>
+    <string name="watch_channel">Significant weather</string>
+    <string name="watch_channel_description">Rain, storms, snow, wind, heat, cold, ice, fog and sharp changes, announced ahead of time</string>
+    <string name="digest_channel">Weather summary</string>
+    <string name="digest_channel_description">The weather of the next hours, at the times you choose</string>
+    <string name="digest_title">Weather, next %1$d hours · %2$s</string>
+    <string name="digest_temp">%1$d–%2$d °C</string>
+    <string name="digest_rain_from">rain from %1$s (%2$s mm)</string>
+    <string name="digest_gust">gusts up to %1$d km/h</string>
+    <string name="section_watch">Weather notifications</string>
+    <string name="watch_notifications">Significant weather</string>
+    <string name="watch_hint">Every 30 minutes the forecast (Open-Meteo) for the place in use is checked and you are told ahead of time. Two thresholds per event keep the messages from repeating when the forecast wobbles.</string>
+    <string name="section_digest">Recurring weather summary</string>
+    <string name="digest_hint">A notification with the weather of the next hours, every day at these times.</string>
+    <string name="digest_add">Add a time</string>
+    <string name="digest_remove">Delete</string>
+    <string name="digest_none">No time set: the summary is off.</string>
+    <string name="digest_exists">That time is already in the list.</string>
 </resources>
