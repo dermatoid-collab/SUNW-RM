@@ -65,9 +65,11 @@
                 android:layout_marginEnd="12dp"
                 android:importantForAccessibility="no" />
 
+            <!-- The margin keeps the title and the description (which wraps) off the max/min pills. -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="14dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
