@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Looper
 import android.widget.TextView
+import java.time.Duration
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -54,13 +55,20 @@ class WidgetRefreshTest {
     }
 
     @Test
-    fun theAlarmWakesTheDeviceAndIsNeverMoreThanAQuarterOfAnHourAway() {
+    fun theAlarmWakesTheDeviceAtTheNextSunEventOrMidnightNotEveryQuarterOfAnHour() {
         shownAfterUpdate()
         val alarm = shadowOf(context.getSystemService(AlarmManager::class.java)).nextScheduledAlarm
         assertNotNull(alarm)
         assertEquals(AlarmManager.RTC_WAKEUP, alarm!!.type)
         val wait = alarm.triggerAtTime - System.currentTimeMillis()
-        assertTrue("wait ${wait / 1000}s", wait in 0..(16 * 60 * 1000L))
+        // Sunrise, sunset or midnight: within a day, and (outside the minutes around an event) well over a quarter of an hour.
+        assertTrue("wait ${wait / 1000}s", wait in 0..(24 * 60 * 60 * 1000L + 60_000))
+    }
+
+    @Test
+    fun theNextCheckDueIsTheJobsOrTheEventsWhicheverComesFirst() {
+        val d = shownAfterUpdate()
+        assertTrue(Duration.between(d.at, d.next!!) <= Duration.ofMinutes(15))
     }
 
     @Test

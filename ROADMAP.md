@@ -116,10 +116,12 @@ inclusione nel backup delle impostazioni.
   00:00–24:00; un'eventuale media mobile su 3 giorni è da decidere.
 - **RainSPOT:** verificare l'allineamento su altre giornate dopo la rimozione dello spostamento a est.
 - **Pallino di affidabilità:** da controllare nell'APK se MeteoBlue manda davvero il dato di prevedibilità.
-- **Widget:** tre trigger indipendenti (aggiornamento di sistema ogni 30 minuti, job ogni 15 minuti, allarme
-  con risveglio, esatto ad alba e tramonto) più l'accensione dello schermo finché il processo è vivo; in Impostazioni → Batteria
-  una riga mostra quando e perché è stato ridisegnato per l'ultima volta. Se anche così resta fermo, resta l'opzione di un
-  servizio in primo piano (notifica fissa): da proporre solo su richiesta.
+- **Widget:** risolto con il job ogni 15 minuti (misurato: 46 esecuzioni in 11 ore e un quarto, nessun buco, anche di notte).
+  L'allarme con risveglio ogni 15 minuti dava poco (5 esecuzioni in 11 ore: Android lo rimanda a telefono fermo) ed è stato
+  tolto: restano solo gli allarmi esatti ad alba, tramonto e mezzanotte, l'accensione dello schermo (finché il processo è vivo)
+  e l'aggiornamento di sistema ogni 30 minuti (misurato: solo all'installazione). In Impostazioni → Batteria una riga per causa
+  mostra l'ultimo ridisegno e il numero; da tenere per ora (costa una scrittura di preferenze a ridisegno, trascurabile).
+  Resta l'opzione di un servizio in primo piano (notifica fissa) solo se il job smettesse di bastare: da proporre su richiesta.
 - **Swipe tra i giorni (Sole e Luna, meteo giornaliero):** sviluppato come un pager (`DayPager.kt`): la pagina
   segue il dito, il giorno vicino è già disegnato come immagine e le scorre accanto, quindi non resta uno spazio
   vuoto. La direzione si decide durante il gesto (orizzontale: lo scroll verticale viene annullato; verticale: niente

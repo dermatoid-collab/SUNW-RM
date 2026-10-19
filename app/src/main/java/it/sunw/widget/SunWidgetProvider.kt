@@ -96,10 +96,12 @@ open class SunWidgetProvider : AppWidgetProvider() {
 
         /**
          * Three independent triggers keep the widgets current (any of them may be held back by battery
-         * saving): the system's own update every 30 min, a 15-minute background job, and this alarm. The
-         * alarm wakes the device at the next sunrise, sunset or midnight, exactly when the app may set
-         * exact alarms, and otherwise at most [HEARTBEAT] later, so the Sun dot keeps moving too.
-         * Every redraw sets the next one. Returns when it will fire.
+         * saving): the system's own update every 30 min, a 15-minute background job (the one that does the
+         * work: measured every 15 minutes, day and night), and this alarm, which wakes the device at the
+         * next sunrise, sunset or midnight, exactly when the app may set exact alarms. There is no
+         * in-between alarm: Android holds those back when the phone is still (5 times in 11 hours measured),
+         * and the job covers the Sun dot. Every redraw sets the next alarm. Returns when the next redraw is
+         * due: the event, or the job's next run if that comes first.
          */
         private fun scheduleNextTick(context: Context, place: Place, now: Instant, zone: ZoneId): Instant {
             val today = now.atZone(zone).toLocalDate()
@@ -107,22 +109,20 @@ open class SunWidgetProvider : AppWidgetProvider() {
             val day = SunCalculator.day(today, place.latitude, place.longitude, zone)
             if (day is SunCalculator.Day.Normal) candidates += listOf(day.sunrise, day.sunset)
             val event = candidates.filter { it.isAfter(now) }.min().plusSeconds(30)
-            val heartbeat = now.plus(HEARTBEAT)
-            val onTime = !event.isAfter(heartbeat)
-            val next = if (onTime) event else heartbeat
-            val alarms = context.getSystemService(AlarmManager::class.java) ?: return next
+            val due = minOf(event, now.plus(JOB_PERIOD))
+            val alarms = context.getSystemService(AlarmManager::class.java) ?: return due
             val pending = tickIntent(context)
-            val exact = onTime && (Build.VERSION.SDK_INT < 31 || alarms.canScheduleExactAlarms())
+            val exact = Build.VERSION.SDK_INT < 31 || alarms.canScheduleExactAlarms()
             try {
-                if (exact) alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.toEpochMilli(), pending)
-                else alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.toEpochMilli(), pending)
+                if (exact) alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, event.toEpochMilli(), pending)
+                else alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, event.toEpochMilli(), pending)
             } catch (e: SecurityException) {
-                alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.toEpochMilli(), pending)
+                alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, event.toEpochMilli(), pending)
             }
-            return next
+            return due
         }
 
-        private val HEARTBEAT: Duration = Duration.ofMinutes(15)
+        private val JOB_PERIOD: Duration = Duration.ofMinutes(15)
 
         private fun tickIntent(context: Context): PendingIntent = PendingIntent.getBroadcast(
             context, 0,

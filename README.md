@@ -52,7 +52,7 @@ Sfondi (temi): **SUNW-RM Legacy** (l'aspetto originale, ex «Antracite»), Nero,
 - I calcoli del Sole usano le equazioni del **NOAA Solar Calculator** (Meeus, *Astronomical Algorithms*), fatte girare sul telefono, senza internet. Solo la ricerca delle località per nome usa il servizio di geocoding del sistema e richiede una connessione (l'app non chiede il permesso Internet; su telefoni senza servizi Google la ricerca può non essere disponibile).
   Alba e tramonto si riferiscono al bordo superiore del disco con rifrazione standard (−0,833°), e vengono raffinati iterativamente; l'errore è sotto il minuto per latitudini entro ±72°. Notte polare e sole di mezzanotte sono gestiti.
 - **Posizione**: di default usa l'ultima posizione nota del dispositivo (permesso *approssimativo*, nessun GPS attivo). In alternativa si **cerca una località per nome** (es. «Livigno», «Passo dello Stelvio») con il Geocoder di Android, oppure si inseriscono le coordinate a mano. Senza nessuna posizione usa Parma.
-- **Aggiornamento**: ogni 30 minuti (per far avanzare il punto sulla curva) e in più subito dopo alba, tramonto e mezzanotte, con allarmi non esatti che non svegliano il telefono e non richiedono permessi speciali.
+- **Aggiornamento**: un job di sistema ogni 15 minuti (di giorno e di notte, per far avanzare il punto sulla curva), più un allarme esatto con risveglio ad alba, tramonto e mezzanotte (permesso concesso all'installazione), il ridisegno all'accensione dello schermo e quello di sistema ogni 30 minuti. In Impostazioni → Batteria una riga per causa mostra quando e quante volte il widget è stato ridisegnato.
 - Su Android 12+ i colori seguono la palette Material You dello sfondo.
 
 
