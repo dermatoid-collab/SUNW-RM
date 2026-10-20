@@ -251,8 +251,9 @@ class MainActivity : Activity() {
                 result.onSuccess {
                     lastAlertsFailure = null
                     AlertUi.bind(icon, this, LocationStore(this).current(), it, java.time.LocalDate.now(zone))
-                    // Already on screen: no notification for what the icon shows.
-                    runCatching { AlertNotifier.check(this, it, post = false) }.onFailure { e -> CrashLog.record(this, e) }
+                    // A new alert is notified as soon as the app finds it, even with the app open: the same rule as
+                    // the background job, which then stays quiet about it (once per day, zone and level).
+                    runCatching { AlertNotifier.check(this, it) }.onFailure { e -> CrashLog.record(this, e) }
                 }.onFailure { lastAlertsFailure = Instant.now() }
             }
         }
