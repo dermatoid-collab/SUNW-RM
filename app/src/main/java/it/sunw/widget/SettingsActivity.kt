@@ -31,6 +31,8 @@ import android.widget.Toast
 import it.sunw.widget.alerts.AlertNotifier
 import it.sunw.widget.watch.DigestScheduler
 import it.sunw.widget.watch.EventType
+import it.sunw.widget.watch.Param
+import it.sunw.widget.watch.Thresholds
 import it.sunw.widget.watch.WatchJobService
 import it.sunw.widget.watch.WatchPrefs
 import java.time.LocalDate
@@ -172,13 +174,29 @@ class SettingsActivity : Activity() {
             }
         }
         for (type in EventType.values()) {
-            events.addView(CheckBox(this).apply {
-                text = getString(type.title)
-                tag = type.key
-                minHeight = dp(40)
-                isChecked = WatchPrefs.isOn(this@SettingsActivity, type)
-                setOnCheckedChangeListener { _, on -> WatchPrefs.setOn(this@SettingsActivity, type, on) }
+            // One row per event: its switch, and the button for its thresholds.
+            events.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                addView(CheckBox(this@SettingsActivity).apply {
+                    text = getString(type.title)
+                    tag = type.key
+                    minHeight = dp(40)
+                    isChecked = WatchPrefs.isOn(this@SettingsActivity, type)
+                    setOnCheckedChangeListener { _, on -> WatchPrefs.setOn(this@SettingsActivity, type, on) }
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                })
+                addView(Button(this@SettingsActivity).apply {
+                    text = getString(R.string.thr_button)
+                    tag = "thresholds_" + type.key
+                    setOnClickListener { showThresholds(type) }
+                })
             })
+        }
+        findViewById<Button>(R.id.watch_general).setOnClickListener { showGeneralParameters() }
+        findViewById<Button>(R.id.watch_reset).setOnClickListener {
+            Thresholds.reset(this, null)
+            Toast.makeText(this, R.string.thr_reset_done, Toast.LENGTH_SHORT).show()
         }
         findViewById<Button>(R.id.digest_add).setOnClickListener {
             TimePickerDialog(this, { _, hour, minute ->
@@ -188,6 +206,71 @@ class SettingsActivity : Activity() {
         }
         showDigestTimes()
         style(events, AppearanceStore(this).palette())
+    }
+
+    /** The thresholds and the lead time of [type]: edited in a dialog, checked before they are kept. */
+    internal fun showThresholds(type: EventType): AlertDialog = showParams(
+        getString(type.title), type.params, Thresholds.load(this).valuesOf(type),
+        invalid = { type.invalid(it) }, save = { Thresholds.save(this, type, it) }, reset = { Thresholds.reset(this, type) },
+        labelOf = { type.param(it).label },
+    )
+
+    /** How the watch confirms the end of an event and avoids repeating itself. */
+    internal fun showGeneralParameters(): AlertDialog = showParams(
+        getString(R.string.thr_general), Thresholds.GENERAL, Thresholds.load(this).generalValues(),
+        invalid = { v -> Thresholds.GENERAL.firstOrNull { v[it.key]!! < it.min || v[it.key]!! > it.max }?.key },
+        save = { Thresholds.saveGeneral(this, it) },
+        reset = { Thresholds.saveGeneral(this, Thresholds.GENERAL.associate { it.key to it.default }) },
+        labelOf = { key -> Thresholds.GENERAL.first { it.key == key }.label },
+    )
+
+    private fun showParams(
+        title: String, params: List<Param>, current: Map<String, Double>,
+        invalid: (Map<String, Double>) -> String?, save: (Map<String, Double>) -> Unit, reset: () -> Unit, labelOf: (String) -> Int,
+    ): AlertDialog {
+        fun plain(v: Double) = v.toString().removeSuffix(".0")
+        val fields = LinkedHashMap<String, EditText>()
+        val box = LinearLayout(this).apply {
+            id = R.id.watch_params
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(8), dp(20), 0)
+        }
+        box.addView(TextView(this).apply { text = getString(R.string.thr_hint); textSize = 13f; alpha = 0.8f })
+        for (p in params) {
+            box.addView(TextView(this).apply {
+                text = getString(p.label) + if (p.unit.isNotEmpty()) " (${p.unit})" else ""
+                textSize = 14f
+                setPadding(0, dp(10), 0, 0)
+            })
+            fields[p.key] = EditText(this).apply {
+                setText(plain(current[p.key] ?: p.default))
+                hint = plain(p.default)
+                tag = p.key
+                inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL or
+                    android.text.InputType.TYPE_NUMBER_FLAG_SIGNED
+                setSelectAllOnFocus(true)
+            }.also { box.addView(it) }
+        }
+        val dialog = AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+            .setTitle(title)
+            .setView(android.widget.ScrollView(this).apply { addView(box) })
+            .setPositiveButton(android.R.string.ok, null) // set below, so a wrong value does not close the dialog
+            .setNegativeButton(android.R.string.cancel, null)
+            .setNeutralButton(R.string.thr_defaults) { _, _ -> reset() }
+            .show()
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val parsed = fields.mapValues { (_, e) -> e.text.toString().replace(',', '.').toDoubleOrNull() }
+            val wrong = parsed.entries.firstOrNull { it.value == null }?.key
+            val values = parsed.mapValues { it.value ?: 0.0 }
+            val bad = wrong ?: invalid(values)
+            if (bad != null) {
+                Toast.makeText(this, getString(R.string.thr_invalid, getString(labelOf(bad))), Toast.LENGTH_LONG).show()
+            } else {
+                save(values)
+                dialog.dismiss()
+            }
+        }
+        return dialog
     }
 
     /** One row per recurring summary time, each with its Delete button. */

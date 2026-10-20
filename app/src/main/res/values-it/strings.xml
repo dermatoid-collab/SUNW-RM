@@ -394,4 +394,27 @@
     <string name="we_peak_hail">temporale con possibile grandine</string>
     <string name="label_device">Dispositivo · %1$s</string>
     <string name="label_place">📍 %1$s</string>
+    <string name="thr_button">Soglie</string>
+    <string name="thr_general">Parametri generali</string>
+    <string name="thr_reset_all">Ripristina tutto</string>
+    <string name="thr_defaults">Predefiniti</string>
+    <string name="thr_hint">ON: l\'evento si attiva. OFF: finisce, dopo le conferme; tra le due soglie mantiene il suo stato. Forte: priorità superiore, notifica subito. Anticipo: quanto prima dell\'inizio vieni avvisato.</string>
+    <string name="thr_invalid">Valore non valido: %1$s. Tieni ogni valore nel suo intervallo, con OFF dal lato più lieve di ON e ON dal lato più lieve di forte.</string>
+    <string name="thr_reset_done">Soglie tornate ai valori iniziali.</string>
+    <string name="pr_on">Soglia ON</string>
+    <string name="pr_off">Soglia OFF</string>
+    <string name="pr_strong">Livello forte</string>
+    <string name="pr_lead">Anticipo (minuti)</string>
+    <string name="pr_prob_on">Probabilità ON</string>
+    <string name="pr_prob_off">Probabilità OFF</string>
+    <string name="pr_prob_min">Probabilità minima del temporale</string>
+    <string name="pr_int_on">Intensità ON</string>
+    <string name="pr_int_off">Intensità OFF</string>
+    <string name="pr_cape_on">CAPE ON</string>
+    <string name="pr_cape_off">CAPE OFF</string>
+    <string name="pr_cape_strong">CAPE forte</string>
+    <string name="pr_freezing">Zero termico massimo</string>
+    <string name="pr_conf">Conferme OFF necessarie</string>
+    <string name="pr_interval">Tempo minimo tra le conferme</string>
+    <string name="pr_dedup">Pausa tra notifiche dello stesso tipo</string>
 </resources>

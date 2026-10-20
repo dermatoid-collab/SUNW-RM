@@ -32,7 +32,7 @@ object WeatherWatch {
             // A place that cannot be reached is skipped: no data is not "all clear", so its events stay as they are.
             val data = runCatching { WatchData.fetch(place) }.getOrNull() ?: continue
             val tracker = EventTracker.load(context, EventTracker.placeKey(place.latitude, place.longitude))
-            val alerts = tracker.update(data, now, types)
+            val alerts = tracker.update(data, now, types, Thresholds.load(context))
             for (alert in alerts) WeatherNotifier.post(context, alert, place, data.localNow(now))
             posted += alerts.size
         }

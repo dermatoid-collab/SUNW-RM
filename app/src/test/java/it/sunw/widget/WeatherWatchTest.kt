@@ -10,6 +10,7 @@ import it.sunw.widget.watch.DigestReceiver
 import it.sunw.widget.watch.DigestScheduler
 import it.sunw.widget.watch.EventTracker
 import it.sunw.widget.watch.EventType
+import it.sunw.widget.watch.Thresholds
 import it.sunw.widget.watch.WatchData
 import it.sunw.widget.watch.PlaceLabels
 import it.sunw.widget.watch.WatchPrefs
@@ -295,6 +296,113 @@ class WeatherWatchTest {
         assertEquals(LocalDateTime.of(2026, 10, 20, 14, 0), data.localNow(Instant.parse("2026-10-20T12:00:00Z")))
         assertTrue(runCatching { WatchData.parse("""{"error":true,"reason":"nope"}""") }.isFailure)
         assertTrue(WatchData.url(44.8, 10.33).contains("minutely_15=precipitation") && WatchData.url(44.8, 10.33).contains("wind_gusts_10m"))
+    }
+
+    // --- the thresholds the user can change ---
+
+    @Test
+    fun theThresholdsStartAtTheValuesOfTheDesign() {
+        val th = Thresholds.DEFAULTS
+        assertEquals(50.0, th.value(EventType.WIND, "on"), 0.0)
+        assertEquals(40.0, th.value(EventType.WIND, "off"), 0.0)
+        assertEquals(70.0, th.value(EventType.WIND, "strong"), 0.0)
+        assertEquals(360L, th.lead(EventType.WIND))
+        assertEquals(1440L, th.lead(EventType.COLD))
+        assertEquals(-5.0, th.value(EventType.COLD, "on"), 0.0)
+        assertEquals(1500.0, th.value(EventType.HAIL, "cape_on"), 0.0)
+        assertEquals(2, th.offConfirmations)
+        assertEquals(15 * 60_000L, th.minIntervalMs)
+        assertEquals(6 * 3_600_000L, th.dedupMs)
+        // Every event's own starting values are acceptable ones.
+        for (type in EventType.values()) assertEquals(type.name, null, type.invalid(th.valuesOf(type)))
+    }
+
+    @Test
+    fun aChangedThresholdChangesWhatTheWatchReports() {
+        val gusts = gustsAt(45.0, 12, 13)
+        assertEquals(0, EventTracker.inMemory().update(gusts, at(10), wind).size) // 45 km/h is under the 50 of the design
+        val lower = Thresholds(mapOf("wind.on" to 40.0, "wind.off" to 30.0))
+        assertEquals(1, EventTracker.inMemory().update(gusts, at(10), wind, lower).size)
+        // The lead time too: a gale 10 hours ahead is announced 6 hours before, or only 1 hour with a shorter lead.
+        val later = gustsAt(60.0, 20, 21)
+        assertEquals(1, EventTracker.inMemory().update(later, at(15), wind).size)
+        assertEquals(0, EventTracker.inMemory().update(later, at(15), wind, Thresholds(mapOf("wind.lead" to 60.0))).size)
+        // And the strong level: 55 km/h is a normal level, strong with the threshold at 50.
+        val strong = Thresholds(mapOf("wind.strong" to 50.0))
+        assertEquals(2, EventTracker.inMemory().update(gustsAt(55.0, 12, 13), at(10), wind, strong).single().event.level)
+    }
+
+    @Test
+    fun aSingleOffConfirmationEndsTheEventWhenTheGeneralParameterSaysSo() {
+        val one = Thresholds(mapOf("global.confirmations" to 1.0))
+        val tracker = EventTracker.inMemory()
+        tracker.update(gustsAt(60.0, 14, 15), at(10), wind, one)
+        tracker.update(gustsAt(30.0, 14, 15), at(10, 20), wind, one)
+        assertEquals(EventTracker.State.RESOLVED, tracker.all.single().state)
+        assertEquals(3 * 3_600_000L, Thresholds(mapOf("global.dedup" to 3.0)).dedupMs)
+    }
+
+    @Test
+    fun thresholdsOutOfRangeOrOutOfOrderAreRefused() {
+        val wind = EventType.WIND
+        fun with(vararg change: Pair<String, Double>) = Thresholds.DEFAULTS.valuesOf(wind) + change
+        assertEquals("off", wind.invalid(with("off" to 60.0))) // OFF above ON: the hysteresis would be upside down
+        assertEquals("strong", wind.invalid(with("strong" to 45.0))) // strong under ON
+        assertEquals("lead", wind.invalid(with("lead" to 5000.0))) // out of range
+        assertEquals(null, wind.invalid(with("on" to 45.0, "off" to 35.0)))
+        // Cold, ice and fog are the other way round: the lower, the stronger.
+        val cold = EventType.COLD
+        assertEquals("off", cold.invalid(Thresholds.DEFAULTS.valuesOf(cold) + ("off" to -8.0)))
+        assertEquals("strong", cold.invalid(Thresholds.DEFAULTS.valuesOf(cold) + ("strong" to -2.0)))
+        assertEquals("prob_off", EventType.RAIN_SOON.invalid(Thresholds.DEFAULTS.valuesOf(EventType.RAIN_SOON) + ("prob_off" to 80.0)))
+        assertEquals("cape_strong", EventType.HAIL.invalid(Thresholds.DEFAULTS.valuesOf(EventType.HAIL) + ("cape_strong" to 1200.0)))
+    }
+
+    @Test
+    fun thresholdsAreKeptAndAValueEqualToTheStartingOneIsNotStored() {
+        Thresholds.save(context, EventType.WIND, Thresholds.DEFAULTS.valuesOf(EventType.WIND) + ("on" to 45.0))
+        assertEquals(45.0, Thresholds.load(context).value(EventType.WIND, "on"), 0.0)
+        assertEquals(40.0, Thresholds.load(context).value(EventType.WIND, "off"), 0.0) // untouched: still the design's
+        assertTrue(context.getSharedPreferences("weather_watch_thresholds", Context.MODE_PRIVATE).all.keys == setOf("wind.on"))
+        // A decimal comes back exactly, not as a float's approximation.
+        Thresholds.save(context, EventType.RAIN_SOON, Thresholds.DEFAULTS.valuesOf(EventType.RAIN_SOON) + ("on" to 0.3))
+        assertEquals(0.3, Thresholds.load(context).value(EventType.RAIN_SOON, "on"), 0.0)
+        Thresholds.reset(context, EventType.WIND)
+        assertEquals(50.0, Thresholds.load(context).value(EventType.WIND, "on"), 0.0)
+        assertEquals(0.3, Thresholds.load(context).value(EventType.RAIN_SOON, "on"), 0.0) // the other event keeps its own
+        Thresholds.reset(context, null)
+        assertEquals(0.2, Thresholds.load(context).value(EventType.RAIN_SOON, "on"), 0.0)
+    }
+
+    @Test
+    fun theThresholdsOfAnEventAreEditedInADialogFromSettings() {
+        val settings = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
+        val events = settings.findViewById<LinearLayout>(R.id.watch_events)
+        events.findViewWithTag<Button>("thresholds_wind").performClick()
+        val dialog = org.robolectric.shadows.ShadowDialog.getLatestDialog() as android.app.AlertDialog
+        val box = dialog.findViewById<LinearLayout>(R.id.watch_params)
+        fun field(key: String) = box.findViewWithTag<android.widget.EditText>(key)
+        assertEquals(EventType.WIND.params.size, EventType.WIND.params.count { field(it.key) != null })
+        assertEquals("50", field("on").text.toString())
+        // A value out of order is refused and the dialog stays.
+        field("off").setText("60")
+        dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick()
+        assertTrue(dialog.isShowing)
+        assertEquals(40.0, Thresholds.load(context).value(EventType.WIND, "off"), 0.0)
+        // A good one is kept and the dialog closes.
+        field("off").setText("35")
+        field("on").setText("45")
+        dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick()
+        assertTrue(!dialog.isShowing)
+        assertEquals(45.0, Thresholds.load(context).value(EventType.WIND, "on"), 0.0)
+        assertEquals(35.0, Thresholds.load(context).value(EventType.WIND, "off"), 0.0)
+        // The general parameters have their own dialog; "Reset all" puts everything back.
+        settings.findViewById<Button>(R.id.watch_general).performClick()
+        val general = org.robolectric.shadows.ShadowDialog.getLatestDialog() as android.app.AlertDialog
+        assertEquals("2", general.findViewById<LinearLayout>(R.id.watch_params).findViewWithTag<android.widget.EditText>("confirmations").text.toString())
+        general.dismiss()
+        settings.findViewById<Button>(R.id.watch_reset).performClick()
+        assertEquals(50.0, Thresholds.load(context).value(EventType.WIND, "on"), 0.0)
     }
 
     // --- the recurring summaries and the settings ---

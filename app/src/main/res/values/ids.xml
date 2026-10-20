@@ -9,4 +9,6 @@
     <item name="wc_image" type="id" />
     <!-- Tag holding the running day-change animation (see DaySlide). -->
     <item name="day_slide_animator" type="id" />
+    <!-- The list of values in a thresholds dialog (Settings), referenced by tests. -->
+    <item name="watch_params" type="id" />
 </resources>

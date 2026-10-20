@@ -11,13 +11,13 @@ import java.time.LocalDateTime
 /**
  * Remembers each weather event between updates, so a forecast that wobbles around a threshold does not switch the
  * event on and off. Every event has two thresholds ([EventType.isOn] to start, [EventType.isOff] to end); between them
- * its state is kept, and it ends only after [OFF_CONFIRMATIONS] OFF updates that are really different updates.
+ * its state is kept, and it ends only after [Thresholds.offConfirmations] OFF updates that are really different updates.
  *
  * - An event is an *episode*: a run of hours over the ON threshold. The episodes of a new update are matched to the
  *   stored ones by overlap in absolute time (±3 h), never by "hours from now", so the horizon sliding is not read
  *   as an easing.
  * - It is followed from the moment it reaches ON (up to two days ahead) and notified once it falls within its lead
- *   time ([EventType.leadMinutes]) and is still ACTIVE.
+ *   time ([Thresholds.lead]) and is still ACTIVE.
  * - ACTIVE → RESOLVED after the OFF confirmations (silent); ACTIVE → EXPIRED once its window is over (silent).
  * - A higher level notifies at once; a new event of the same type soon after a notification is not notified again
  *   unless it is stronger.
@@ -58,7 +58,7 @@ class EventTracker private constructor(private val file: File?, private val plac
     fun active(type: EventType): List<Event> = events.filter { it.type == type && it.state == State.ACTIVE }
 
     /** Applies a new forecast; returns what to notify now. [enabled] are the event types the user wants. */
-    fun update(data: WatchData, now: Instant, enabled: Set<EventType>): List<Alert> {
+    fun update(data: WatchData, now: Instant, enabled: Set<EventType>, th: Thresholds = Thresholds.DEFAULTS): List<Alert> {
         val nowMs = now.toEpochMilli()
         val local = data.localNow(now)
         val alerts = ArrayList<Alert>()
@@ -67,8 +67,8 @@ class EventTracker private constructor(private val file: File?, private val plac
                 events.removeAll { it.type == type }
                 continue
             }
-            val series = type.series(data)
-            val leftover = type.episodes(series.filter { it.time.plusMinutes(it.minutes).isAfter(local) }).toMutableList()
+            val series = type.series(data, th)
+            val leftover = type.episodes(series.filter { it.time.plusMinutes(it.minutes).isAfter(local) }, th).toMutableList()
             for (e in active(type)) {
                 if (local.isAfter(e.end.plusHours(1))) { // the window is over: expired, which is not the same as confirmed over
                     e.state = State.EXPIRED
@@ -88,7 +88,7 @@ class EventTracker private constructor(private val file: File?, private val plac
                 }
                 val window = series.filter { it.time.plusMinutes(it.minutes).isAfter(e.start) && it.time.isBefore(e.end) }
                 if (window.isEmpty() || window.any { it.value == null }) continue // not enough data: nothing changes
-                if (window.all { type.isOff(it) }) confirmOff(e, window, nowMs) else e.offCount = 0
+                if (window.all { type.isOff(it, th) }) confirmOff(e, window, nowMs, th) else e.offCount = 0
             }
             for (episode in leftover) {
                 events += Event(
@@ -99,10 +99,10 @@ class EventTracker private constructor(private val file: File?, private val plac
         }
 
         for (e in events.filter { it.state == State.ACTIVE }) {
-            val inWindow = !e.start.isAfter(local.plusMinutes(e.type.leadMinutes)) && e.end.isAfter(local)
+            val inWindow = !e.start.isAfter(local.plusMinutes(th.lead(e.type))) && e.end.isAfter(local)
             if (e.notifiedLevel == 0 && inWindow) {
                 val last = lastNotified[e.type]
-                val repeated = last != null && nowMs - last.first < DEDUP_MS && e.level <= last.second
+                val repeated = last != null && nowMs - last.first < th.dedupMs && e.level <= last.second
                 val stronger = SUPERSEDED_BY[e.type]
                 val superseded = stronger != null && active(stronger).any { !it.start.isAfter(e.end) && !it.end.isBefore(e.start) }
                 e.notifiedLevel = e.level
@@ -125,17 +125,17 @@ class EventTracker private constructor(private val file: File?, private val plac
     }
 
     /** One more OFF update, only when it is a different update from the last counted one (see the class comment). */
-    private fun confirmOff(e: Event, window: List<Point>, nowMs: Long) {
+    private fun confirmOff(e: Event, window: List<Point>, nowMs: Long, th: Thresholds) {
         val fingerprint = window.joinToString(",") { String.format(java.util.Locale.ROOT, "%.2f", it.value) }
         val since = nowMs - e.lastOffAt
         val first = e.offCount == 0
-        val distinct = first || (since >= MIN_INTERVAL_MS && (fingerprint != e.lastOffFingerprint || since >= SAME_DATA_MS))
+        val distinct = first || (since >= th.minIntervalMs && (fingerprint != e.lastOffFingerprint || since >= SAME_DATA_MS))
         if (distinct) {
             e.offCount++
             e.lastOffAt = nowMs
             e.lastOffFingerprint = fingerprint
         }
-        if (e.offCount >= (if (HYSTERESIS_ENABLED) OFF_CONFIRMATIONS else 1)) {
+        if (e.offCount >= (if (HYSTERESIS_ENABLED) th.offConfirmations else 1)) {
             e.state = State.RESOLVED
             e.updatedAt = nowMs
         }
@@ -188,14 +188,10 @@ class EventTracker private constructor(private val file: File?, private val plac
     companion object {
         // The configurable parameters of the design (kept as constants until a screen needs them).
         const val HYSTERESIS_ENABLED = true
-        const val OFF_CONFIRMATIONS = 2
-        const val OFF_CONFIRMATION_MIN_INTERVAL_MINUTES = 15L
         const val RESET_OFF_COUNTER_ON_RECOVERY = true
         const val ALLOW_IMMEDIATE_ESCALATION = true
 
-        private val MIN_INTERVAL_MS = Duration.ofMinutes(OFF_CONFIRMATION_MIN_INTERVAL_MINUTES).toMillis()
         private val SAME_DATA_MS = Duration.ofMinutes(60).toMillis()
-        private val DEDUP_MS = Duration.ofHours(6).toMillis()
         private val KEEP_ENDED_MS = Duration.ofHours(12).toMillis()
 
         /** Events that a stronger kind of event on the same hours replaces in the notifications (heavy rain over rain, hail over a storm). */

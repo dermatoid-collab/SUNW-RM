@@ -393,4 +393,27 @@
     <string name="we_peak_hail">thunderstorm with possible hail</string>
     <string name="label_device">Device · %1$s</string>
     <string name="label_place">📍 %1$s</string>
+    <string name="thr_button">Thresholds</string>
+    <string name="thr_general">General parameters</string>
+    <string name="thr_reset_all">Reset all</string>
+    <string name="thr_defaults">Defaults</string>
+    <string name="thr_hint">ON: the event starts. OFF: it ends, after the confirmations; between the two it keeps its state. Strong: a higher priority that notifies at once. Lead: how long before the start you are told.</string>
+    <string name="thr_invalid">Invalid value: %1$s. Keep each value in its range, with OFF on the milder side of ON and ON on the milder side of strong.</string>
+    <string name="thr_reset_done">Thresholds back to their starting values.</string>
+    <string name="pr_on">ON threshold</string>
+    <string name="pr_off">OFF threshold</string>
+    <string name="pr_strong">Strong level</string>
+    <string name="pr_lead">Lead time (minutes)</string>
+    <string name="pr_prob_on">Probability ON</string>
+    <string name="pr_prob_off">Probability OFF</string>
+    <string name="pr_prob_min">Least thunderstorm probability</string>
+    <string name="pr_int_on">Intensity ON</string>
+    <string name="pr_int_off">Intensity OFF</string>
+    <string name="pr_cape_on">CAPE ON</string>
+    <string name="pr_cape_off">CAPE OFF</string>
+    <string name="pr_cape_strong">CAPE strong</string>
+    <string name="pr_freezing">Highest 0 °C level</string>
+    <string name="pr_conf">OFF confirmations needed</string>
+    <string name="pr_interval">Least time between confirmations</string>
+    <string name="pr_dedup">Pause between notifications of one type</string>
 </resources>
