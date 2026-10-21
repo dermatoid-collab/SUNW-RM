@@ -53,6 +53,16 @@ class AppearanceTest {
     }
 
     @Test
+    fun theLegacyThemeIsFirstAndAloneAndEveryOtherThemeHasAGroupWithATitle() {
+        assertEquals(Theme.ANTHRACITE, Theme.values().first())
+        assertEquals(listOf(Theme.ANTHRACITE), Theme.values().filter { it.group == ThemeGroup.LEGACY })
+        assertEquals(null, ThemeGroup.LEGACY.title)
+        assertEquals(8, Theme.values().count { it.group == ThemeGroup.MINIMALIST })
+        for (group in ThemeGroup.values().filter { it != ThemeGroup.LEGACY }) assertNotNull("$group title", group.title)
+        assertEquals(Theme.values().size, ThemeGroup.values().sumOf { g -> Theme.values().count { it.group == g } })
+    }
+
+    @Test
     fun lightThemesHaveDarkTextOnLightPages() {
         val store = AppearanceStore(context)
         fun luminance(c: Int) = (0.299 * android.graphics.Color.red(c) + 0.587 * android.graphics.Color.green(c) + 0.114 * android.graphics.Color.blue(c)) / 255
@@ -68,7 +78,7 @@ class AppearanceTest {
                 assertTrue("$theme page is dark", luminance(p.pageBackground) < 0.35)
             }
         }
-        assertEquals(9, Theme.values().count { it.isLight })
+        assertEquals(13, Theme.values().count { it.isLight })
     }
 
     @Test

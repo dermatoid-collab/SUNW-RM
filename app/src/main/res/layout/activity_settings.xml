@@ -167,17 +167,12 @@
             style="@style/SubHeader"
             android:text="@string/background" />
 
-        <HorizontalScrollView
+        <!-- One titled row of swatches per theme group; filled in by SettingsActivity. -->
+        <LinearLayout
+            android:id="@+id/themes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:scrollbars="none">
-
-            <LinearLayout
-                android:id="@+id/themes"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" />
-        </HorizontalScrollView>
+            android:orientation="vertical" />
 
         <!-- Weather alerts -->
         <TextView

@@ -41,6 +41,17 @@ enum class Accent(val key: String, val label: Int, private val color: Int?) {
 }
 
 /** Widget background plus the matching text colours and, for the app pages, page/card colours. */
+/** The sections of the theme picker; [LEGACY] has no title: it stands first and alone. */
+enum class ThemeGroup(val title: Int?) {
+    LEGACY(null),
+    SYSTEM(R.string.theme_group_system),
+    COMMUNITY_DARK(R.string.theme_group_community_dark),
+    COMMUNITY_LIGHT(R.string.theme_group_community_light),
+    ORIGINAL_DARK(R.string.theme_group_original_dark),
+    ORIGINAL_LIGHT(R.string.theme_group_original_light),
+    MINIMALIST(R.string.theme_group_minimalist),
+}
+
 enum class Theme(val key: String, val label: Int, val isLight: Boolean = false) {
     /** The original look (kept under its old key so saved settings still match). */
     ANTHRACITE("anthracite", R.string.theme_anthracite),
@@ -73,7 +84,27 @@ enum class Theme(val key: String, val label: Int, val isLight: Boolean = false) 
     DUNA("duna", R.string.theme_duna, isLight = true),
     ILMETEO("ilmeteo", R.string.theme_ilmeteo, isLight = true),
     AZZURRO("azzurro", R.string.theme_azzurro, isLight = true),
-    GIALLO("giallo", R.string.theme_giallo, isLight = true);
+    GIALLO("giallo", R.string.theme_giallo, isLight = true),
+    MIN_NEUTRAL_DARK("neutral_dark", R.string.theme_min_neutral_dark),
+    MIN_NEUTRAL_LIGHT("neutral_light", R.string.theme_min_neutral_light, isLight = true),
+    MIN_SEPIA_DARK("sepia_dark", R.string.theme_min_sepia_dark),
+    MIN_SEPIA_LIGHT("sepia_light", R.string.theme_min_sepia_light, isLight = true),
+    MIN_SAGE_DARK("sage_dark", R.string.theme_min_sage_dark),
+    MIN_SAGE_LIGHT("sage_light", R.string.theme_min_sage_light, isLight = true),
+    MIN_LAVENDER_DARK("lavender_dark", R.string.theme_min_lavender_dark),
+    MIN_LAVENDER_LIGHT("lavender_light", R.string.theme_min_lavender_light, isLight = true);
+
+    /** The section of the picker in Settings the theme is listed under. */
+    val group: ThemeGroup
+        get() = when (this) {
+            ANTHRACITE -> ThemeGroup.LEGACY
+            GLASS, MATERIAL_YOU -> ThemeGroup.SYSTEM
+            BLACK, TOKYO_NIGHT, CATPPUCCIN, NORD, DRACULA, GRUVBOX_DARK, ONE_DARK, SOLARIZED_DARK -> ThemeGroup.COMMUNITY_DARK
+            SOLARIZED_LIGHT, CATPPUCCIN_LATTE, GRUVBOX_LIGHT -> ThemeGroup.COMMUNITY_LIGHT
+            EVERFOREST, NIGHT_OWL, PALENIGHT, AYU_MIRAGE, VINO, METEOBLUE, TURCHESE, VIOLA, CORALLO, LIME -> ThemeGroup.ORIGINAL_DARK
+            ARDESIA, SALVIA, DUNA, ILMETEO, AZZURRO, GIALLO -> ThemeGroup.ORIGINAL_LIGHT
+            else -> ThemeGroup.MINIMALIST
+        }
 
     /** Rounded (system radius) and square-ish (1×1 "big") background drawables. */
     val background: Int
@@ -109,6 +140,14 @@ enum class Theme(val key: String, val label: Int, val isLight: Boolean = false) 
             ILMETEO -> R.drawable.widget_bg_ilmeteo
             AZZURRO -> R.drawable.widget_bg_azzurro
             GIALLO -> R.drawable.widget_bg_giallo
+            MIN_NEUTRAL_DARK -> R.drawable.widget_bg_min_neutral_dark
+            MIN_NEUTRAL_LIGHT -> R.drawable.widget_bg_min_neutral_light
+            MIN_SEPIA_DARK -> R.drawable.widget_bg_min_sepia_dark
+            MIN_SEPIA_LIGHT -> R.drawable.widget_bg_min_sepia_light
+            MIN_SAGE_DARK -> R.drawable.widget_bg_min_sage_dark
+            MIN_SAGE_LIGHT -> R.drawable.widget_bg_min_sage_light
+            MIN_LAVENDER_DARK -> R.drawable.widget_bg_min_lavender_dark
+            MIN_LAVENDER_LIGHT -> R.drawable.widget_bg_min_lavender_light
         }
     val backgroundSquare: Int
         get() = when (this) {
@@ -143,6 +182,14 @@ enum class Theme(val key: String, val label: Int, val isLight: Boolean = false) 
             ILMETEO -> R.drawable.widget_bg_square_ilmeteo
             AZZURRO -> R.drawable.widget_bg_square_azzurro
             GIALLO -> R.drawable.widget_bg_square_giallo
+            MIN_NEUTRAL_DARK -> R.drawable.widget_bg_square_min_neutral_dark
+            MIN_NEUTRAL_LIGHT -> R.drawable.widget_bg_square_min_neutral_light
+            MIN_SEPIA_DARK -> R.drawable.widget_bg_square_min_sepia_dark
+            MIN_SEPIA_LIGHT -> R.drawable.widget_bg_square_min_sepia_light
+            MIN_SAGE_DARK -> R.drawable.widget_bg_square_min_sage_dark
+            MIN_SAGE_LIGHT -> R.drawable.widget_bg_square_min_sage_light
+            MIN_LAVENDER_DARK -> R.drawable.widget_bg_square_min_lavender_dark
+            MIN_LAVENDER_LIGHT -> R.drawable.widget_bg_square_min_lavender_light
         }
 }
 
@@ -456,6 +503,71 @@ class AppearanceStore(private val context: Context) {
                 sky = sky(0xFFB39B2E, 0xFF6A5ACD, 0xFF1E70C8, 0xFFB0368F, 0xFFD32F2F, 0xFFE65100, 0xFFC77700, 0xFFC77700),
                 blueHour = 0xFF1E70C8.toInt(), goldenHour = 0xFFE65100.toInt(),
                 highSun = 0xFFC77700.toInt(), twilightBand = 0xFF6A5ACD.toInt(),
+            )
+            // Minimalist: low-saturation greys, sepia, sage and lavender; the sky ramp stays nearly colourless.
+            Theme.MIN_NEUTRAL_DARK -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF1C1C1C.toInt(), text = 0xFFF5F5F5.toInt(), textSecondary = 0xFFBDBDBD.toInt(),
+                dim = 0xFF777777.toInt(), pageBackground = 0xFF101010.toInt(), cardBackground = 0xFF1C1C1C.toInt(),
+                sky = sky(0xFF2B2B2B, 0xFF3A3A3A, 0xFF6B6B6B, 0xFF8C8C8C, 0xFFAAAAAA, 0xFFC4C4C4, 0xFFDADADA, 0xFFF5F5F5),
+                blueHour = 0xFF9AA7B5.toInt(), goldenHour = 0xFFC9A57A.toInt(),
+                highSun = 0xFFD9C48C.toInt(), twilightBand = 0xFFA79FB8.toInt(),
+            )
+            Theme.MIN_NEUTRAL_LIGHT -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFFFAFAFA.toInt(), text = 0xFF282828.toInt(), textSecondary = 0xFF707070.toInt(),
+                dim = 0xFFA8A8A8.toInt(), pageBackground = 0xFFF0F0F0.toInt(), cardBackground = 0xFFFAFAFA.toInt(),
+                sky = sky(0xFFA8A8A8, 0xFF8B8B8B, 0xFF777777, 0xFF686868, 0xFF5C5C5C, 0xFF525252, 0xFF484848, 0xFF484848),
+                blueHour = 0xFF5F6F80.toInt(), goldenHour = 0xFF8A6A45.toInt(),
+                highSun = 0xFF8A7440.toInt(), twilightBand = 0xFF6F6880.toInt(),
+            )
+            Theme.MIN_SEPIA_DARK -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF28231F.toInt(), text = 0xFFF5F0E9.toInt(), textSecondary = 0xFFC8BCAC.toInt(),
+                dim = 0xFF887B6E.toInt(), pageBackground = 0xFF181512.toInt(), cardBackground = 0xFF28231F.toInt(),
+                sky = sky(0xFF39322B, 0xFF3A3A3A, 0xFF6B6B6B, 0xFF8C8C8C, 0xFFAAAAAA, 0xFFC4C4C4, 0xFFDADADA, 0xFFF5F5F5),
+                blueHour = 0xFF9AA7B5.toInt(), goldenHour = 0xFFC9A57A.toInt(),
+                highSun = 0xFFD9C48C.toInt(), twilightBand = 0xFFA79FB8.toInt(),
+            )
+            Theme.MIN_SEPIA_LIGHT -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFFFCFAF6.toInt(), text = 0xFF302A25.toInt(), textSecondary = 0xFF776D61.toInt(),
+                dim = 0xFFB3A99B.toInt(), pageBackground = 0xFFF3F0EA.toInt(), cardBackground = 0xFFFCFAF6.toInt(),
+                sky = sky(0xFFB3A99B, 0xFF8B8B8B, 0xFF777777, 0xFF686868, 0xFF5C5C5C, 0xFF525252, 0xFF484848, 0xFF484848),
+                blueHour = 0xFF5F6F80.toInt(), goldenHour = 0xFF8A6A45.toInt(),
+                highSun = 0xFF8A7440.toInt(), twilightBand = 0xFF6F6880.toInt(),
+            )
+            Theme.MIN_SAGE_DARK -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF242C25.toInt(), text = 0xFFF1F5F0.toInt(), textSecondary = 0xFFC0CDC2.toInt(),
+                dim = 0xFF819084.toInt(), pageBackground = 0xFF151A16.toInt(), cardBackground = 0xFF242C25.toInt(),
+                sky = sky(0xFF354037, 0xFF3A3A3A, 0xFF6B6B6B, 0xFF8C8C8C, 0xFFAAAAAA, 0xFFC4C4C4, 0xFFDADADA, 0xFFF5F5F5),
+                blueHour = 0xFF9AA7B5.toInt(), goldenHour = 0xFFC9A57A.toInt(),
+                highSun = 0xFFD9C48C.toInt(), twilightBand = 0xFFA79FB8.toInt(),
+            )
+            Theme.MIN_SAGE_LIGHT -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFFFAFCF9.toInt(), text = 0xFF2C382D.toInt(), textSecondary = 0xFF667563.toInt(),
+                dim = 0xFFACB9A9.toInt(), pageBackground = 0xFFF0F3EF.toInt(), cardBackground = 0xFFFAFCF9.toInt(),
+                sky = sky(0xFFACB9A9, 0xFF8B8B8B, 0xFF777777, 0xFF686868, 0xFF5C5C5C, 0xFF525252, 0xFF484848, 0xFF484848),
+                blueHour = 0xFF5F6F80.toInt(), goldenHour = 0xFF8A6A45.toInt(),
+                highSun = 0xFF8A7440.toInt(), twilightBand = 0xFF6F6880.toInt(),
+            )
+            Theme.MIN_LAVENDER_DARK -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFF25232E.toInt(), text = 0xFFF5F2F9.toInt(), textSecondary = 0xFFC8C3D3.toInt(),
+                dim = 0xFF898397.toInt(), pageBackground = 0xFF17151D.toInt(), cardBackground = 0xFF25232E.toInt(),
+                sky = sky(0xFF373442, 0xFF3A3A3A, 0xFF6B6B6B, 0xFF8C8C8C, 0xFFAAAAAA, 0xFFC4C4C4, 0xFFDADADA, 0xFFF5F5F5),
+                blueHour = 0xFF9AA7B5.toInt(), goldenHour = 0xFFC9A57A.toInt(),
+                highSun = 0xFFD9C48C.toInt(), twilightBand = 0xFFA79FB8.toInt(),
+            )
+            Theme.MIN_LAVENDER_LIGHT -> Palette(
+                curveStyle, theme, accent,
+                background = 0xFFFCFBFD.toInt(), text = 0xFF302B3B.toInt(), textSecondary = 0xFF6F6780.toInt(),
+                dim = 0xFFB2A9C0.toInt(), pageBackground = 0xFFF2F0F6.toInt(), cardBackground = 0xFFFCFBFD.toInt(),
+                sky = sky(0xFFB2A9C0, 0xFF8B8B8B, 0xFF777777, 0xFF686868, 0xFF5C5C5C, 0xFF525252, 0xFF484848, 0xFF484848),
+                blueHour = 0xFF5F6F80.toInt(), goldenHour = 0xFF8A6A45.toInt(),
+                highSun = 0xFF8A7440.toInt(), twilightBand = 0xFF6F6880.toInt(),
             )
             else -> {
                 val (bg, text, secondary) = when (theme) {

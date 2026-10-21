@@ -22,6 +22,7 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.EditText
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -674,8 +675,44 @@ class SettingsActivity : Activity() {
         }
         swatches(findViewById(R.id.accents), Accent.values().toList(), appearance.accent, { getString(it.label) },
             { it.resolve(this) }) { appearance.accent = it }
-        swatches(findViewById(R.id.themes), Theme.values().toList(), appearance.theme, { getString(it.label) },
-            { appearance.palette(it).background }) { appearance.theme = it }
+        showThemes()
+    }
+
+    /** The theme picker: one scrolling row per group, the Legacy theme first and alone, without a title. */
+    private fun showThemes() {
+        val container = findViewById<LinearLayout>(R.id.themes)
+        container.removeAllViews()
+        val rows = ArrayList<Pair<LinearLayout, List<Theme>>>()
+        fun refresh() = rows.forEach { (row, items) ->
+            swatches(row, items, appearance.theme, { getString(it.label) }, { appearance.palette(it).background }, ::pickTheme)
+        }
+        pickThemeHook = ::refresh
+        for (group in ThemeGroup.values()) {
+            val items = Theme.values().filter { it.group == group }
+            if (items.isEmpty()) continue
+            group.title?.let { title ->
+                container.addView(TextView(this).apply {
+                    text = getString(title)
+                    textSize = 12f
+                    alpha = 0.7f
+                    setPadding(0, dp(8), 0, 0)
+                })
+            }
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            container.addView(HorizontalScrollView(this).apply {
+                isHorizontalScrollBarEnabled = false
+                addView(row)
+            })
+            rows.add(row to items)
+        }
+        refresh()
+    }
+
+    private var pickThemeHook: (() -> Unit)? = null
+
+    private fun pickTheme(theme: Theme) {
+        appearance.theme = theme
+        pickThemeHook?.invoke()
     }
 
     /** A row of round colour swatches with labels; the selected one gets a ring. */
