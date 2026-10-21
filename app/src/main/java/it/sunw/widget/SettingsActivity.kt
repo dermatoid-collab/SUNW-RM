@@ -680,6 +680,7 @@ class SettingsActivity : Activity() {
 
     /** The theme picker: one scrolling row per group, the Legacy theme first and alone, without a title. */
     private fun showThemes() {
+        val appearance = AppearanceStore(this)
         val container = findViewById<LinearLayout>(R.id.themes)
         container.removeAllViews()
         val rows = ArrayList<Pair<LinearLayout, List<Theme>>>()
@@ -711,7 +712,7 @@ class SettingsActivity : Activity() {
     private var pickThemeHook: (() -> Unit)? = null
 
     private fun pickTheme(theme: Theme) {
-        appearance.theme = theme
+        AppearanceStore(this).theme = theme
         pickThemeHook?.invoke()
     }
 
