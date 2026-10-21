@@ -53,6 +53,9 @@ class WeatherDayActivity : Activity() {
     private lateinit var forecast: Forecast
     private lateinit var selected: LocalDate
     private var stepHours = 1
+
+    /** The "every hour / every 3 hours" choice, shared by every day page (and kept after the app closes). */
+    private fun stepPrefs() = getSharedPreferences("weather_day", MODE_PRIVATE)
     private var model: OpenMeteoHours? = null
     private val zone: ZoneId get() = ZoneId.systemDefault()
     private val density get() = resources.displayMetrics.density
@@ -105,7 +108,7 @@ class WeatherDayActivity : Activity() {
             return
         }
         forecast = cached
-        stepHours = savedInstanceState?.getInt(STATE_STEP) ?: 1
+        stepHours = savedInstanceState?.getInt(STATE_STEP) ?: stepPrefs().getInt(KEY_STEP, 1).takeIf { it == 3 } ?: 1
         selected = (savedInstanceState?.getString(STATE_DATE) ?: intent.getStringExtra(EXTRA_DATE))
             ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
             ?.takeIf { d -> forecast.days.any { it.date == d } }
@@ -114,6 +117,7 @@ class WeatherDayActivity : Activity() {
             setTextColor(palette.accent)
             setOnClickListener {
                 stepHours = if (stepHours == 1) 3 else 1
+                stepPrefs().edit().putInt(KEY_STEP, stepHours).apply() // one choice for every day page, until it is changed in one
                 showHours()
                 if (focusedRow != null) scrollToFocusedHour() // other days keep their position
             }
@@ -544,6 +548,7 @@ class WeatherDayActivity : Activity() {
         const val EXTRA_DATE = "date"
         private const val STATE_DATE = "date"
         private const val STATE_STEP = "step"
+        private const val KEY_STEP = "step_hours"
         private const val RAIN_TEXT = 0xFF8FB8F2.toInt()
         private const val PAST_ROW_ALPHA = 0.6f
         private const val RELIABLE = 0xFF4FC36A.toInt()

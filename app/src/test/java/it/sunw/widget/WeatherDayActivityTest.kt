@@ -219,6 +219,28 @@ class WeatherDayActivityTest {
     }
 
     @Test
+    fun theHourlyOrThreeHourlyChoiceIsTheSameOnEveryDayPageUntilChanged() {
+        fun step(a: WeatherDayActivity) = a.findViewById<TextView>(R.id.day_step).text.toString()
+        val every1 = context.getString(R.string.detail_step_1h)
+        val every3 = context.getString(R.string.detail_step_3h)
+        val first = open("2026-10-09")
+        assertEquals(every1, step(first))
+        first.findViewById<TextView>(R.id.day_step).performClick() // every 3 hours
+        assertEquals(every3, step(first))
+        // Another day page opened afterwards (from the main page, the meteogram...) starts the same way.
+        val second = open("2026-10-10")
+        assertEquals(every3, step(second))
+        // Changing it there changes it for the next one.
+        second.findViewById<TextView>(R.id.day_step).performClick() // back to every hour
+        val third = open("2026-10-08")
+        assertEquals(every1, step(third))
+        // Within a page, swiping or tapping to another day keeps it too.
+        third.findViewById<TextView>(R.id.day_step).performClick()
+        third.showDay(1)
+        assertEquals(every3, step(third))
+    }
+
+    @Test
     fun tappingATabSwitchesDay() {
         val activity = open("2026-10-08")
         val title = activity.findViewById<TextView>(R.id.day_title)
