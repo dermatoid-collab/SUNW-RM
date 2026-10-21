@@ -58,6 +58,8 @@ class AppearanceTest {
         assertEquals(listOf(Theme.ANTHRACITE), Theme.values().filter { it.group == ThemeGroup.LEGACY })
         assertEquals(null, ThemeGroup.LEGACY.title)
         assertEquals(8, Theme.values().count { it.group == ThemeGroup.MINIMALIST })
+        assertEquals(11, Theme.values().count { it.group == ThemeGroup.ORIGINAL_DARK })
+        assertEquals(6, Theme.values().count { it.group == ThemeGroup.ORIGINAL_LIGHT })
         for (group in ThemeGroup.values().filter { it != ThemeGroup.LEGACY }) assertNotNull("$group title", group.title)
         assertEquals(Theme.values().size, ThemeGroup.values().sumOf { g -> Theme.values().count { it.group == g } })
     }

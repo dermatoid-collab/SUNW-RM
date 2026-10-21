@@ -36,12 +36,22 @@ class SettingsThemeBatteryTest {
     private fun allowUnrestricted(value: Boolean) =
         shadowOf(context.getSystemService(PowerManager::class.java)).setIgnoringBatteryOptimizations(context.packageName, value)
 
+    /** The clickable swatch (label and colour) of a theme, wherever its group row is. */
+    private fun swatchOf(root: View, label: String): View {
+        fun find(view: View): View? {
+            if (view is TextView && view.text.toString() == label) return view.parent as View
+            if (view is android.view.ViewGroup) for (i in 0 until view.childCount) find(view.getChildAt(i))?.let { return it }
+            return null
+        }
+        return find(root) ?: throw AssertionError("no swatch labelled $label")
+    }
+
     @Test
     fun pickingAThemeRecolorsTheSettingsPageAtOnce() {
         val activity = settings()
         val themes = activity.findViewById<LinearLayout>(R.id.themes)
         for (theme in listOf(Theme.SOLARIZED_LIGHT, Theme.NIGHT_OWL, Theme.DUNA)) {
-            themes.getChildAt(Theme.values().indexOf(theme)).performClick()
+            swatchOf(themes, activity.getString(theme.label)).performClick()
             val palette = AppearanceStore(context).palette()
             assertEquals(theme, AppearanceStore(context).theme)
             assertEquals("$theme page", palette.pageBackground, (activity.window.decorView.background as ColorDrawable).color)
