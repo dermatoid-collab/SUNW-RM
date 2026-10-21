@@ -3,6 +3,7 @@ package it.sunw.widget
 import android.content.Context
 import android.content.Intent
 import android.view.View
+import android.view.ViewGroup
 import android.os.Looper
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -416,5 +417,23 @@ class WeatherDayActivityTest {
         val activity = open(today.toString())
         assertEquals("15°", rowPill(activity, 0)) // MeteoBlue: 15 + hour % 12
         assertTrue(activity.findViewById<LinearLayout>(R.id.day_hours).getChildAt(0).alpha < 1f)
+    }
+
+    @Test
+    fun aPageTallerThanTheScreenIsPicturedOnlyWhereItIsInView() {
+        val scroll = ScrollView(context)
+        val column = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        val content = LinearLayout(context)
+        column.addView(View(context), LinearLayout.LayoutParams(1080, 300))
+        column.addView(content, LinearLayout.LayoutParams(1080, 9000))
+        scroll.addView(column, ViewGroup.LayoutParams(1080, 9300))
+        scroll.measure(View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(2000, View.MeasureSpec.EXACTLY))
+        scroll.layout(0, 0, 1080, 2000)
+        scroll.scrollY = 5000
+        assertEquals(4700 to 6700, DayPager.visibleSpan(content))
+        scroll.scrollY = 0
+        assertEquals(0 to 1700, DayPager.visibleSpan(content))
+        val picture = DayPager.drawOnly(content)!!
+        assertEquals(1700, picture.height) // never the whole 9000 pixels, which the GPU could not draw
     }
 }
