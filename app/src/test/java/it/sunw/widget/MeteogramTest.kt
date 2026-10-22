@@ -254,16 +254,16 @@ class MeteogramTest {
     }
 
     @Test
-    fun theMeteogramLabelHasTemperatureMeanWindAndPressure() {
+    fun theMeteogramLabelHasTemperatureMeanWindAndPressureWithoutAnArrow() {
         org.junit.Assume.assumeTrue(utcHour in 1..21)
         seedPast()
         seedModel()
         val meteogram = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get().findViewById<MeteogramView>(R.id.mg_chart)
-        // The sample has 15 km/h (mean) from the west and 1012.5 mbar: the label is "T · wind arrow · pressure".
+        // The sample has 15 km/h (mean) from the west and 1012.5 mbar: the label is "T · wind · pressure".
         val parts = meteogram.cursorLabel(0).second.split(" · ")
         assertEquals(3, parts.size)
         assertTrue(parts[0].endsWith("°"))
-        assertEquals("15 km/h →", parts[1])
+        assertEquals("15 km/h", parts[1])
         assertTrue(parts[2].endsWith("mbar"))
     }
 

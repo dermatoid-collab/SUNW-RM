@@ -403,7 +403,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.typeface = android.graphics.Typeface.DEFAULT
     }
 
-    /** "Sat 10/10 · 14:00 · forecast" (or Open-Meteo / now) and "15.3° · 12 km/h ↗ · 1012 mbar" (what is known). */
+    /** "Sat 10/10 · 14:00 · forecast" (or Open-Meteo / now) and "15.3° · 12 km/h · 1012 mbar" (what is known). */
     internal fun cursorLabel(i: Int, elapsed: Int = now?.let { slot(it).toInt() } ?: 0): Pair<String, String> {
         val h = hours[i]
         val whenText = DateTimeFormatter.ofPattern("EEE dd/MM · HH:mm", Locale.getDefault()).format(h.time)
@@ -416,7 +416,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         val temperature = String.format(Locale.getDefault(), "%.1f°", h.temperature)
         val mbar = pressure.getOrNull(i)?.takeUnless { it.isNaN() }
         val wind = if (detailed.getOrNull(i) == true)
-            String.format(Locale.getDefault(), "%.0f", h.windSpeed) + " " + context.getString(R.string.wind_unit) + " " + WeatherCard.windArrow(h.windDirection)
+            String.format(Locale.getDefault(), "%.0f", h.windSpeed) + " " + context.getString(R.string.wind_unit)
         else null
         val parts = listOfNotNull(
             temperature, wind,
