@@ -377,13 +377,15 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
 
         // Small time and date on top, the temperature large below.
         val label = cursorLabel(i, elapsed)
+        val values = cursorValues(i, p)
+        val separator = " · "
         paint.style = Paint.Style.FILL
         paint.typeface = android.graphics.Typeface.DEFAULT
         paint.textSize = sp(11f)
         val w1 = paint.measureText(label.first)
         paint.typeface = android.graphics.Typeface.DEFAULT_BOLD
         paint.textSize = sp(16f)
-        val w2 = paint.measureText(label.second)
+        val w2 = values.sumOf { paint.measureText(it.first).toDouble() }.toFloat() + paint.measureText(separator) * (values.size - 1)
         val boxW = max(w1, w2) + dp(20f)
         val boxH = dp(42f)
         val visible = android.graphics.Rect().also { getLocalVisibleRect(it) }
@@ -396,10 +398,22 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.textSize = sp(11f)
         paint.color = if (i < elapsed) p.textSecondary else p.accent
         canvas.drawText(label.first, boxLeft + boxW / 2, boxTop + dp(15f), paint)
+        // The values in the colour of their line: temperature in the text colour, wind azure, pressure violet.
         paint.typeface = android.graphics.Typeface.DEFAULT_BOLD
         paint.textSize = sp(16f)
-        paint.color = p.text
-        canvas.drawText(label.second, boxLeft + boxW / 2, boxTop + dp(35f), paint)
+        paint.textAlign = Paint.Align.LEFT
+        var tx = boxLeft + boxW / 2 - w2 / 2
+        for ((k, value) in values.withIndex()) {
+            if (k > 0) {
+                paint.color = p.textSecondary
+                canvas.drawText(separator, tx, boxTop + dp(35f), paint)
+                tx += paint.measureText(separator)
+            }
+            paint.color = value.second
+            canvas.drawText(value.first, tx, boxTop + dp(35f), paint)
+            tx += paint.measureText(value.first)
+        }
+        paint.textAlign = Paint.Align.CENTER
         paint.typeface = android.graphics.Typeface.DEFAULT
     }
 
@@ -413,16 +427,20 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             i == elapsed -> context.getString(R.string.mg_cursor_now)
             else -> context.getString(R.string.mg_cursor_forecast)
         }
-        val temperature = String.format(Locale.getDefault(), "%.1f°", h.temperature)
+        return "$whenText · $kind" to cursorValues(i, null).joinToString(" · ") { it.first }
+    }
+
+    /** The label's values of slot [i], each with the colour of its line: temperature (text colour), mean wind (azure), pressure (violet). */
+    internal fun cursorValues(i: Int, p: Palette?): List<Pair<String, Int>> {
+        val h = hours[i]
         val mbar = pressure.getOrNull(i)?.takeUnless { it.isNaN() }
-        val wind = if (detailed.getOrNull(i) == true)
-            String.format(Locale.getDefault(), "%.0f", h.windSpeed) + " " + context.getString(R.string.wind_unit)
-        else null
-        val parts = listOfNotNull(
-            temperature, wind,
-            mbar?.let { String.format(Locale.getDefault(), "%.0f", it) + " " + context.getString(R.string.pressure_unit) },
+        return listOfNotNull(
+            String.format(Locale.getDefault(), "%.1f°", h.temperature) to (p?.text ?: Color.WHITE),
+            if (detailed.getOrNull(i) == true)
+                (String.format(Locale.getDefault(), "%.0f", h.windSpeed) + " " + context.getString(R.string.wind_unit)) to Last24hView.WIND_LINE
+            else null,
+            mbar?.let { (String.format(Locale.getDefault(), "%.0f", it) + " " + context.getString(R.string.pressure_unit)) to Last24hView.PRESSURE_LINE },
         )
-        return "$whenText · $kind" to parts.joinToString(" · ")
     }
 
     /** For tests: shows the cursor on slot [i] (or hides it with -1). */

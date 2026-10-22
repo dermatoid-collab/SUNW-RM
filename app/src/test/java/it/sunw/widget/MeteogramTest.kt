@@ -265,6 +265,9 @@ class MeteogramTest {
         assertTrue(parts[0].endsWith("°"))
         assertEquals("15 km/h", parts[1])
         assertTrue(parts[2].endsWith("mbar"))
+        // Each value has the colour of its line: temperature in the text colour, wind azure, pressure violet.
+        val colours = meteogram.cursorValues(0, AppearanceStore(context).palette()).map { it.second }
+        assertEquals(listOf(AppearanceStore(context).palette().text, it.sunw.widget.weather.Last24hView.WIND_LINE, it.sunw.widget.weather.Last24hView.PRESSURE_LINE), colours)
     }
 
     @Test
