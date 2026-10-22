@@ -370,9 +370,9 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         /** The pressure curve: violet, apart from the temperature's blue-to-orange. */
         internal const val PRESSURE_LINE = 0xFFB894FF.toInt()
 
-        /** The cursor's label lets the lines show through: about 70% opaque. */
+        /** The cursor's label lets the lines show through: about 80% opaque. */
         internal fun translucent(color: Int): Int = (color and 0x00FFFFFF) or (LABEL_ALPHA shl 24)
-        private const val LABEL_ALPHA = 180
+        private const val LABEL_ALPHA = 204
 
         /** The wind curve and its arrows: azure. */
         internal const val WIND_LINE = 0xFF4FC3F7.toInt()
