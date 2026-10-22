@@ -316,7 +316,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
             .replace(".", "").replaceFirstChar { it.titlecase() }
         val value = when (kind) {
             Kind.PRESSURE -> deg1(points[i].second) + " " + context.getString(R.string.pressure_unit)
-            Kind.WIND -> withUnit(points[i].second) + (directions.getOrNull(i)?.let { " " + WeatherCard.windArrow(it) } ?: "")
+            Kind.WIND -> withUnit(points[i].second)
             Kind.TEMPERATURE -> deg1(points[i].second)
         }
         return "$whenText · ${context.getString(R.string.mg_cursor_past)}" to value

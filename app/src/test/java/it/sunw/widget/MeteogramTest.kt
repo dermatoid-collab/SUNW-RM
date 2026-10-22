@@ -241,7 +241,7 @@ class MeteogramTest {
     }
 
     @Test
-    fun theLast24HoursOfWindHaveTheirCardWithTheDirectionArrow() {
+    fun theLast24HoursOfWindHaveTheirCard() {
         org.junit.Assume.assumeTrue(utcHour in 1..21)
         seedPast()
         seedModel()
@@ -249,8 +249,8 @@ class MeteogramTest {
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.mg_wind24).visibility)
         val chart = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_wind24_chart)
         assertTrue(chart.pointCount in 24..25) // 24 hours, one point per hour
-        // 15 km/h from the west (270°) blows towards the east.
-        assertEquals("15 km/h →", chart.cursorLabel(chart.pointCount - 1).second)
+        // The direction is in the arrows under the chart, not in the cursor's label.
+        assertEquals("15 km/h", chart.cursorLabel(chart.pointCount - 1).second)
     }
 
     @Test
