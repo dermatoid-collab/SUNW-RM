@@ -47,6 +47,9 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
     /** Sea-level pressure (mbar, Open-Meteo) of every slot, NaN where there is none. */
     private var pressure = DoubleArray(0)
 
+    /** Probability of rain (percent) of every slot: MeteoBlue's for the forecast, Open-Meteo's for the hours gone; null where there is none. */
+    private var rainProbability = arrayOfNulls<Int>(0)
+
     /** Slot under the finger after a long press, or -1. */
     private var cursor = -1
 
@@ -82,6 +85,9 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         hours = lead + ahead.map { h -> if (h.time.isBefore(thisHour)) goneToday(h, past, model) else h }
         detailed = BooleanArray(hours.size) { it >= pastCount || leadDetail[it] }
         pressure = DoubleArray(hours.size) { model?.get(hours[it].time)?.pressure ?: Double.NaN }
+        rainProbability = Array(hours.size) { i ->
+            if (hours[i].time.isBefore(thisHour)) model?.get(hours[i].time)?.precipitationProbability else hours[i].precipitationProbability
+        }
         cursor = -1
         days = forecast.days.filter { !it.date.isBefore(now.toLocalDate()) }
         this.now = now
@@ -136,7 +142,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = (2 * left + max(hours.size, 24) * hourWidth).roundToInt()
-        setMeasuredDimension(w, dp(HEADER_DP + ICON_DP + TEMP_DP + RAIN_DP + WIND_DP + AXIS_DP + ReadoutStrip.GAP_DP + ReadoutStrip.COMPACT_HEIGHT_DP).roundToInt())
+        setMeasuredDimension(w, dp(HEADER_DP + ICON_DP + TEMP_DP + RAIN_DP + WIND_DP + AXIS_DP + ReadoutStrip.GAP_DP + ReadoutStrip.HEIGHT_DP).roundToInt())
     }
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -366,8 +372,16 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         val readoutTop = windBottom + dp(AXIS_DP + ReadoutStrip.GAP_DP)
         ReadoutStrip.draw(
             canvas, paint, context, p, visible.left + dp(4f), visible.right - dp(4f), readoutTop,
-            cursorLabel(shown, elapsed).first, cursorValues(shown, p), null,
+            cursorLabel(shown, elapsed).first, cursorValues(shown, p), detailLine(shown),
         )
+    }
+
+    /** Under the values: the rain of the hour in mm and its probability (what is known). */
+    internal fun detailLine(i: Int): String {
+        val h = hours[i]
+        val rain = if (detailed.getOrNull(i) != true) null
+        else if (h.precipitation < 0.05) "0 mm" else String.format(Locale.getDefault(), "%.1f mm", h.precipitation)
+        return listOfNotNull(rain, rainProbability.getOrNull(i)?.let { "$it %" }).joinToString(" · ")
     }
 
     /** Line and dot of slot [i]; its values are read out in the field under the chart. */
