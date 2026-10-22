@@ -554,7 +554,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         private const val HEADER_DP = 38f
         private const val ICON_DP = 26f
         private const val ICON_SIZE_DP = 18f
-        private const val TEMP_DP = 112f
+        private const val TEMP_DP = 142f
         private const val RAIN_DP = 46f
         private const val WIND_DP = 28f
         private const val AXIS_DP = 18f
