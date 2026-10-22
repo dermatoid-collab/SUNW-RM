@@ -271,6 +271,21 @@ class MeteogramTest {
     }
 
     @Test
+    fun theChartsReadOutTheirValuesInAFieldUnderneathWithTheWindDirectionInDegrees() {
+        org.junit.Assume.assumeTrue(utcHour in 1..21)
+        seedPast()
+        seedModel()
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        val wind = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_wind24_chart)
+        assertTrue(wind.detailLine(wind.pointCount - 1).contains("wind from W 270°")) // 270° is a west wind
+        val pressure = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_pressure24_chart)
+        assertTrue(pressure.detailLine(pressure.pointCount - 1).startsWith("Last 3 h:"))
+        val meteogram = activity.findViewById<MeteogramView>(R.id.mg_chart)
+        val detail = meteogram.detailLine(0)
+        assertTrue(detail, detail.contains("Feels") && detail.contains("mm") && detail.contains("wind from W 270°"))
+    }
+
+    @Test
     fun withoutTheHoursOfOpenMeteoTheWindCardStaysHidden() {
         seedPast()
         val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()

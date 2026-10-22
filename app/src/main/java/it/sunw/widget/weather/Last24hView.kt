@@ -81,7 +81,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     private fun sp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, v, resources.displayMetrics)
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), dp(TILES_DP + CHART_DP + (if (kind == Kind.WIND) ARROWS_DP else 0f)).roundToInt())
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), dp(TILES_DP + CHART_DP + (if (kind == Kind.WIND) ARROWS_DP else 0f) + ReadoutStrip.GAP_DP + ReadoutStrip.HEIGHT_DP).roundToInt())
     }
 
     private val left get() = dp(6f)
@@ -232,6 +232,36 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         canvas.drawText(context.getString(R.string.l24_now_axis), width - dp(2f), axisY, paint)
 
         if (cursor in 0 until n) drawCursor(canvas, p, cursor)
+        drawReadout(canvas, p, if (cursor in 0 until n) cursor else last)
+    }
+
+    private val readoutTop get() = dp(TILES_DP + CHART_DP + (if (kind == Kind.WIND) ARROWS_DP else 0f) + ReadoutStrip.GAP_DP)
+
+    /** The field under the chart: time, value and, below, the change over the trend span (and where the wind comes from). */
+    private fun drawReadout(canvas: Canvas, p: Palette, i: Int) {
+        val (whenText, value) = cursorLabel(i)
+        val color = when (kind) {
+            Kind.PRESSURE -> PRESSURE_LINE
+            Kind.WIND -> WIND_LINE
+            Kind.TEMPERATURE -> p.text
+        }
+        ReadoutStrip.draw(canvas, paint, context, p, 0f, width.toFloat(), readoutTop, whenText, listOf(value to color), detailLine(i))
+    }
+
+    /** "Last hour: +0.8°" (pressure: last 3 hours), and for the wind where it comes from. */
+    internal fun detailLine(i: Int): String {
+        val earlier = (i downTo 0).firstOrNull { Duration.between(points[it].first, points[i].first).toMinutes() >= trendMinutes }
+        val change = earlier?.let { points[i].second - points[it].second }
+        val label = context.getString(if (kind == Kind.PRESSURE) R.string.l24_3h else R.string.l24_hour)
+        val pattern = if (kind == Kind.WIND) "%.0f" else "%.1f"
+        val delta = change?.let { (if (it >= 0) "+" else "−") + pattern.format(Locale.getDefault(), abs(it)) } ?: "—"
+        val unit = when (kind) {
+            Kind.PRESSURE -> " " + context.getString(R.string.pressure_unit)
+            Kind.WIND -> " " + context.getString(R.string.wind_unit)
+            Kind.TEMPERATURE -> "°"
+        }
+        val from = if (kind == Kind.WIND) directions.getOrNull(i)?.let { " · " + ReadoutStrip.windFrom(context, it) } ?: "" else ""
+        return "$label: $delta$unit$from"
     }
 
     /** The fixed colour of the line (pressure violet, wind azure), or null for the temperature's own. */
@@ -282,31 +312,6 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         paint.strokeWidth = dp(2.5f)
         paint.color = p.text
         canvas.drawCircle(cx, cy, dp(5.5f), paint)
-
-        // Small time and date on top, the temperature large below.
-        val (whenText, temperature) = cursorLabel(i)
-        paint.style = Paint.Style.FILL
-        paint.typeface = Typeface.DEFAULT
-        paint.textSize = sp(11f)
-        val w1 = paint.measureText(whenText)
-        paint.typeface = Typeface.DEFAULT_BOLD
-        paint.textSize = sp(16f)
-        val w2 = paint.measureText(temperature)
-        val w = max(w1, w2) + dp(20f)
-        val boxLeft = (cx - w / 2).coerceIn(dp(4f), max(dp(4f), width - w - dp(4f)))
-        val top = chartTop - dp(6f)
-        paint.typeface = Typeface.DEFAULT
-        paint.color = translucent(p.raised(0.14f))
-        canvas.drawRoundRect(RectF(boxLeft, top, boxLeft + w, top + dp(42f)), dp(9f), dp(9f), paint)
-        paint.textAlign = Paint.Align.CENTER
-        paint.textSize = sp(11f)
-        paint.color = p.textSecondary
-        canvas.drawText(whenText, boxLeft + w / 2, top + dp(15f), paint)
-        paint.typeface = Typeface.DEFAULT_BOLD
-        paint.textSize = sp(16f)
-        paint.color = p.text
-        canvas.drawText(temperature, boxLeft + w / 2, top + dp(35f), paint)
-        paint.typeface = Typeface.DEFAULT
     }
 
     /** "Sat 10/10 · 14:00 · Open-Meteo" and "18.0°". */
@@ -369,10 +374,6 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     companion object {
         /** The pressure curve: violet, apart from the temperature's blue-to-orange. */
         internal const val PRESSURE_LINE = 0xFFB894FF.toInt()
-
-        /** The cursor's label lets the lines show through: about 80% opaque. */
-        internal fun translucent(color: Int): Int = (color and 0x00FFFFFF) or (LABEL_ALPHA shl 24)
-        private const val LABEL_ALPHA = 204
 
         /** The wind curve and its arrows: azure. */
         internal const val WIND_LINE = 0xFF4FC3F7.toInt()

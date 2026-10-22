@@ -368,6 +368,18 @@
     <string name="w24_legend">Mean wind at 10 m in km/h, every hour; the arrows show where it blows to. Long press and drag for the wind at that time.</string>
     <string name="l24_avg">Avg</string>
     <string name="wind_unit">km/h</string>
+    <string-array name="wind_compass">
+        <item>N</item>
+        <item>NE</item>
+        <item>E</item>
+        <item>SE</item>
+        <item>S</item>
+        <item>SW</item>
+        <item>W</item>
+        <item>NW</item>
+    </string-array>
+    <string name="wind_from">wind from %1$s %2$d°</string>
+    <string name="mg_no_detail">only the temperature is known for this hour</string>
     <!-- Weather watch: significant weather notifications and the recurring summaries. -->
     <string name="we_rain_soon">Rain on the way</string>
     <string name="we_rain_heavy">Heavy rain</string>

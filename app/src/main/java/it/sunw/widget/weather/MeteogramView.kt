@@ -136,7 +136,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = (2 * left + max(hours.size, 24) * hourWidth).roundToInt()
-        setMeasuredDimension(w, dp(HEADER_DP + ICON_DP + TEMP_DP + RAIN_DP + WIND_DP + AXIS_DP).roundToInt())
+        setMeasuredDimension(w, dp(HEADER_DP + ICON_DP + TEMP_DP + RAIN_DP + WIND_DP + AXIS_DP + ReadoutStrip.GAP_DP + ReadoutStrip.HEIGHT_DP).roundToInt())
     }
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -359,9 +359,31 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
                 canvas.drawCircle(cxOf(cursor), wy(wind[cursor]), dp(3.5f), paint)
             }
         }
+
+        // The field under the chart, kept in the visible part: the cursor's slot, or "now" without a cursor.
+        val shown = (if (cursor in 0 until n) cursor else elapsed).coerceIn(0, n - 1)
+        val visible = android.graphics.Rect().also { getLocalVisibleRect(it) }
+        val readoutTop = windBottom + dp(AXIS_DP + ReadoutStrip.GAP_DP)
+        ReadoutStrip.draw(
+            canvas, paint, context, p, visible.left + dp(4f), visible.right - dp(4f), readoutTop,
+            cursorLabel(shown, elapsed).first, cursorValues(shown, p), detailLine(shown),
+        )
     }
 
-    /** Line, dot and a label with the time and temperature of slot [i], kept inside the visible part. */
+    /** Under the values: felt temperature, rain and its probability, and where the wind comes from (what is known). */
+    internal fun detailLine(i: Int): String {
+        val h = hours[i]
+        if (detailed.getOrNull(i) != true) return context.getString(R.string.mg_no_detail)
+        val rain = if (h.precipitation < 0.05) "0 mm" else String.format(Locale.getDefault(), "%.1f mm", h.precipitation)
+        return listOfNotNull(
+            context.getString(R.string.detail_felt, WeatherCard.deg(h.feltTemperature)),
+            rain,
+            if (h.precipitationProbability > 0 || i >= pastCount) "${h.precipitationProbability} %" else null,
+            ReadoutStrip.windFrom(context, h.windDirection),
+        ).joinToString(" · ")
+    }
+
+    /** Line and dot of slot [i]; its values are read out in the field under the chart. */
     private fun drawCursor(canvas: Canvas, p: Palette, i: Int, cx: Float, cy: Float, top: Float, bottom: Float, elapsed: Int) {
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = dp(1.5f)
@@ -374,47 +396,6 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.strokeWidth = dp(2.5f)
         paint.color = p.text
         canvas.drawCircle(cx, cy, dp(5.5f), paint)
-
-        // Small time and date on top, the temperature large below.
-        val label = cursorLabel(i, elapsed)
-        val values = cursorValues(i, p)
-        val separator = " · "
-        paint.style = Paint.Style.FILL
-        paint.typeface = android.graphics.Typeface.DEFAULT
-        paint.textSize = sp(11f)
-        val w1 = paint.measureText(label.first)
-        paint.typeface = android.graphics.Typeface.DEFAULT_BOLD
-        paint.textSize = sp(16f)
-        val w2 = values.sumOf { paint.measureText(it.first).toDouble() }.toFloat() + paint.measureText(separator) * (values.size - 1)
-        val boxW = max(w1, w2) + dp(20f)
-        val boxH = dp(42f)
-        val visible = android.graphics.Rect().also { getLocalVisibleRect(it) }
-        val boxLeft = (cx - boxW / 2).coerceIn(visible.left + dp(4f), max(visible.left + dp(4f), visible.right - boxW - dp(4f)))
-        val boxTop = top + dp(2f)
-        paint.typeface = android.graphics.Typeface.DEFAULT
-        paint.color = Last24hView.translucent(p.raised(0.14f))
-        canvas.drawRoundRect(boxLeft, boxTop, boxLeft + boxW, boxTop + boxH, dp(9f), dp(9f), paint)
-        paint.textAlign = Paint.Align.CENTER
-        paint.textSize = sp(11f)
-        paint.color = if (i < elapsed) p.textSecondary else p.accent
-        canvas.drawText(label.first, boxLeft + boxW / 2, boxTop + dp(15f), paint)
-        // The values in the colour of their line: temperature in the text colour, wind azure, pressure violet.
-        paint.typeface = android.graphics.Typeface.DEFAULT_BOLD
-        paint.textSize = sp(16f)
-        paint.textAlign = Paint.Align.LEFT
-        var tx = boxLeft + boxW / 2 - w2 / 2
-        for ((k, value) in values.withIndex()) {
-            if (k > 0) {
-                paint.color = p.textSecondary
-                canvas.drawText(separator, tx, boxTop + dp(35f), paint)
-                tx += paint.measureText(separator)
-            }
-            paint.color = value.second
-            canvas.drawText(value.first, tx, boxTop + dp(35f), paint)
-            tx += paint.measureText(value.first)
-        }
-        paint.textAlign = Paint.Align.CENTER
-        paint.typeface = android.graphics.Typeface.DEFAULT
     }
 
     /** "Sat 10/10 · 14:00 · forecast" (or Open-Meteo / now) and "15.3° · 12 km/h · 1012 mbar" (what is known). */
