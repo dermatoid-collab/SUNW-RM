@@ -392,7 +392,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         val boxLeft = (cx - boxW / 2).coerceIn(visible.left + dp(4f), max(visible.left + dp(4f), visible.right - boxW - dp(4f)))
         val boxTop = top + dp(2f)
         paint.typeface = android.graphics.Typeface.DEFAULT
-        paint.color = p.raised(0.14f)
+        paint.color = Last24hView.translucent(p.raised(0.14f))
         canvas.drawRoundRect(boxLeft, boxTop, boxLeft + boxW, boxTop + boxH, dp(9f), dp(9f), paint)
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = sp(11f)

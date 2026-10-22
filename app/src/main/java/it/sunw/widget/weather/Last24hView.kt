@@ -296,7 +296,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         val boxLeft = (cx - w / 2).coerceIn(dp(4f), max(dp(4f), width - w - dp(4f)))
         val top = chartTop - dp(6f)
         paint.typeface = Typeface.DEFAULT
-        paint.color = p.raised(0.14f)
+        paint.color = translucent(p.raised(0.14f))
         canvas.drawRoundRect(RectF(boxLeft, top, boxLeft + w, top + dp(42f)), dp(9f), dp(9f), paint)
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = sp(11f)
@@ -369,6 +369,10 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     companion object {
         /** The pressure curve: violet, apart from the temperature's blue-to-orange. */
         internal const val PRESSURE_LINE = 0xFFB894FF.toInt()
+
+        /** The cursor's label lets the lines show through: about 70% opaque. */
+        internal fun translucent(color: Int): Int = (color and 0x00FFFFFF) or (LABEL_ALPHA shl 24)
+        private const val LABEL_ALPHA = 180
 
         /** The wind curve and its arrows: azure. */
         internal const val WIND_LINE = 0xFF4FC3F7.toInt()
