@@ -229,7 +229,7 @@
     </string-array>
     <string name="mg_title">Meteogram</string>
     <string name="mg_subtitle">%1$s · next 7 days</string>
-    <string name="mg_legend">Weather and wind every 3 hours · rain mm/h · thin violet line: pressure (mbar), thin azure line: mean wind (km/h) · long press and drag for temperature, wind and pressure · tap a day to open it</string>
+    <string name="mg_legend">Weather and wind every 3 hours · rain mm/h · thin violet line: pressure (mbar), azure line: mean wind (km/h) · long press and drag for temperature, wind and pressure · tap a day to open it</string>
     <string name="weather_source_past">Updated at %1$s</string>
     <string name="mg_cursor_past">Past</string>
     <string name="mg_cursor_forecast">forecast</string>

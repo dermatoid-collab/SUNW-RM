@@ -230,7 +230,7 @@
     </string-array>
     <string name="mg_title">Meteogramma</string>
     <string name="mg_subtitle">%1$s · prossimi 7 giorni</string>
-    <string name="mg_legend">Tempo e vento ogni 3 ore · pioggia mm/h · linea viola sottile: pressione (mbar), linea azzurra sottile: vento medio (km/h) · tocco lungo e trascina per temperatura, vento e pressione · tocca un giorno per aprirlo</string>
+    <string name="mg_legend">Tempo e vento ogni 3 ore · pioggia mm/h · linea viola sottile: pressione (mbar), linea azzurra: vento medio (km/h) · tocco lungo e trascina per temperatura, vento e pressione · tocca un giorno per aprirlo</string>
     <string name="weather_source_past">Aggiornato alle %1$s</string>
     <string name="mg_cursor_past">Passato</string>
     <string name="mg_cursor_forecast">previsione</string>

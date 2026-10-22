@@ -237,13 +237,13 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             paint.alpha = 255
         }
 
-        // Mean wind: a thin azure line over the same panel, on a scale of its own (at least 20 km/h tall); the
+        // Mean wind: an azure line, thinner than the temperature's over the same panel, on a scale of its own (at least 20 km/h tall); the
         // value is in the cursor's label. Slots without Open-Meteo's hours have no wind and are left out.
         val wind = DoubleArray(n) { if (detailed[it]) hours[it].windSpeed else Double.NaN }
         val wHi = max(ceil(wind.filter { !it.isNaN() }.maxOrNull() ?: 0.0), 20.0)
         fun wy(v: Double) = (tempBottom - dp(14f) - v / wHi * (tempBottom - tempTop - dp(34f))).toFloat()
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = dp(1.1f)
+        paint.strokeWidth = dp(1.8f)
         paint.strokeCap = Paint.Cap.ROUND
         for (i in 0 until n - 1) {
             if (wind[i].isNaN() || wind[i + 1].isNaN()) continue
