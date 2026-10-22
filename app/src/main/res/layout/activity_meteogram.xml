@@ -275,6 +275,53 @@
                 android:textSize="11.5sp" />
         </LinearLayout>
 
+        <!-- The mean wind of the last 24 hours, every hour, with its direction, under the pressure's. -->
+        <LinearLayout
+            android:id="@+id/mg_wind24"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="14dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/card_background"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/mg_wind24_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/w24_title"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/mg_wind24_step"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <it.sunw.widget.weather.Last24hView
+                android:id="@+id/mg_wind24_chart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/mg_wind24_legend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/w24_legend"
+                android:textSize="11.5sp" />
+        </LinearLayout>
+
         <LinearLayout
             android:id="@+id/mg_card"
             android:layout_width="match_parent"

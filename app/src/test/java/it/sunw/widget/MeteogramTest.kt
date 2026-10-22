@@ -241,6 +241,26 @@ class MeteogramTest {
     }
 
     @Test
+    fun theLast24HoursOfWindHaveTheirCardWithTheDirectionArrow() {
+        org.junit.Assume.assumeTrue(utcHour in 1..21)
+        seedPast()
+        seedModel()
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.mg_wind24).visibility)
+        val chart = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_wind24_chart)
+        assertTrue(chart.pointCount in 24..25) // 24 hours, one point per hour
+        // 15 km/h from the west (270°) blows towards the east.
+        assertEquals("15 km/h →", chart.cursorLabel(chart.pointCount - 1).second)
+    }
+
+    @Test
+    fun withoutTheHoursOfOpenMeteoTheWindCardStaysHidden() {
+        seedPast()
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.mg_wind24).visibility)
+    }
+
+    @Test
     fun withoutPressureTheCardStaysHiddenAndTheLabelHasOnlyTheTemperature() {
         seedPast()
         val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()

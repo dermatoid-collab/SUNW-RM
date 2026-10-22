@@ -365,6 +365,10 @@
     <string name="l24_3h">Ultime 3 h</string>
     <string name="p24_title">Pressione, ultime 24 ore</string>
     <string name="p24_legend">Pressione ridotta al livello del mare in mbar (= hPa), ogni ora. Tocco lungo e trascina per la pressione in quel momento.</string>
+    <string name="w24_title">Vento, ultime 24 ore</string>
+    <string name="w24_legend">Vento medio a 10 m in km/h, ogni ora; le frecce indicano dove soffia. Tocco lungo e trascina per il vento in quel momento.</string>
+    <string name="l24_avg">Media</string>
+    <string name="wind_unit">km/h</string>
     <!-- Sorveglianza meteo: notifiche sul meteo significativo e riepiloghi ricorrenti. -->
     <string name="we_rain_soon">Pioggia in arrivo</string>
     <string name="we_rain_heavy">Pioggia intensa</string>

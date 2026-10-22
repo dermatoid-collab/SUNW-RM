@@ -364,6 +364,10 @@
     <string name="l24_3h">Last 3 h</string>
     <string name="p24_title">Pressure, last 24 hours</string>
     <string name="p24_legend">Sea-level pressure in mbar (= hPa), every hour. Long press and drag for the pressure at that time.</string>
+    <string name="w24_title">Wind, last 24 hours</string>
+    <string name="w24_legend">Mean wind at 10 m in km/h, every hour; the arrows show where it blows to. Long press and drag for the wind at that time.</string>
+    <string name="l24_avg">Avg</string>
+    <string name="wind_unit">km/h</string>
     <!-- Weather watch: significant weather notifications and the recurring summaries. -->
     <string name="we_rain_soon">Rain on the way</string>
     <string name="we_rain_heavy">Heavy rain</string>

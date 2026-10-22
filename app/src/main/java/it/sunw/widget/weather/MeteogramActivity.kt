@@ -90,6 +90,7 @@ class MeteogramActivity : Activity() {
             chart.show(palette, forecast, now, past, model)
             showLast24(palette, forecast, past, now)
             showPressure24(palette, forecast, model, now)
+            showWind24(palette, forecast, model, now)
             scrollToCharts()
             status.text = getString(if (past == null) R.string.weather_source else R.string.weather_source_past, updated)
         }
@@ -108,9 +109,9 @@ class MeteogramActivity : Activity() {
         chart.onDayTap = { date ->
             startActivity(Intent(this, WeatherDayActivity::class.java).putExtra(WeatherDayActivity.EXTRA_DATE, date.toString()))
         }
-        // Start a little before the current hour.
+        // From the start of the chart: the beginning of the last 24 hours (yesterday), with "now" further right.
         val scroll = findViewById<HorizontalScrollView>(R.id.mg_scroll)
-        scroll.post { scroll.scrollTo((chart.nowX() - (40 * resources.displayMetrics.density).toInt()).coerceAtLeast(0), 0) }
+        scroll.post { scroll.scrollTo(0, 0) }
     }
 
     /** The 15-minute chart of the last 24 hours; the card stays hidden without data. */
@@ -153,6 +154,29 @@ class MeteogramActivity : Activity() {
         findViewById<TextView>(R.id.mg_pressure24_legend).setTextColor(palette.textSecondary)
         val daylight = forecast.hours.take(24).associate { it.time.hour to it.isDaylight }
         findViewById<Last24hView>(R.id.mg_pressure24_chart).show(palette, points, Last24hView.Kind.PRESSURE) { daylight[it.hour] ?: (it.hour in 7..18) }
+    }
+
+    /** The mean wind of the last 24 hours, one point per hour with its direction, under the pressure card; hidden without data. */
+    private fun showWind24(palette: Palette, forecast: Forecast, model: OpenMeteoHours?, now: java.time.LocalDateTime) {
+        val card = findViewById<View>(R.id.mg_wind24)
+        val thisHour = now.truncatedTo(java.time.temporal.ChronoUnit.HOURS)
+        val winds = model?.winds(thisHour.minusHours(24), thisHour).orEmpty()
+        if (winds.size < 2) {
+            card.visibility = View.GONE
+            return
+        }
+        card.visibility = View.VISIBLE
+        card.background = (getDrawable(R.drawable.card_background)!!.mutate() as GradientDrawable).apply { setColor(palette.cardBackground) }
+        findViewById<TextView>(R.id.mg_wind24_title).setTextColor(palette.text)
+        findViewById<TextView>(R.id.mg_wind24_step).apply {
+            setTextColor(palette.textSecondary)
+            text = getString(R.string.l24_step_hour)
+        }
+        findViewById<TextView>(R.id.mg_wind24_legend).setTextColor(palette.textSecondary)
+        val daylight = forecast.hours.take(24).associate { it.time.hour to it.isDaylight }
+        findViewById<Last24hView>(R.id.mg_wind24_chart).show(
+            palette, winds.map { it.first to it.second }, Last24hView.Kind.WIND, winds.map { it.third },
+        ) { daylight[it.hour] ?: (it.hour in 7..18) }
     }
 
     /** Four previews of the nearest webcams and the button to the full page. */

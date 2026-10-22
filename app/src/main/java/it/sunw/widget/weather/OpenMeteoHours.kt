@@ -48,6 +48,11 @@ class OpenMeteoHours(private val hours: Map<LocalDateTime, Sample>) {
         hours.entries.filter { !it.key.isBefore(from) && !it.key.isAfter(to) && it.value.pressure != null }
             .sortedBy { it.key }.map { it.key to it.value.pressure!! }
 
+    /** Mean wind (km/h) and the direction it comes from (degrees) of the hours from [from] to [to] included, oldest first; hours without a speed are left out. */
+    fun winds(from: LocalDateTime, to: LocalDateTime): List<Triple<LocalDateTime, Double, Int?>> =
+        hours.entries.filter { !it.key.isBefore(from) && !it.key.isAfter(to) && it.value.windSpeed != null }
+            .sortedBy { it.key }.map { Triple(it.key, it.value.windSpeed!!, it.value.windDirection) }
+
     companion object {
         /** Parses an Open-Meteo response with the hourly variables of [VARIABLES]; throws on anything else. */
         fun parse(json: String): OpenMeteoHours {
