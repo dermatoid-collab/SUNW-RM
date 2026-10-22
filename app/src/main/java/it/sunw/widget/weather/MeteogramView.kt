@@ -237,6 +237,22 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             paint.alpha = 255
         }
 
+        // Mean wind: a thin azure line over the same panel, on a scale of its own (at least 20 km/h tall); the
+        // value is in the cursor's label. Slots without Open-Meteo's hours have no wind and are left out.
+        val wind = DoubleArray(n) { if (detailed[it]) hours[it].windSpeed else Double.NaN }
+        val wHi = max(ceil(wind.filter { !it.isNaN() }.maxOrNull() ?: 0.0), 20.0)
+        fun wy(v: Double) = (tempBottom - dp(14f) - v / wHi * (tempBottom - tempTop - dp(34f))).toFloat()
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = dp(1.1f)
+        paint.strokeCap = Paint.Cap.ROUND
+        for (i in 0 until n - 1) {
+            if (wind[i].isNaN() || wind[i + 1].isNaN()) continue
+            paint.color = Last24hView.WIND_LINE
+            paint.alpha = if (i < elapsed) PAST_ALPHA else 230
+            canvas.drawLine(x(i + 0.5), wy(wind[i]), x(i + 1.5), wy(wind[i + 1]), paint)
+        }
+        paint.alpha = 255
+
         // Temperature curve, coloured by value, with a soft fill.
         val temps = hours.map { it.temperature }
         val lo = floor(temps.min() - 1)
@@ -296,7 +312,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.color = p.raised(0.15f)
         canvas.drawLine(0f, rainBottom, width.toFloat(), rainBottom, paint)
 
-        // Wind every 3 hours: an arrow where it blows to, km/h below, stronger winds brighter.
+        // Wind every 3 hours: an arrow where it blows to, stronger winds brighter (the speed is in the cursor's label).
         for (range in blocks()) {
             val withDetail = range.filter { detailed[it] }
             if (withDetail.isEmpty()) continue
@@ -306,12 +322,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
             val cx = x((range.first + range.last + 1) / 2.0)
             val base = windColor(speed, p)
             val color = if (range.last < elapsed) (base and 0x00FFFFFF) or (PAST_ALPHA shl 24) else base
-            drawArrow(canvas, cx, windTop + dp(11f), mid.windDirection, color)
-            paint.style = Paint.Style.FILL
-            paint.color = color
-            paint.textSize = sp(10.5f)
-            paint.textAlign = Paint.Align.CENTER
-            canvas.drawText("${speed.roundToInt()}", cx, windBottom - dp(5f), paint)
+            drawArrow(canvas, cx, windTop + dp(WIND_DP) / 2, mid.windDirection, color)
         }
 
         // Hour axis.
@@ -340,6 +351,12 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
                 paint.style = Paint.Style.FILL
                 paint.color = Last24hView.PRESSURE_LINE
                 canvas.drawCircle(cxOf(cursor), py(pressure[cursor]), dp(3.5f), paint)
+            }
+            if (!wind[cursor].isNaN()) {
+                // And an azure one on the wind line.
+                paint.style = Paint.Style.FILL
+                paint.color = Last24hView.WIND_LINE
+                canvas.drawCircle(cxOf(cursor), wy(wind[cursor]), dp(3.5f), paint)
             }
         }
     }
@@ -386,7 +403,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         paint.typeface = android.graphics.Typeface.DEFAULT
     }
 
-    /** "Sat 10/10 · 14:00 · forecast" (or Open-Meteo / now) and "15.3°". */
+    /** "Sat 10/10 · 14:00 · forecast" (or Open-Meteo / now) and "15.3° · 12 km/h ↗ · 1012 mbar" (what is known). */
     internal fun cursorLabel(i: Int, elapsed: Int = now?.let { slot(it).toInt() } ?: 0): Pair<String, String> {
         val h = hours[i]
         val whenText = DateTimeFormatter.ofPattern("EEE dd/MM · HH:mm", Locale.getDefault()).format(h.time)
@@ -398,8 +415,14 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         }
         val temperature = String.format(Locale.getDefault(), "%.1f°", h.temperature)
         val mbar = pressure.getOrNull(i)?.takeUnless { it.isNaN() }
-        return "$whenText · $kind" to if (mbar == null) temperature
-        else temperature + " · " + String.format(Locale.getDefault(), "%.0f", mbar) + " " + context.getString(R.string.pressure_unit)
+        val wind = if (detailed.getOrNull(i) == true)
+            String.format(Locale.getDefault(), "%.0f", h.windSpeed) + " " + context.getString(R.string.wind_unit) + " " + WeatherCard.windArrow(h.windDirection)
+        else null
+        val parts = listOfNotNull(
+            temperature, wind,
+            mbar?.let { String.format(Locale.getDefault(), "%.0f", it) + " " + context.getString(R.string.pressure_unit) },
+        )
+        return "$whenText · $kind" to parts.joinToString(" · ")
     }
 
     /** For tests: shows the cursor on slot [i] (or hides it with -1). */
@@ -515,7 +538,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         private const val ICON_SIZE_DP = 18f
         private const val TEMP_DP = 112f
         private const val RAIN_DP = 46f
-        private const val WIND_DP = 40f
+        private const val WIND_DP = 28f
         private const val AXIS_DP = 18f
         private const val RAIN = 0xFF5B9BE8.toInt()
     }
