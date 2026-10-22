@@ -268,6 +268,56 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         return listOfNotNull(extra, trend).joinToString(" · ")
     }
 
+    /** The fixed colour of the line (pressure violet, wind azure), or null for the temperature's own. */
+    private fun lineColor(): Int? = when (kind) {
+        Kind.PRESSURE -> PRESSURE_LINE
+        Kind.WIND -> WIND_LINE
+        Kind.TEMPERATURE -> null
+    }
+
+    /** One arrow every two hours under the chart: where the wind goes (the data say where it comes from). */
+    private fun drawArrows(canvas: Canvas) {
+        val n = points.size
+        var lastX = -1f
+        for (i in 0 until n) {
+            val from = directions.getOrNull(i) ?: continue
+            val cx = x(i)
+            if (lastX >= 0 && cx - lastX < dp(26f)) continue
+            lastX = cx
+            val a = Math.toRadians((from + 180.0) % 360)
+            val len = dp(6f)
+            val dx = (sin(a) * len).toFloat()
+            val dy = (-cos(a) * len).toFloat()
+            val cy = chartBottom + dp(14f)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = dp(1.6f)
+            paint.strokeCap = Paint.Cap.ROUND
+            paint.color = WIND_LINE
+            canvas.drawLine(cx - dx, cy - dy, cx + dx, cy + dy, paint)
+            val head = dp(3.4f)
+            for (side in listOf(-0.5, 0.5)) {
+                val b = a + Math.PI + side
+                canvas.drawLine(cx + dx, cy + dy, cx + dx + (sin(b) * head).toFloat(), cy + dy - (cos(b) * head).toFloat(), paint)
+            }
+        }
+    }
+
+    private fun drawCursor(canvas: Canvas, p: Palette, i: Int) {
+        val cx = x(i)
+        val cy = y(points[i].second)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = dp(1.5f)
+        paint.color = p.text
+        canvas.drawLine(cx, chartTop - dp(8f), cx, chartBottom, paint)
+        paint.style = Paint.Style.FILL
+        paint.color = p.cardBackground
+        canvas.drawCircle(cx, cy, dp(5.5f), paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = dp(2.5f)
+        paint.color = p.text
+        canvas.drawCircle(cx, cy, dp(5.5f), paint)
+    }
+
     /** "Sat 10/10 · 14:00 · Open-Meteo" and "18.0°". */
     internal fun cursorLabel(i: Int): Pair<String, String> {
         val t = points[i].first
