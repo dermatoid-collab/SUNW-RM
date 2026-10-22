@@ -379,7 +379,6 @@
         <item>NW</item>
     </string-array>
     <string name="wind_from">wind from %1$s %2$d°</string>
-    <string name="mg_no_detail">only the temperature is known for this hour</string>
     <!-- Weather watch: significant weather notifications and the recurring summaries. -->
     <string name="we_rain_soon">Rain on the way</string>
     <string name="we_rain_heavy">Heavy rain</string>

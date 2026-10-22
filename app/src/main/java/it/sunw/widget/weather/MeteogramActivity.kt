@@ -32,6 +32,7 @@ import it.sunw.widget.webcams.WebcamsActivity
 import it.sunw.widget.webcams.WindyWebcams
 import java.time.Instant
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 import java.util.Locale
 
 /**
@@ -88,7 +89,7 @@ class MeteogramActivity : Activity() {
         // The last 24 hours (Open-Meteo) sit to the left of "now"; they arrive after the first draw when not cached.
         fun draw(past: PastTemperatures?) {
             chart.show(palette, forecast, now, past, model)
-            showLast24(palette, forecast, past, now)
+            showLast24(palette, forecast, past, model, now)
             showPressure24(palette, forecast, model, now)
             showWind24(palette, forecast, model, now)
             scrollToCharts()
@@ -101,7 +102,7 @@ class MeteogramActivity : Activity() {
             }
         }
         // Open-Meteo's other hours (rain, wind, icon) complete the last 24 hours and today's hours already gone.
-        if (model == null || !modelRepo.isFresh() || model?.hasPressure != true) {
+        if (model == null || !modelRepo.isFresh() || model?.hasPressure != true || model?.hasProbabilityColumn != true) {
             modelRepo.refresh(place) { result ->
                 result.getOrNull()?.let { fresh -> runOnUiThread { if (!isDestroyed) { model = fresh; draw(pastRepo.cached(place)) } } }
             }
@@ -115,7 +116,7 @@ class MeteogramActivity : Activity() {
     }
 
     /** The 15-minute chart of the last 24 hours; the card stays hidden without data. */
-    private fun showLast24(palette: Palette, forecast: Forecast, past: PastTemperatures?, now: java.time.LocalDateTime) {
+    private fun showLast24(palette: Palette, forecast: Forecast, past: PastTemperatures?, model: OpenMeteoHours?, now: java.time.LocalDateTime) {
         val card = findViewById<View>(R.id.mg_last24)
         val points = past?.last24h(now).orEmpty()
         if (points.size < 2) {
@@ -132,7 +133,11 @@ class MeteogramActivity : Activity() {
         findViewById<TextView>(R.id.mg_last24_legend).setTextColor(palette.textSecondary)
         // Day and night as the forecast has them, by hour of the day.
         val daylight = forecast.hours.take(24).associate { it.time.hour to it.isDaylight }
-        findViewById<Last24hView>(R.id.mg_last24_chart).show(palette, points) { daylight[it.hour] ?: (it.hour in 7..18) }
+        // The readout's third line: the felt temperature of the hour (Open-Meteo), then the change in the last hour.
+        val felt = points.map { (t, _) ->
+            model?.get(t.truncatedTo(java.time.temporal.ChronoUnit.HOURS))?.feltTemperature?.let { getString(R.string.detail_felt, WeatherCard.deg(it)) }
+        }
+        findViewById<Last24hView>(R.id.mg_last24_chart).show(palette, points, details = felt) { daylight[it.hour] ?: (it.hour in 7..18) }
     }
 
     /** The sea-level pressure of the last 24 hours, one point per hour, under the temperature card; hidden without data. */
@@ -153,7 +158,15 @@ class MeteogramActivity : Activity() {
         }
         findViewById<TextView>(R.id.mg_pressure24_legend).setTextColor(palette.textSecondary)
         val daylight = forecast.hours.take(24).associate { it.time.hour to it.isDaylight }
-        findViewById<Last24hView>(R.id.mg_pressure24_chart).show(palette, points, Last24hView.Kind.PRESSURE) { daylight[it.hour] ?: (it.hour in 7..18) }
+        // The readout's third line: the rain of the hour, in mm and its probability.
+        val rain = points.map { (t, _) ->
+            val sample = model?.get(t)
+            listOfNotNull(
+                sample?.precipitation?.let { if (it < 0.05) "0 mm" else String.format(java.util.Locale.getDefault(), "%.1f mm", it) },
+                sample?.precipitationProbability?.let { "$it %" },
+            ).joinToString(" · ").ifEmpty { null }
+        }
+        findViewById<Last24hView>(R.id.mg_pressure24_chart).show(palette, points, Last24hView.Kind.PRESSURE, details = rain) { daylight[it.hour] ?: (it.hour in 7..18) }
     }
 
     /** The mean wind of the last 24 hours, one point per hour with its direction, under the pressure card; hidden without data. */
@@ -174,8 +187,15 @@ class MeteogramActivity : Activity() {
         }
         findViewById<TextView>(R.id.mg_wind24_legend).setTextColor(palette.textSecondary)
         val daylight = forecast.hours.take(24).associate { it.time.hour to it.isDaylight }
+        // The readout's third line: the gust of the hour and where the wind comes from.
+        val gustAndDirection = winds.map { (t, _, direction) ->
+            listOfNotNull(
+                model?.get(t)?.gust?.let { getString(R.string.dc_cursor_gust, it.roundToInt()) },
+                direction?.let { ReadoutStrip.windFrom(this, it) },
+            ).joinToString(" · ").ifEmpty { null }
+        }
         findViewById<Last24hView>(R.id.mg_wind24_chart).show(
-            palette, winds.map { it.first to it.second }, Last24hView.Kind.WIND, winds.map { it.third },
+            palette, winds.map { it.first to it.second }, Last24hView.Kind.WIND, winds.map { it.third }, gustAndDirection,
         ) { daylight[it.hour] ?: (it.hour in 7..18) }
     }
 

@@ -136,7 +136,7 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = (2 * left + max(hours.size, 24) * hourWidth).roundToInt()
-        setMeasuredDimension(w, dp(HEADER_DP + ICON_DP + TEMP_DP + RAIN_DP + WIND_DP + AXIS_DP + ReadoutStrip.GAP_DP + ReadoutStrip.HEIGHT_DP).roundToInt())
+        setMeasuredDimension(w, dp(HEADER_DP + ICON_DP + TEMP_DP + RAIN_DP + WIND_DP + AXIS_DP + ReadoutStrip.GAP_DP + ReadoutStrip.COMPACT_HEIGHT_DP).roundToInt())
     }
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -366,21 +366,8 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         val readoutTop = windBottom + dp(AXIS_DP + ReadoutStrip.GAP_DP)
         ReadoutStrip.draw(
             canvas, paint, context, p, visible.left + dp(4f), visible.right - dp(4f), readoutTop,
-            cursorLabel(shown, elapsed).first, cursorValues(shown, p), detailLine(shown),
+            cursorLabel(shown, elapsed).first, cursorValues(shown, p), null,
         )
-    }
-
-    /** Under the values: felt temperature, rain and its probability, and where the wind comes from (what is known). */
-    internal fun detailLine(i: Int): String {
-        val h = hours[i]
-        if (detailed.getOrNull(i) != true) return context.getString(R.string.mg_no_detail)
-        val rain = if (h.precipitation < 0.05) "0 mm" else String.format(Locale.getDefault(), "%.1f mm", h.precipitation)
-        return listOfNotNull(
-            context.getString(R.string.detail_felt, WeatherCard.deg(h.feltTemperature)),
-            rain,
-            if (h.precipitationProbability > 0 || i >= pastCount) "${h.precipitationProbability} %" else null,
-            ReadoutStrip.windFrom(context, h.windDirection),
-        ).joinToString(" · ")
     }
 
     /** Line and dot of slot [i]; its values are read out in the field under the chart. */
@@ -411,12 +398,12 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         return "$whenText · $kind" to cursorValues(i, null).joinToString(" · ") { it.first }
     }
 
-    /** The label's values of slot [i], each with the colour of its line: temperature (text colour), mean wind (azure), pressure (violet). */
+    /** The label's values of slot [i], each with the colour of its line: temperature (by value), mean wind (azure), pressure (violet). */
     internal fun cursorValues(i: Int, p: Palette?): List<Pair<String, Int>> {
         val h = hours[i]
         val mbar = pressure.getOrNull(i)?.takeUnless { it.isNaN() }
         return listOfNotNull(
-            String.format(Locale.getDefault(), "%.1f°", h.temperature) to (p?.text ?: Color.WHITE),
+            String.format(Locale.getDefault(), "%.1f°", h.temperature) to WeatherCard.temperatureColor(h.temperature), // the colour of the curve there
             if (detailed.getOrNull(i) == true)
                 (String.format(Locale.getDefault(), "%.0f", h.windSpeed) + " " + context.getString(R.string.wind_unit)) to Last24hView.WIND_LINE
             else null,

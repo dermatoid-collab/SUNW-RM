@@ -199,7 +199,7 @@ class MeteogramTest {
             .put("temperature_2m", column(7.0)).put("apparent_temperature", column(5.0))
             .put("precipitation", column(2.0)).put("wind_speed_10m", column(15.0))
             .put("wind_direction_10m", column(270.0)).put("wind_gusts_10m", column(30.0)).put("weather_code", column(61.0))
-            .put("pressure_msl", column(1012.5)))
+            .put("pressure_msl", column(1012.5)).put("precipitation_probability", column(40.0)))
         File(context.cacheDir, "openmeteo_hours.json").writeText(json.toString())
         context.getSharedPreferences("weather", Context.MODE_PRIVATE).edit()
             .putLong("omh_fetched", System.currentTimeMillis())
@@ -265,24 +265,28 @@ class MeteogramTest {
         assertTrue(parts[0].endsWith("°"))
         assertEquals("15 km/h", parts[1])
         assertTrue(parts[2].endsWith("mbar"))
-        // Each value has the colour of its line: temperature in the text colour, wind azure, pressure violet.
+        // Each value has the colour of its line: temperature as the curve there, wind azure, pressure violet.
         val colours = meteogram.cursorValues(0, AppearanceStore(context).palette()).map { it.second }
-        assertEquals(listOf(AppearanceStore(context).palette().text, it.sunw.widget.weather.Last24hView.WIND_LINE, it.sunw.widget.weather.Last24hView.PRESSURE_LINE), colours)
+        val curve = it.sunw.widget.weather.WeatherCard.temperatureColor(meteogram.hourAt(0)!!.temperature)
+        assertEquals(listOf(curve, it.sunw.widget.weather.Last24hView.WIND_LINE, it.sunw.widget.weather.Last24hView.PRESSURE_LINE), colours)
     }
 
     @Test
-    fun theChartsReadOutTheirValuesInAFieldUnderneathWithTheWindDirectionInDegrees() {
+    fun theChartsReadOutTheirValuesInAFieldUnderneath() {
         org.junit.Assume.assumeTrue(utcHour in 1..21)
         seedPast()
         seedModel()
         val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
-        val wind = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_wind24_chart)
-        assertTrue(wind.detailLine(wind.pointCount - 1).contains("wind from W 270°")) // 270° is a west wind
+        // Temperature: the felt temperature and the change in the last hour.
+        val temperature = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_last24_chart)
+        val felt = temperature.detailLine(temperature.pointCount - 1)
+        assertTrue(felt, felt.startsWith("Feels 5°") && felt.contains("Last hour:"))
+        // Pressure: the rain in mm and its probability.
         val pressure = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_pressure24_chart)
-        assertTrue(pressure.detailLine(pressure.pointCount - 1).startsWith("Last 3 h:"))
-        val meteogram = activity.findViewById<MeteogramView>(R.id.mg_chart)
-        val detail = meteogram.detailLine(0)
-        assertTrue(detail, detail.contains("Feels") && detail.contains("mm") && detail.contains("wind from W 270°"))
+        assertEquals("2.0 mm · 40 %", pressure.detailLine(pressure.pointCount - 1))
+        // Wind: the gust and where it comes from (270° is a west wind).
+        val wind = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_wind24_chart)
+        assertEquals("gust 30 km/h · wind from W 270°", wind.detailLine(wind.pointCount - 1))
     }
 
     @Test

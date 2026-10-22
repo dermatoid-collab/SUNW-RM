@@ -21,7 +21,7 @@ import kotlin.math.roundToInt
  * values the day page shows for the hours already gone (MeteoBlue's forecast for those hours is
  * replaced) and the wind gusts (MeteoBlue's package has only the mean wind). Any value can be missing.
  */
-class OpenMeteoHours(private val hours: Map<LocalDateTime, Sample>) {
+class OpenMeteoHours(private val hours: Map<LocalDateTime, Sample>, private val asksProbability: Boolean = true) {
 
     class Sample(
         val temperature: Double?,
@@ -34,11 +34,16 @@ class OpenMeteoHours(private val hours: Map<LocalDateTime, Sample>) {
         val weatherCode: Int?,
         /** Pressure reduced to sea level, in hPa (the same number as mbar). */
         val pressure: Double? = null,
+        /** Probability of rain in percent, where Open-Meteo has one. */
+        val precipitationProbability: Int? = null,
     )
 
     operator fun get(time: LocalDateTime): Sample? = hours[time]
 
     val isEmpty: Boolean get() = hours.isEmpty()
+
+    /** False for a download made before the rain probability was asked for (it may still be empty for some hours). */
+    val hasProbabilityColumn: Boolean get() = asksProbability
 
     /** False for a download made before the pressure was asked for. */
     val hasPressure: Boolean get() = hours.values.any { it.pressure != null }
@@ -73,12 +78,13 @@ class OpenMeteoHours(private val hours: Map<LocalDateTime, Sample>) {
                     gust = number("wind_gusts_10m", i),
                     weatherCode = number("weather_code", i)?.roundToInt(),
                     pressure = number("pressure_msl", i),
+                    precipitationProbability = number("precipitation_probability", i)?.roundToInt(),
                 )
             }
-            return OpenMeteoHours(map)
+            return OpenMeteoHours(map, hourly.has("precipitation_probability"))
         }
 
-        const val VARIABLES = "temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,pressure_msl"
+        const val VARIABLES = "temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,pressure_msl,precipitation_probability"
     }
 }
 

@@ -16,13 +16,16 @@ import it.sunw.widget.R
  */
 internal object ReadoutStrip {
     const val HEIGHT_DP = 58f
+
+    /** Without the third line. */
+    const val COMPACT_HEIGHT_DP = 44f
     const val GAP_DP = 8f
 
     /** Draws the field between [left] and [right], its top at [top] (pixels). */
     fun draw(
         canvas: Canvas, paint: Paint, context: Context, p: Palette,
         left: Float, right: Float, top: Float,
-        whenText: String, values: List<Pair<String, Int>>, detail: String,
+        whenText: String, values: List<Pair<String, Int>>, detail: String?,
     ) {
         val metrics = context.resources.displayMetrics
         fun dp(v: Float) = v * metrics.density
@@ -30,7 +33,7 @@ internal object ReadoutStrip {
         paint.style = Paint.Style.FILL
         paint.alpha = 255
         paint.color = p.raised(0.07f)
-        canvas.drawRoundRect(RectF(left, top, right, top + dp(HEIGHT_DP)), dp(10f), dp(10f), paint)
+        canvas.drawRoundRect(RectF(left, top, right, top + dp(if (detail == null) COMPACT_HEIGHT_DP else HEIGHT_DP)), dp(10f), dp(10f), paint)
         val pad = dp(10f)
         val x0 = left + pad
         val maxWidth = right - left - 2 * pad
@@ -59,6 +62,11 @@ internal object ReadoutStrip {
             x += paint.measureText(value.first)
         }
 
+        if (detail == null) {
+            paint.typeface = Typeface.DEFAULT
+            paint.textSize = sp(11f)
+            return
+        }
         paint.typeface = Typeface.DEFAULT
         paint.textSize = sp(11.5f)
         val detailWidth = paint.measureText(detail)

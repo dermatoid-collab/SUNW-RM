@@ -43,6 +43,9 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     /** Per point, where the wind comes from (degrees); only for [Kind.WIND]. */
     private var directions = emptyList<Int?>()
 
+    /** Per point, what the readout's third line says besides the trend: felt temperature, rain, gust and direction. */
+    private var details = emptyList<String?>()
+
     /** What the chart shows: the temperature (degrees, coloured by value), the sea-level pressure (mbar) or the wind (km/h, with its direction). */
     enum class Kind { TEMPERATURE, PRESSURE, WIND }
 
@@ -64,10 +67,12 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         points: List<Pair<LocalDateTime, Double>>,
         kind: Kind = Kind.TEMPERATURE,
         directions: List<Int?> = emptyList(),
+        details: List<String?> = emptyList(),
         isDaylight: (LocalDateTime) -> Boolean,
     ) {
         this.kind = kind
         this.directions = directions
+        this.details = details
         this.palette = palette
         this.points = points
         this.daylight = isDaylight
@@ -243,75 +248,24 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         val color = when (kind) {
             Kind.PRESSURE -> PRESSURE_LINE
             Kind.WIND -> WIND_LINE
-            Kind.TEMPERATURE -> p.text
+            Kind.TEMPERATURE -> WeatherCard.temperatureColor(points[i].second) // the colour of the line there
         }
         ReadoutStrip.draw(canvas, paint, context, p, 0f, width.toFloat(), readoutTop, whenText, listOf(value to color), detailLine(i))
     }
 
-    /** "Last hour: +0.8°" (pressure: last 3 hours), and for the wind where it comes from. */
+    /**
+     * Third line of the readout. Temperature: the felt temperature and the change over the last hour; pressure: the rain
+     * (mm and probability); wind: the gust and where it comes from. Parts that are not known are left out.
+     */
     internal fun detailLine(i: Int): String {
+        val extra = details.getOrNull(i)
+        if (kind != Kind.TEMPERATURE) return extra.orEmpty()
         val earlier = (i downTo 0).firstOrNull { Duration.between(points[it].first, points[i].first).toMinutes() >= trendMinutes }
-        val change = earlier?.let { points[i].second - points[it].second }
-        val label = context.getString(if (kind == Kind.PRESSURE) R.string.l24_3h else R.string.l24_hour)
-        val pattern = if (kind == Kind.WIND) "%.0f" else "%.1f"
-        val delta = change?.let { (if (it >= 0) "+" else "−") + pattern.format(Locale.getDefault(), abs(it)) } ?: "—"
-        val unit = when (kind) {
-            Kind.PRESSURE -> " " + context.getString(R.string.pressure_unit)
-            Kind.WIND -> " " + context.getString(R.string.wind_unit)
-            Kind.TEMPERATURE -> "°"
+        val trend = earlier?.let {
+            val change = points[i].second - points[it].second
+            context.getString(R.string.l24_hour) + ": " + (if (change >= 0) "+" else "−") + "%.1f°".format(Locale.getDefault(), abs(change))
         }
-        val from = if (kind == Kind.WIND) directions.getOrNull(i)?.let { " · " + ReadoutStrip.windFrom(context, it) } ?: "" else ""
-        return "$label: $delta$unit$from"
-    }
-
-    /** The fixed colour of the line (pressure violet, wind azure), or null for the temperature's own. */
-    private fun lineColor(): Int? = when (kind) {
-        Kind.PRESSURE -> PRESSURE_LINE
-        Kind.WIND -> WIND_LINE
-        Kind.TEMPERATURE -> null
-    }
-
-    /** One arrow every two hours under the chart: where the wind goes (the data say where it comes from). */
-    private fun drawArrows(canvas: Canvas) {
-        val n = points.size
-        var lastX = -1f
-        for (i in 0 until n) {
-            val from = directions.getOrNull(i) ?: continue
-            val cx = x(i)
-            if (lastX >= 0 && cx - lastX < dp(26f)) continue
-            lastX = cx
-            val a = Math.toRadians((from + 180.0) % 360)
-            val len = dp(6f)
-            val dx = (sin(a) * len).toFloat()
-            val dy = (-cos(a) * len).toFloat()
-            val cy = chartBottom + dp(14f)
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = dp(1.6f)
-            paint.strokeCap = Paint.Cap.ROUND
-            paint.color = WIND_LINE
-            canvas.drawLine(cx - dx, cy - dy, cx + dx, cy + dy, paint)
-            val head = dp(3.4f)
-            for (side in listOf(-0.5, 0.5)) {
-                val b = a + Math.PI + side
-                canvas.drawLine(cx + dx, cy + dy, cx + dx + (sin(b) * head).toFloat(), cy + dy - (cos(b) * head).toFloat(), paint)
-            }
-        }
-    }
-
-    private fun drawCursor(canvas: Canvas, p: Palette, i: Int) {
-        val cx = x(i)
-        val cy = y(points[i].second)
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = dp(1.5f)
-        paint.color = p.text
-        canvas.drawLine(cx, chartTop - dp(8f), cx, chartBottom, paint)
-        paint.style = Paint.Style.FILL
-        paint.color = p.cardBackground
-        canvas.drawCircle(cx, cy, dp(5.5f), paint)
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = dp(2.5f)
-        paint.color = p.text
-        canvas.drawCircle(cx, cy, dp(5.5f), paint)
+        return listOfNotNull(extra, trend).joinToString(" · ")
     }
 
     /** "Sat 10/10 · 14:00 · Open-Meteo" and "18.0°". */
