@@ -30,7 +30,7 @@ Toccando la tile del Sole o della Luna si apre **Sole e Luna per data**, un'unic
 
 L'icona ⚙ apre le **impostazioni**:
 
-- **Posizione**: dispositivo, ricerca per nome o coordinate a mano (la ricerca è anche la prima voce del menu della località nella pagina principale: «Scegli la località», poi «Usa e basta» / «Aggiungi ai preferiti»);
+- **Posizione**: dispositivo, ricerca per nome o coordinate a mano (la ricerca è anche la prima voce del menu della località nella pagina principale, che ha dall'alto Search, Posizione del dispositivo e l'elenco dei preferiti, separati da divisori; la finestra di ricerca mostra sotto il campo gli ultimi 10 **Recenti**, scorrevoli, da toccare per usarli subito; poi «Scegli la località» e «Usa e basta» / «Aggiungi ai preferiti»);
 - **Preferiti**: «+ Salva la posizione attuale»; tocca per usarne uno, tieni premuto per rimuoverlo;
 - **Aspetto**: colore della curva, colore d'accento e sfondo (anche **Tokyo Night**).
 

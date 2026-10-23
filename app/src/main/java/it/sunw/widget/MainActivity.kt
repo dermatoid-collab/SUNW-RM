@@ -6,6 +6,7 @@ import android.location.Address
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -412,12 +413,14 @@ class MainActivity : Activity() {
         val current = store.current()
         val favorites = FavoritesStore(this).all()
         val menu = PopupMenu(this, anchor)
-        menu.menu.add(0, SEARCH_ITEM, -1, getString(R.string.search)) // first: before the favourites
+        // Search / divider / Device location / divider / favourites (the list scrolls when it is long).
+        menu.menu.add(GROUP_SEARCH, SEARCH_ITEM, 0, getString(R.string.search))
+        menu.menu.add(GROUP_DEVICE, DEVICE_ITEM, 1, getString(R.string.place_device_menu))
         favorites.forEachIndexed { i, fav ->
-            menu.menu.add(0, i, i, if (fav.matches(current)) "★ ${fav.name}" else fav.name)
+            menu.menu.add(GROUP_FAVORITES, i, FIRST_FAVORITE_ORDER + i, if (fav.matches(current)) "★ ${fav.name}" else fav.name)
         }
-        menu.menu.add(0, DEVICE_ITEM, favorites.size, getString(R.string.place_device_menu))
-        if (favorites.isEmpty()) menu.menu.add(0, SETTINGS_ITEM, favorites.size + 1, getString(R.string.favorites_empty_menu))
+        if (favorites.isEmpty()) menu.menu.add(GROUP_FAVORITES, SETTINGS_ITEM, FIRST_FAVORITE_ORDER, getString(R.string.favorites_empty_menu))
+        if (Build.VERSION.SDK_INT >= 28) menu.menu.setGroupDividerEnabled(true)
         menu.setOnMenuItemClickListener { item ->
             if (item.itemId == SEARCH_ITEM) {
                 PlaceSearch.ask(this) { useFound(it) }
@@ -479,6 +482,10 @@ class MainActivity : Activity() {
         private const val DEVICE_ITEM = 10_000
         private const val SETTINGS_ITEM = 10_001
         private const val SEARCH_ITEM = 10_002
+        private const val GROUP_SEARCH = 1
+        private const val GROUP_DEVICE = 2
+        private const val GROUP_FAVORITES = 3
+        private const val FIRST_FAVORITE_ORDER = 10
         private const val MOON_LIT = 0xFFECE6D2.toInt()
 
         private val PHASE_NAMES = mapOf(

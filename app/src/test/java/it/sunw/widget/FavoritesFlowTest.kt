@@ -178,6 +178,35 @@ class FavoritesFlowTest {
         assertFalse(activity.isFinishing) // the main page stays
     }
 
+    private fun listViewIn(view: View): android.widget.ListView? =
+        if (view is android.widget.ListView) view
+        else (view as? ViewGroup)?.let { g -> (0 until g.childCount).firstNotNullOfOrNull { listViewIn(g.getChildAt(it)) } }
+
+    @Test
+    fun recentPlacesKeepTheLastTenNewestFirstWithoutRepeats() {
+        val recents = RecentPlaces(context)
+        for (i in 1..12) recents.add(Favorite("Place $i", 40.0 + i, 10.0))
+        recents.add(Favorite("Place 5", 45.0, 10.0)) // again: moves up instead of repeating
+        val names = recents.all().map { it.name }
+        assertEquals(10, names.size)
+        assertEquals(listOf("Place 5", "Place 12", "Place 11"), names.take(3))
+        assertEquals(1, names.count { it == "Place 5" })
+    }
+
+    @Test
+    fun theSearchDialogListsTheRecentsAndTappingOneUsesIt() {
+        RecentPlaces(context).add(Favorite("Livigno", 46.5386, 10.1357))
+        RecentPlaces(context).add(Favorite("Bormio", 46.4669, 10.3705))
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        var picked: Address? = null
+        PlaceSearch.ask(activity) { picked = it }
+        val list = listViewIn(ShadowAlertDialog.getLatestAlertDialog().window!!.decorView)!!
+        assertEquals(listOf("Bormio", "Livigno"), (0 until list.adapter.count).map { list.adapter.getItem(it).toString() }) // newest first
+        list.onItemClickListener.onItemClick(list, null, 0, 0)
+        assertEquals("Bormio", picked!!.locality)
+        assertEquals(46.4669, picked!!.latitude, 1e-4)
+    }
+
     @Test
     fun quickSwitchFromMainPage() {
         FavoritesStore(context).add(Favorite("Livigno", 46.5386, 10.1357))
@@ -186,8 +215,11 @@ class FavoritesFlowTest {
 
         val popup = ShadowPopupMenu.getLatestPopupMenu()
         assertNotNull("place menu not shown", popup)
-        assertEquals(context.getString(R.string.search), popup.menu.getItem(0).title.toString()) // Search is the first entry
-        shadowOf(popup).onMenuItemClickListener.onMenuItemClick(popup.menu.getItem(1))
+        // Search / Device location / the favourites, in three groups (so the dividers fall between them).
+        assertEquals(context.getString(R.string.search), popup.menu.getItem(0).title.toString())
+        assertEquals(context.getString(R.string.place_device_menu), popup.menu.getItem(1).title.toString())
+        assertEquals(listOf(1, 2, 3), (0..2).map { popup.menu.getItem(it).groupId })
+        shadowOf(popup).onMenuItemClickListener.onMenuItemClick(popup.menu.getItem(2))
 
         val place = LocationStore(context).current()
         assertEquals("Livigno", place.name)

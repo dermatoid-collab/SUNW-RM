@@ -29,6 +29,7 @@
     <string name="search_failed">Ricerca non riuscita: controlla la connessione.</string>
     <string name="search_no_results">Nessuna località trovata</string>
     <string name="search_pick">Scegli la località</string>
+    <string name="recents">Recenti</string>
     <string name="place_device">Posizione del dispositivo</string>
     <string name="settings">Impostazioni</string>
     <string name="settings_title">Impostazioni</string>
