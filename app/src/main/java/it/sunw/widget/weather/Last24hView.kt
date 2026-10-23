@@ -50,6 +50,9 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     /** Per point, the gust of the hour (km/h); only for [Kind.WIND]: a dashed line over the mean wind. */
     private var gusts = emptyList<Double?>()
 
+    /** Per point, the rain (mm) of the hour that ends there; only for [Kind.PRESSURE]: bars at the foot of the chart. */
+    private var rain = emptyList<Double?>()
+
     /** What the chart shows: the temperature (degrees, coloured by value), the sea-level pressure (mbar) or the wind (km/h, with its direction). */
     enum class Kind { TEMPERATURE, PRESSURE, WIND }
 
@@ -73,12 +76,14 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         directions: List<Int?> = emptyList(),
         details: List<String?> = emptyList(),
         gusts: List<Double?> = emptyList(),
+        rain: List<Double?> = emptyList(),
         isDaylight: (LocalDateTime) -> Boolean,
     ) {
         this.kind = kind
         this.directions = directions
         this.details = details
         this.gusts = if (kind == Kind.WIND) gusts else emptyList()
+        this.rain = if (kind == Kind.PRESSURE) rain else emptyList()
         this.palette = palette
         this.points = points
         this.daylight = isDaylight
@@ -179,6 +184,8 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         for (i in 0 until n - 1) {
             if (!daylight(points[i].first)) canvas.drawRect(x(i), chartTop - dp(8f), x(i + 1), chartBottom, paint)
         }
+
+        if (rain.any { (it ?: 0.0) >= RAIN_MIN_MM }) drawRain(canvas)
 
         // Grid and temperature labels.
         val step = max(1, ((hi() - lo()) / 4).roundToInt())
@@ -283,6 +290,30 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         Kind.PRESSURE -> PRESSURE_LINE
         Kind.WIND -> WIND_LINE
         Kind.TEMPERATURE -> null
+    }
+
+    /**
+     * Rain bars as in the meteogram (mm per hour, at least 2 mm tall as a scale), in the lower part of the chart so that
+     * the chart does not grow: each bar is the hour that ends at its point, under the pressure curve.
+     */
+    private fun drawRain(canvas: Canvas) {
+        if (points.size < 2) return
+        val scale = max(2.0, rain.filterNotNull().maxOrNull() ?: 0.0)
+        val room = dp(RAIN_BARS_DP)
+        val hourPx = x(1) - x(0) // the points are an hour apart
+        paint.style = Paint.Style.FILL
+        paint.color = RAIN_COLOR
+        paint.alpha = 190
+        for (i in points.indices) {
+            val mm = rain.getOrNull(i) ?: continue
+            if (mm < RAIN_MIN_MM) continue
+            val barRight = x(i)
+            val barLeft = max(left, barRight - hourPx)
+            if (barRight <= barLeft) continue
+            val top = chartBottom - (mm / scale * (room - dp(2f))).toFloat() - dp(1f)
+            canvas.drawRect(barLeft + dp(0.5f), top, barRight - dp(0.5f), chartBottom, paint)
+        }
+        paint.alpha = 255
     }
 
     /** The gust: the same azure as the mean wind, dashed and thinner (1.8 dp), through the hours that have one. */
@@ -417,6 +448,11 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     companion object {
         /** The pressure curve: violet, apart from the temperature's blue-to-orange. */
         internal const val PRESSURE_LINE = 0xFFB894FF.toInt()
+
+        /** The rain bars: the meteogram's blue. */
+        private const val RAIN_COLOR = 0xFF5B9BE8.toInt()
+        private const val RAIN_MIN_MM = 0.05
+        private const val RAIN_BARS_DP = 44f
 
         /** The wind curve and its arrows: azure. */
         internal const val WIND_LINE = 0xFF4FC3F7.toInt()

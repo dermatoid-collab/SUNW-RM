@@ -364,7 +364,7 @@
     <string name="pressure_unit">mbar</string>
     <string name="l24_3h">Ultime 3 h</string>
     <string name="p24_title">Pressione, ultime 24 ore</string>
-    <string name="p24_legend">Pressione ridotta al livello del mare in mbar (= hPa), ogni ora. Tocco lungo e trascina per la pressione in quel momento.</string>
+    <string name="p24_legend">Pressione ridotta al livello del mare in mbar (= hPa), ogni ora; le barre blu sono la pioggia di ogni ora. Tocco lungo e trascina per la pressione in quel momento.</string>
     <string name="w24_title">Vento, ultime 24 ore</string>
     <string name="w24_legend">Vento medio a 10 m in km/h, ogni ora (tratteggio: la raffica); le frecce indicano dove soffia. Tocco lungo e trascina per il vento in quel momento.</string>
     <string name="l24_avg">Media</string>

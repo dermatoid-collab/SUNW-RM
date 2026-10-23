@@ -166,7 +166,9 @@ class MeteogramActivity : Activity() {
                 sample?.precipitationProbability?.let { "$it %" },
             ).joinToString(" · ").ifEmpty { null }?.let { getString(R.string.rain_label) + " " + it }
         }
-        findViewById<Last24hView>(R.id.mg_pressure24_chart).show(palette, points, Last24hView.Kind.PRESSURE, details = rain) { daylight[it.hour] ?: (it.hour in 7..18) }
+        findViewById<Last24hView>(R.id.mg_pressure24_chart).show(
+            palette, points, Last24hView.Kind.PRESSURE, details = rain, rain = points.map { (t, _) -> model?.get(t)?.precipitation },
+        ) { daylight[it.hour] ?: (it.hour in 7..18) }
     }
 
     /** The mean wind of the last 24 hours, one point per hour with its direction, under the pressure card; hidden without data. */

@@ -307,6 +307,21 @@ class MeteogramTest {
     }
 
     @Test
+    fun thePressureChartDrawsTheRainBarsWithoutGrowing() {
+        org.junit.Assume.assumeTrue(utcHour in 1..21)
+        seedPast()
+        seedModel()
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        val chart = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_pressure24_chart)
+        val temperature = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_last24_chart)
+        chart.measure(View.MeasureSpec.makeMeasureSpec(1000, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
+        temperature.measure(View.MeasureSpec.makeMeasureSpec(1000, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
+        assertEquals(temperature.measuredHeight, chart.measuredHeight) // same height as before: the bars sit inside the chart
+        chart.layout(0, 0, 1000, chart.measuredHeight)
+        chart.draw(android.graphics.Canvas(android.graphics.Bitmap.createBitmap(1000, chart.measuredHeight, android.graphics.Bitmap.Config.ARGB_8888))) // the sample has 2 mm every hour
+    }
+
+    @Test
     fun withoutTheHoursOfOpenMeteoTheWindCardStaysHidden() {
         seedPast()
         val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
