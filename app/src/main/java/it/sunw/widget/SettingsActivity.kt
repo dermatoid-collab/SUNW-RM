@@ -10,7 +10,6 @@ import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.location.Address
-import android.location.Geocoder
 import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
@@ -39,7 +38,6 @@ import it.sunw.widget.watch.WatchPrefs
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
-import java.io.IOException
 import java.util.Locale
 
 /**
@@ -442,34 +440,8 @@ class SettingsActivity : Activity() {
     private fun search() {
         val query = searchQuery.text.toString().trim()
         if (query.isEmpty()) return
-        if (!Geocoder.isPresent()) {
-            Toast.makeText(this, R.string.search_unavailable, Toast.LENGTH_LONG).show()
-            return
-        }
         getSystemService(InputMethodManager::class.java)?.hideSoftInputFromWindow(searchQuery.windowToken, 0)
-        // Geocoder blocks on the network: run it off the main thread.
-        Thread {
-            val results = try {
-                @Suppress("DEPRECATION") // the async overload needs API 33
-                Geocoder(this, Locale.getDefault()).getFromLocationName(query, MAX_RESULTS).orEmpty()
-                    .filter { it.hasLatitude() && it.hasLongitude() }
-            } catch (e: IOException) {
-                null
-            }
-            runOnUiThread { if (!isFinishing && !isDestroyed) showResults(results) }
-        }.start()
-    }
-
-    private fun showResults(results: List<Address>?) {
-        when {
-            results == null -> Toast.makeText(this, R.string.search_failed, Toast.LENGTH_LONG).show()
-            results.isEmpty() -> Toast.makeText(this, R.string.search_no_results, Toast.LENGTH_LONG).show()
-            results.size == 1 -> pick(results[0])
-            else -> AlertDialog.Builder(this)
-                .setTitle(R.string.search_pick)
-                .setItems(results.map { describe(it) }.toTypedArray()) { _, which -> pick(results[which]) }
-                .show()
-        }
+        PlaceSearch.search(this, query) { pick(it) }
     }
 
     /**
@@ -479,7 +451,7 @@ class SettingsActivity : Activity() {
     internal fun pick(address: Address) {
         auto.isChecked = false
         showCoordinates(address.latitude, address.longitude)
-        val name = shortName(address)
+        val name = PlaceSearch.shortName(address)
         picked = latitude.text.toString() to longitude.text.toString()
         pickedName = name
         if (!persist()) return
@@ -496,18 +468,6 @@ class SettingsActivity : Activity() {
             .setOnCancelListener { finish() }
             .show()
     }
-
-    /** "Passo dello Stelvio, Bormio, Lombardia, Italia" — for the result list. */
-    private fun describe(address: Address): String =
-        listOfNotNull(address.featureName, address.locality, address.subAdminArea, address.adminArea, address.countryName)
-            .filter { it.isNotBlank() && it.toDoubleOrNull() == null } // featureName can be a house number
-            .distinct()
-            .joinToString(", ")
-
-    private fun shortName(address: Address): String =
-        listOfNotNull(address.locality, address.featureName, address.subAdminArea, address.adminArea)
-            .firstOrNull { it.isNotBlank() && it.toDoubleOrNull() == null }
-            ?: describe(address)
 
     private fun refreshSummary() {
         val place = store.current()
@@ -775,7 +735,6 @@ class SettingsActivity : Activity() {
 
     companion object {
         private const val REQUEST_LOCATION = 1
-        private const val MAX_RESULTS = 6
         private const val REQUEST_EXPORT = 2
         private const val REQUEST_IMPORT = 3
         private const val REQUEST_NOTIFICATIONS = 4

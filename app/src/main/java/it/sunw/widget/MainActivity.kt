@@ -1,6 +1,8 @@
 package it.sunw.widget
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.location.Address
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -14,6 +16,7 @@ import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import it.sunw.widget.alerts.AlertJobService
 import it.sunw.widget.alerts.AlertNotifier
 import it.sunw.widget.alerts.AlertRepository
@@ -409,12 +412,17 @@ class MainActivity : Activity() {
         val current = store.current()
         val favorites = FavoritesStore(this).all()
         val menu = PopupMenu(this, anchor)
+        menu.menu.add(0, SEARCH_ITEM, -1, getString(R.string.search)) // first: before the favourites
         favorites.forEachIndexed { i, fav ->
             menu.menu.add(0, i, i, if (fav.matches(current)) "★ ${fav.name}" else fav.name)
         }
         menu.menu.add(0, DEVICE_ITEM, favorites.size, getString(R.string.place_device_menu))
         if (favorites.isEmpty()) menu.menu.add(0, SETTINGS_ITEM, favorites.size + 1, getString(R.string.favorites_empty_menu))
         menu.setOnMenuItemClickListener { item ->
+            if (item.itemId == SEARCH_ITEM) {
+                PlaceSearch.ask(this) { useFound(it) }
+                return@setOnMenuItemClickListener true
+            }
             when (item.itemId) {
                 DEVICE_ITEM -> {
                     store.save(current.latitude, current.longitude, automatic = true)
@@ -428,6 +436,26 @@ class MainActivity : Activity() {
             true
         }
         menu.show()
+    }
+
+    /**
+     * A place found by name: used right away (manual mode) and then offered for the favourites, as in Settings;
+     * the page stays here and shows it.
+     */
+    internal fun useFound(address: Address) {
+        val name = PlaceSearch.shortName(address)
+        LocationStore(this).save(address.latitude, address.longitude, automatic = false, name = name)
+        SunWidgetProvider.updateAll(this)
+        refresh()
+        AlertDialog.Builder(this)
+            .setTitle(name)
+            .setMessage(R.string.search_picked)
+            .setPositiveButton(R.string.add_to_favorites) { _, _ ->
+                FavoritesStore(this).add(Favorite(name, address.latitude, address.longitude))
+                Toast.makeText(this, getString(R.string.favorite_added, name), Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(R.string.just_use, null)
+            .show()
     }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
@@ -450,6 +478,7 @@ class MainActivity : Activity() {
         private const val REQUEST_NOTIFICATIONS = 3
         private const val DEVICE_ITEM = 10_000
         private const val SETTINGS_ITEM = 10_001
+        private const val SEARCH_ITEM = 10_002
         private const val MOON_LIT = 0xFFECE6D2.toInt()
 
         private val PHASE_NAMES = mapOf(

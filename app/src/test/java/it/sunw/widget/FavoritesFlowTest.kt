@@ -160,6 +160,25 @@ class FavoritesFlowTest {
     }
 
     @Test
+    fun searchFromThePlaceMenuUsesThePlaceAndOffersTheFavorites() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        activity.findViewById<TextView>(R.id.place).performClick()
+        val popup = ShadowPopupMenu.getLatestPopupMenu()
+        // The Search entry asks for the name in a dialog.
+        shadowOf(popup).onMenuItemClickListener.onMenuItemClick(popup.menu.getItem(0))
+        assertEquals(context.getString(R.string.search), ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).text.toString())
+        // A place found: used at once, then "Just use it" / "Add to favourites" as in Settings.
+        activity.useFound(address("Livigno", 46.5386, 10.1357))
+        assertEquals("Livigno", LocationStore(context).current().name)
+        val dialog = ShadowAlertDialog.getLatestAlertDialog()
+        assertEquals(context.getString(R.string.just_use), dialog.getButton(AlertDialog.BUTTON_NEGATIVE).text.toString())
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        ShadowLooper.idleMainLooper()
+        assertEquals(listOf("Livigno"), FavoritesStore(context).all().map { it.name })
+        assertFalse(activity.isFinishing) // the main page stays
+    }
+
+    @Test
     fun quickSwitchFromMainPage() {
         FavoritesStore(context).add(Favorite("Livigno", 46.5386, 10.1357))
         val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
@@ -167,7 +186,8 @@ class FavoritesFlowTest {
 
         val popup = ShadowPopupMenu.getLatestPopupMenu()
         assertNotNull("place menu not shown", popup)
-        shadowOf(popup).onMenuItemClickListener.onMenuItemClick(popup.menu.getItem(0))
+        assertEquals(context.getString(R.string.search), popup.menu.getItem(0).title.toString()) // Search is the first entry
+        shadowOf(popup).onMenuItemClickListener.onMenuItemClick(popup.menu.getItem(1))
 
         val place = LocationStore(context).current()
         assertEquals("Livigno", place.name)
