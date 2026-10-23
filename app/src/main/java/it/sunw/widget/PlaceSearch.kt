@@ -30,10 +30,7 @@ internal object PlaceSearch {
      * from a search are listed ("Recents", scrolling): tapping one picks it without searching again.
      */
     fun ask(activity: Activity, onPick: (Address) -> Unit) {
-        val remember: (Address) -> Unit = { address ->
-            RecentPlaces(activity).add(Favorite(shortName(address), address.latitude, address.longitude))
-            onPick(address)
-        }
+
         val input = EditText(activity).apply {
             setHint(R.string.search_hint)
             inputType = InputType.TYPE_CLASS_TEXT
@@ -60,11 +57,11 @@ internal object PlaceSearch {
                 setOnItemClickListener { _, _, position, _ ->
                     dialog?.dismiss()
                     val recent = recents[position]
-                    remember(Address(Locale.getDefault()).apply {
+                    pickAndRemember(activity, Address(Locale.getDefault()).apply {
                         locality = recent.name
                         latitude = recent.latitude
                         longitude = recent.longitude
-                    })
+                    }, onPick)
                 }
             }
             body.addView(list, LinearLayout.LayoutParams(MATCH_PARENT, (minOf(recents.size * rowDp, 216) * density).toInt()))
@@ -72,20 +69,26 @@ internal object PlaceSearch {
         dialog = AlertDialog.Builder(activity)
             .setTitle(R.string.search)
             .setView(body, pad, pad / 2, pad, 0)
-            .setPositiveButton(R.string.search) { _, _ -> search(activity, input.text.toString(), remember) }
+            .setPositiveButton(R.string.search) { _, _ -> search(activity, input.text.toString(), onPick) }
             .setNegativeButton(android.R.string.cancel, null)
             .create()
         input.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 dialog?.dismiss()
-                search(activity, input.text.toString(), remember)
+                search(activity, input.text.toString(), onPick)
                 true
             } else false
         }
         dialog?.show()
     }
 
-    /** Searches [query] off the main thread and hands the chosen place to [onPick]. */
+    /** Remembers [address] among the recents (first) and hands it to [onPick]. */
+    private fun pickAndRemember(activity: Activity, address: Address, onPick: (Address) -> Unit) {
+        RecentPlaces(activity).add(Favorite(shortName(address), address.latitude, address.longitude))
+        onPick(address)
+    }
+
+    /** Searches [query] off the main thread and hands the chosen place to [onPick] (and remembers it among the recents). */
     fun search(activity: Activity, query: String, onPick: (Address) -> Unit) {
         val text = query.trim()
         if (text.isEmpty()) return
@@ -110,10 +113,10 @@ internal object PlaceSearch {
         when {
             results == null -> Toast.makeText(activity, R.string.search_failed, Toast.LENGTH_LONG).show()
             results.isEmpty() -> Toast.makeText(activity, R.string.search_no_results, Toast.LENGTH_LONG).show()
-            results.size == 1 -> onPick(results[0])
+            results.size == 1 -> pickAndRemember(activity, results[0], onPick)
             else -> AlertDialog.Builder(activity)
                 .setTitle(R.string.search_pick)
-                .setItems(results.map { describe(it) }.toTypedArray()) { _, which -> onPick(results[which]) }
+                .setItems(results.map { describe(it) }.toTypedArray()) { _, which -> pickAndRemember(activity, results[which], onPick) }
                 .show()
         }
     }
