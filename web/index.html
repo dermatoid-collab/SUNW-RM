@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Alba · Tramonto</title>
+  <meta name="description" content="Alba, tramonto, Luna e meteo del luogo scelto">
+  <meta name="theme-color" content="#121316">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <button id="place" class="place" aria-haspopup="menu"></button>
+    <span id="today" class="today"></span>
+    <button id="settingsBtn" class="icon" aria-label="Impostazioni">⚙</button>
+  </header>
+  <div id="placeMenu" class="menu" role="menu" hidden></div>
+
+  <main>
+    <p id="status" class="status" role="status"></p>
+
+    <section class="card" id="sunmoon">
+      <div class="row between">
+        <h2 id="sunmoonTitle"></h2>
+        <div class="datenav">
+          <button id="dayPrev" class="icon" aria-label="‹">‹</button>
+          <button id="dayLabel" class="datebtn"></button>
+          <button id="dayNext" class="icon" aria-label="›">›</button>
+        </div>
+      </div>
+      <canvas id="sunCurve" aria-label="Altezza del Sole nella giornata"></canvas>
+      <dl id="sunTimes" class="facts"></dl>
+      <div class="moonrow">
+        <canvas id="moonDisc" aria-hidden="true"></canvas>
+        <div id="moonInfo" class="moontext"></div>
+      </div>
+    </section>
+
+    <section class="card" id="weatherCard">
+      <h2 id="weatherTitle"></h2>
+      <div id="nowBox" class="nowbox"></div>
+      <div id="daysRow" class="days" role="tablist"></div>
+    </section>
+
+    <section class="card" id="hourlyCard">
+      <div class="row between">
+        <h2 id="hourlyTitle"></h2>
+        <div class="seg" role="group">
+          <button id="step1" type="button"></button>
+          <button id="step3" type="button"></button>
+        </div>
+      </div>
+      <div class="tablewrap"><table id="hourlyTable" class="hours"></table></div>
+    </section>
+
+    <section class="card" id="radarCard">
+      <h2 id="radarTitle"></h2>
+      <div class="radar"><iframe id="radar" title="Radar" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
+      <p id="radarNote" class="legend"></p>
+    </section>
+
+    <section class="card chartcard" id="c1">
+      <div class="row between"><h2 id="c1Title"></h2><span id="c1Step" class="muted small"></span></div>
+      <div id="c1Tiles" class="tiles"></div>
+      <div class="plot"><canvas id="c1Canvas"></canvas></div>
+      <div id="c1Readout" class="readout"></div>
+    </section>
+
+    <section class="card chartcard" id="c2">
+      <div class="row between"><h2 id="c2Title"></h2><span id="c2Step" class="muted small"></span></div>
+      <div id="c2Tiles" class="tiles"></div>
+      <div class="plot"><canvas id="c2Canvas"></canvas></div>
+      <div id="c2Readout" class="readout"></div>
+      <p id="c2Legend" class="legend"></p>
+    </section>
+
+    <section class="card chartcard" id="c3">
+      <div class="row between"><h2 id="c3Title"></h2><span id="c3Step" class="muted small"></span></div>
+      <div id="c3Tiles" class="tiles"></div>
+      <div class="plot"><canvas id="c3Canvas"></canvas></div>
+      <div id="c3Readout" class="readout"></div>
+      <p id="c3Legend" class="legend"></p>
+    </section>
+
+    <section class="card" id="mgCard">
+      <h2 id="mgTitle"></h2>
+      <div id="mgScroll" class="mgscroll"><canvas id="mgCanvas"></canvas></div>
+      <div id="mgReadout" class="readout"></div>
+    </section>
+  </main>
+
+  <dialog id="searchDialog">
+    <form method="dialog" id="searchForm">
+      <h3 id="searchTitle"></h3>
+      <input id="searchInput" type="search" autocomplete="off" enterkeyhint="search">
+      <div id="searchBody"></div>
+      <div class="buttons"><button type="button" id="searchCancel" class="flat"></button><button type="submit" id="searchGo"></button></div>
+    </form>
+  </dialog>
+
+  <dialog id="pickedDialog">
+    <h3 id="pickedTitle"></h3>
+    <p id="pickedMessage"></p>
+    <div class="buttons"><button id="pickedJust" class="flat"></button><button id="pickedAdd"></button></div>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <div class="row between"><h3 id="settingsTitle"></h3><button id="settingsClose" class="icon" aria-label="×">×</button></div>
+    <div id="settingsBody"></div>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

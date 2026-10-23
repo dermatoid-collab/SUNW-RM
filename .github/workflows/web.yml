@@ -1,0 +1,33 @@
+name: Web tests
+
+on:
+  push:
+    paths:
+      - 'web/**'
+      - 'tools/gen_web_themes.py'
+      - 'app/src/main/java/it/sunw/widget/Appearance.kt'
+      - '.github/workflows/web.yml'
+  pull_request:
+    paths:
+      - 'web/**'
+      - 'tools/gen_web_themes.py'
+      - 'app/src/main/java/it/sunw/widget/Appearance.kt'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Tests (calculations, backup, parsing)
+        run: node --test web/tests/*.test.mjs
+
+      - name: The web themes match the app's
+        run: |
+          python3 tools/gen_web_themes.py
+          git diff --exit-code web/js/themes.js

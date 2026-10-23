@@ -46,6 +46,11 @@ Sfondi (temi): **SUNW-RM Legacy** (l'aspetto originale, ex «Antracite»), Nero,
 
 **Batteria:** al primo avvio (dopo la richiesta delle notifiche), se il risparmio energetico limita l'app, un avviso spiega perché il widget ne ha bisogno e porta alla scelta di sistema «senza restrizioni»; in Impostazioni → Batteria si vede lo stato e si può riaprire la scelta. Le «App in stop» di Samsung non sono rilevabili e sono solo nominate nel testo.
 
+## Versione web
+
+Nella cartella `web/` c'è una PWA con Sole e Luna, meteo, radar, i grafici delle ultime 24 ore, il meteogramma, i luoghi,
+i temi e lo stesso backup dell'app, pensata per Cloudflare Pages. Vedi `web/README.md`.
+
 ## Come funziona
 
 - **Luna**: posizione con l'algoritmo di Paul Schlyter (termini periodici principali), illuminazione dall'angolo di fase vero Sole–Luna. Confrontata con PyEphem: illuminazione entro 0,1 %, levata/tramonto entro ~1 minuto (rifrazione standard, bordo superiore), fasi principali entro ~10 minuti.

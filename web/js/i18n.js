@@ -1,0 +1,52 @@
+// Italian and English texts, by the browser's language.
+const IT = {
+  appTitle: 'Alba · Tramonto', search: 'Cerca', deviceLocation: '◎ Posizione del dispositivo', noFavorites: 'Aggiungi preferiti…',
+  choosePlace: 'Scegli la località', justUse: 'Usa e basta', addFavorite: 'Aggiungi ai preferiti', pickedMessage: 'Ora in uso. Aggiungerla ai preferiti?',
+  searchHint: 'es. Livigno, Passo dello Stelvio', recents: 'Recenti', noResults: 'Nessuna località trovata', searchFailed: 'Ricerca non riuscita: controlla la connessione.',
+  cancel: 'Annulla', close: 'Chiudi', settings: 'Impostazioni', favoriteAdded: (n) => `«${n}» aggiunta ai preferiti`,
+  sunMoon: 'Sole e Luna', weather: 'Meteo', radar: 'Radar', hourly: 'Ora per ora', everyHour: 'ogni ora', every3Hours: 'ogni 3 ore',
+  sunrise: 'Alba', sunset: 'Tramonto', solarNoon: 'Mezzogiorno solare', dayLength: 'Durata del giorno', civil: 'Crepuscolo civile', nautical: 'Crepuscolo nautico',
+  astronomical: 'Crepuscolo astronomico', blueHour: 'Ora blu', goldenHour: 'Ora dorata', polarDay: 'Il Sole non tramonta', polarNight: 'Il Sole non sorge',
+  moon: 'Luna', illumination: 'Illuminazione', moonrise: 'Sorge', moonset: 'Tramonta', nextPhases: 'Prossime fasi', today: 'Oggi', now: 'ora',
+  phases: { new: 'Luna nuova', waxingCrescent: 'Luna crescente', firstQuarter: 'Primo quarto', waxingGibbous: 'Gibbosa crescente', full: 'Luna piena', waningGibbous: 'Gibbosa calante', lastQuarter: 'Ultimo quarto', waningCrescent: 'Luna calante' },
+  quarters: { new: 'Luna nuova', first: 'Primo quarto', full: 'Luna piena', last: 'Ultimo quarto' },
+  last24: 'Ultime 24 ore', pressure24: 'Pressione, ultime 24 ore', wind24: 'Vento, ultime 24 ore', meteogram: 'Meteogramma',
+  min: 'Min', max: 'Max', range: 'Escursione', avg: 'Media', in24h: 'in 24 h', lastHour: 'Ultima ora', last3h: 'Ultime 3 h', nowValue: (v) => `ora ${v}`,
+  past: 'Passato', forecast: 'previsione', nowLabel: 'ora', feels: (v) => `Percepita ${v}`, rain: 'pioggia', gust: (v) => `raffica ${v} km/h`, windFrom: (n, d) => `vento da ${n} ${d}°`,
+  compass: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
+  hintCursor: 'Passa il dito o il mouse sul grafico per leggere i valori.',
+  theme: 'Sfondo', accent: 'Colore d\'accento', curve: 'Colore della curva', backup: 'Backup delle impostazioni', exportBtn: 'Esporta', importBtn: 'Importa',
+  curves: { sky: 'Cielo (segue l\'altezza del Sole)', accent: 'Accento (sopra l\'orizzonte)', golden: 'Ora dorata e blu', twilight: 'Crepuscoli (fasce)' },
+  imported: 'Impostazioni importate', importFailed: (m) => `Importazione non riuscita: ${m}`, loading: 'Carico i dati meteo…', loadFailed: 'Meteo non disponibile: controlla la connessione.',
+  updated: (t) => `Dati Open-Meteo, aggiornati alle ${t}`, geoDenied: 'Posizione non disponibile: consenti l\'accesso nel browser.', geoUnsupported: 'Questo browser non ha la geolocalizzazione.',
+  groups: { LEGACY: '', SYSTEM: 'Sistema', COMMUNITY_DARK: 'Community – scuri', COMMUNITY_LIGHT: 'Community – chiari', ORIGINAL_DARK: 'Originali – scuri', ORIGINAL_LIGHT: 'Originali – chiari', MINIMALIST: 'Minimalist' },
+  rainLegend: 'Le barre blu sono la pioggia di ogni ora.', gustLegend: 'Tratteggio: la raffica. Le frecce mostrano dove soffia il vento.', radarNote: 'Radar e vento: Windy.com', details: 'Dettagli',
+  unitMm: 'mm', pressureUnit: 'mbar',
+};
+const EN = {
+  ...IT,
+  search: 'Search', deviceLocation: '◎ Device location', noFavorites: 'Add favourites…', choosePlace: 'Choose a place', justUse: 'Just use it',
+  addFavorite: 'Add to favourites', pickedMessage: 'Now in use. Add it to your favourites?', searchHint: 'e.g. Livigno, Stelvio Pass', recents: 'Recents',
+  noResults: 'No place found', searchFailed: 'Search failed: check your connection.', cancel: 'Cancel', close: 'Close', settings: 'Settings',
+  favoriteAdded: (n) => `“${n}” added to favourites`, sunMoon: 'Sun and Moon', weather: 'Weather', radar: 'Radar', hourly: 'Hour by hour',
+  everyHour: 'every hour', every3Hours: 'every 3 hours', sunrise: 'Sunrise', sunset: 'Sunset', solarNoon: 'Solar noon', dayLength: 'Day length',
+  civil: 'Civil twilight', nautical: 'Nautical twilight', astronomical: 'Astronomical twilight', blueHour: 'Blue hour', goldenHour: 'Golden hour',
+  polarDay: 'The Sun does not set', polarNight: 'The Sun does not rise', moon: 'Moon', illumination: 'Illumination', moonrise: 'Rises', moonset: 'Sets',
+  nextPhases: 'Next phases', today: 'Today', now: 'now',
+  phases: { new: 'New Moon', waxingCrescent: 'Waxing crescent', firstQuarter: 'First quarter', waxingGibbous: 'Waxing gibbous', full: 'Full Moon', waningGibbous: 'Waning gibbous', lastQuarter: 'Last quarter', waningCrescent: 'Waning crescent' },
+  quarters: { new: 'New Moon', first: 'First quarter', full: 'Full Moon', last: 'Last quarter' },
+  last24: 'Last 24 hours', pressure24: 'Pressure, last 24 hours', wind24: 'Wind, last 24 hours', meteogram: 'Meteogram',
+  range: 'Range', avg: 'Avg', in24h: 'in 24 h', lastHour: 'Last hour', last3h: 'Last 3 h', nowValue: (v) => `now ${v}`, past: 'Past', nowLabel: 'now',
+  feels: (v) => `Feels ${v}`, rain: 'rain', gust: (v) => `gust ${v} km/h`, windFrom: (n, d) => `wind from ${n} ${d}°`, compass: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+  hintCursor: 'Move your finger or the mouse over the chart to read the values.', theme: 'Background', accent: 'Accent colour', curve: 'Curve colour',
+  backup: 'Settings backup', exportBtn: 'Export', importBtn: 'Import',
+  curves: { sky: 'Sky (follows the Sun\'s elevation)', accent: 'Accent (above the horizon)', golden: 'Golden and blue hour', twilight: 'Twilights (bands)' },
+  imported: 'Settings imported', importFailed: (m) => `Import failed: ${m}`, loading: 'Loading weather…', loadFailed: 'Weather unavailable: check your connection.',
+  updated: (t) => `Open-Meteo data, updated at ${t}`, geoDenied: 'Location unavailable: allow access in the browser.', geoUnsupported: 'This browser has no geolocation.',
+  groups: { LEGACY: '', SYSTEM: 'System', COMMUNITY_DARK: 'Community – dark', COMMUNITY_LIGHT: 'Community – light', ORIGINAL_DARK: 'Originals – dark', ORIGINAL_LIGHT: 'Originals – light', MINIMALIST: 'Minimalist' },
+  rainLegend: 'The blue bars are the rain of each hour.', gustLegend: 'Dashed: the gust. The arrows show where the wind blows to.', radarNote: 'Radar and wind: Windy.com', details: 'Details',
+};
+export const lang = (typeof navigator !== 'undefined' && /^it/i.test(navigator.language || '')) ? 'it' : 'en';
+export const t = lang === 'it' ? IT : EN;
+export const locale = lang === 'it' ? 'it-IT' : 'en-GB';
+export const textsFor = (l) => (l === 'it' ? IT : EN);

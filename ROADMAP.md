@@ -133,6 +133,11 @@ inclusione nel backup delle impostazioni.
   telefono: leggibilità della linea sopra la temperatura (scala propria, almeno 8 mbar di altezza) e confronto con la
   pressione di una stazione vicina. MeteoBlue non è stato usato perché il pacchetto basic non la include.
 - **Meteoalarm** per le località fuori Italia (già indicato nella sezione 2).
+- **Versione web** (`web/`): prima versione minima: Sole e Luna, meteo, radar, grafici da 24 ore, meteogramma, luoghi con Recenti,
+  temi, backup compatibile. Da fare, nell'ordine: webcam (Windy richiede una chiave: funzione di Cloudflare Pages con il segreto
+  nelle variabili del progetto, e da verificare se l'API accetta chiamate dal browser), allerte della Protezione Civile (fonte da
+  leggere dal browser o tramite funzione), notifiche (richiedono un server). Da verificare con dati reali: ricerca dei luoghi
+  (nome del luogo e non del comune), orari e grafici a confronto con l'app.
 
 ## Note
 
