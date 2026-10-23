@@ -381,7 +381,8 @@ class MeteogramView @JvmOverloads constructor(context: Context, attrs: Attribute
         val h = hours[i]
         val rain = if (detailed.getOrNull(i) != true) null
         else if (h.precipitation < 0.05) "0 mm" else String.format(Locale.getDefault(), "%.1f mm", h.precipitation)
-        return listOfNotNull(rain, rainProbability.getOrNull(i)?.let { "$it %" }).joinToString(" · ")
+        val values = listOfNotNull(rain, rainProbability.getOrNull(i)?.let { "$it %" }).joinToString(" · ")
+        return if (values.isEmpty()) "" else context.getString(R.string.rain_label) + " " + values
     }
 
     /** Line and dot of slot [i]; its values are read out in the field under the chart. */

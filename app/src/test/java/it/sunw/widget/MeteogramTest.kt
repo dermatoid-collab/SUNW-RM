@@ -283,13 +283,13 @@ class MeteogramTest {
         assertTrue(felt, felt.startsWith("Feels 5°") && felt.contains("Last hour:"))
         // Pressure: the rain in mm and its probability.
         val pressure = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_pressure24_chart)
-        assertEquals("2.0 mm · 40 %", pressure.detailLine(pressure.pointCount - 1))
+        assertEquals("rain 2.0 mm · 40 %", pressure.detailLine(pressure.pointCount - 1))
         // Wind: the gust and where it comes from (270° is a west wind).
         val wind = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_wind24_chart)
         assertEquals("gust 30 km/h · wind from W 270°", wind.detailLine(wind.pointCount - 1))
         // Meteogram: the rain in mm and its probability (the sample's gone hours: 2.0 mm, 40 %).
         val meteogram = activity.findViewById<MeteogramView>(R.id.mg_chart)
-        assertEquals("2.0 mm · 40 %", meteogram.detailLine(0))
+        assertEquals("rain 2.0 mm · 40 %", meteogram.detailLine(0))
     }
 
     @Test

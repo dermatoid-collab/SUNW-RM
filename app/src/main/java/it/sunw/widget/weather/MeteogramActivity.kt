@@ -164,7 +164,7 @@ class MeteogramActivity : Activity() {
             listOfNotNull(
                 sample?.precipitation?.let { if (it < 0.05) "0 mm" else String.format(java.util.Locale.getDefault(), "%.1f mm", it) },
                 sample?.precipitationProbability?.let { "$it %" },
-            ).joinToString(" · ").ifEmpty { null }
+            ).joinToString(" · ").ifEmpty { null }?.let { getString(R.string.rain_label) + " " + it }
         }
         findViewById<Last24hView>(R.id.mg_pressure24_chart).show(palette, points, Last24hView.Kind.PRESSURE, details = rain) { daylight[it.hour] ?: (it.hour in 7..18) }
     }
