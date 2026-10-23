@@ -202,7 +202,7 @@ class FavoritesFlowTest {
         PlaceSearch.ask(activity) { picked = it }
         val list = listViewIn(ShadowAlertDialog.getLatestAlertDialog().window!!.decorView)!!
         assertEquals(listOf("Bormio", "Livigno"), (0 until list.adapter.count).map { list.adapter.getItem(it).toString() }) // newest first
-        list.onItemClickListener.onItemClick(list, null, 0, 0)
+        list.onItemClickListener!!.onItemClick(list, null, 0, 0)
         assertEquals("Bormio", picked!!.locality)
         assertEquals(46.4669, picked!!.latitude, 1e-4)
     }
