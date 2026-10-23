@@ -27,6 +27,13 @@ class RecentPlaces(context: Context) {
         prefs.edit().putString(KEY, json.toString()).apply()
     }
 
+    /** Replaces the list (a restored backup), keeping the first [MAX]. */
+    fun replace(list: List<Favorite>) {
+        val json = JSONArray()
+        list.take(MAX).forEach { json.put(JSONObject().put("name", it.name).put("lat", it.latitude).put("lon", it.longitude)) }
+        prefs.edit().putString(KEY, json.toString()).apply()
+    }
+
     companion object {
         const val MAX = 10
         private const val KEY = "list"

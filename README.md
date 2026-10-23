@@ -77,7 +77,7 @@ Perché un nuovo APK si installi sopra il precedente (mantenendo località, pref
 - `SIGNING_KEYSTORE_BASE64`: il keystore `.jks` codificato in base64;
 - `SIGNING_PASSWORD`: la password del keystore e della chiave (alias `sunw`).
 
-Senza questi secret gli APK sono firmati con una chiave di debug diversa a ogni build e Android li rifiuta come aggiornamento. In ogni caso, in Impostazioni → Backup si possono esportare e reimportare le impostazioni in un file.
+Senza questi secret gli APK sono firmati con una chiave di debug diversa a ogni build e Android li rifiuta come aggiornamento. In ogni caso, in Impostazioni → Backup si possono esportare e reimportare le impostazioni in un file. Il file (versione 2) contiene tutto: località, preferiti e Recenti, aspetto (curva, accento, tema), interruttore delle allerte della Protezione Civile, notifiche meteo (interruttore generale, uno per evento, soglie, anticipi e parametri generali dell'isteresi, orari dei riepiloghi), la scelta ogni ora / ogni 3 ore e le webcam; un file di una versione precedente si importa ancora e lascia com'è ciò che non contiene. Un gruppo di soglie fuori limite o fuori ordine nel file viene scartato e restano i valori attuali.
 
 ## Compilare
 

@@ -1,6 +1,7 @@
 package it.sunw.widget.weather
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -55,7 +56,7 @@ class WeatherDayActivity : Activity() {
     private var stepHours = 1
 
     /** The "every hour / every 3 hours" choice, shared by every day page (and kept after the app closes). */
-    private fun stepPrefs() = getSharedPreferences("weather_day", MODE_PRIVATE)
+    private fun stepPrefs() = getSharedPreferences(PREFS_STEP, MODE_PRIVATE)
     private var model: OpenMeteoHours? = null
     private val zone: ZoneId get() = ZoneId.systemDefault()
     private val density get() = resources.displayMetrics.density
@@ -548,7 +549,17 @@ class WeatherDayActivity : Activity() {
         const val EXTRA_DATE = "date"
         private const val STATE_DATE = "date"
         private const val STATE_STEP = "step"
-        private const val KEY_STEP = "step_hours"
+        /** Where the every-hour / every-3-hours choice is kept (it is in the settings backup). */
+        internal const val PREFS_STEP = "weather_day"
+        internal const val KEY_STEP = "step_hours"
+
+        /** The shared every-hour (1) / every-3-hours (3) choice. */
+        internal fun stepHours(context: Context): Int =
+            context.getSharedPreferences(PREFS_STEP, Context.MODE_PRIVATE).getInt(KEY_STEP, 1).takeIf { it == 3 } ?: 1
+
+        internal fun setStepHours(context: Context, hours: Int) {
+            context.getSharedPreferences(PREFS_STEP, Context.MODE_PRIVATE).edit().putInt(KEY_STEP, if (hours == 3) 3 else 1).apply()
+        }
         private const val RAIN_TEXT = 0xFF8FB8F2.toInt()
         private const val PAST_ROW_ALPHA = 0.6f
         private const val RELIABLE = 0xFF4FC36A.toInt()

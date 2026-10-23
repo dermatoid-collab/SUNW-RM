@@ -36,6 +36,9 @@ object DigestScheduler {
         scheduleNext(context)
     }
 
+    /** Replaces the whole list (a restored backup), seconds dropped. */
+    fun setTimes(context: Context, list: List<LocalTime>) = save(context, list.map { it.withSecond(0).withNano(0) })
+
     /** False when [time] is already in the list. */
     fun add(context: Context, time: LocalTime): Boolean {
         val t = time.withSecond(0).withNano(0)
