@@ -105,15 +105,16 @@ internal object PlaceSearch {
             } catch (e: IOException) {
                 null
             }
-            activity.runOnUiThread { if (!activity.isFinishing && !activity.isDestroyed) show(activity, results, onPick) }
+            activity.runOnUiThread { if (!activity.isFinishing && !activity.isDestroyed) show(activity, text, results, onPick) }
         }.start()
     }
 
-    private fun show(activity: Activity, results: List<Address>?, onPick: (Address) -> Unit) {
+    private fun show(activity: Activity, query: String, results: List<Address>?, onPick: (Address) -> Unit) {
         when {
             results == null -> Toast.makeText(activity, R.string.search_failed, Toast.LENGTH_LONG).show()
             results.isEmpty() -> Toast.makeText(activity, R.string.search_no_results, Toast.LENGTH_LONG).show()
-            results.size == 1 -> pickAndRemember(activity, results[0], onPick)
+            // One result that is what was asked for is taken at once; anything else is offered to choose (and confirm).
+            results.size == 1 && matches(query, results[0]) -> pickAndRemember(activity, results[0], onPick)
             else -> AlertDialog.Builder(activity)
                 .setTitle(R.string.search_pick)
                 .setItems(results.map { describe(it) }.toTypedArray()) { _, which -> pickAndRemember(activity, results[which], onPick) }
@@ -128,8 +129,26 @@ internal object PlaceSearch {
             .distinct()
             .joinToString(", ")
 
-    fun shortName(address: Address): String =
-        listOfNotNull(address.locality, address.featureName, address.subAdminArea, address.adminArea)
-            .firstOrNull { it.isNotBlank() && it.toDoubleOrNull() == null }
+    /**
+     * The name a found place gets: the place itself ("Prato Spilla") and not the municipality it lies in
+     * ("Monchio delle Corti"); for a street address (the feature is a number or the street) the locality, then the area.
+     * The coordinates are always the found point's own, whatever the name.
+     */
+    fun shortName(address: Address): String {
+        fun usable(name: String?) = name?.takeIf { it.isNotBlank() && it.toDoubleOrNull() == null }
+        return usable(address.featureName)?.takeIf { it != address.thoroughfare }
+            ?: listOfNotNull(address.locality, address.subAdminArea, address.adminArea).firstNotNullOfOrNull { usable(it) }
             ?: describe(address)
+    }
+
+    /** Whether a found place is what [query] names: the name matches in either direction, ignoring case and accents. */
+    fun matches(query: String, address: Address): Boolean {
+        val wanted = plain(query)
+        if (wanted.isEmpty()) return true
+        return listOfNotNull(address.featureName, address.locality, address.subAdminArea, address.adminArea)
+            .map { plain(it) }.any { it.isNotEmpty() && (it.contains(wanted) || wanted.contains(it)) }
+    }
+
+    private fun plain(text: String): String =
+        java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "").lowercase(Locale.ROOT).trim()
 }
