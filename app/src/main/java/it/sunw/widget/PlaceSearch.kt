@@ -2,6 +2,7 @@ package it.sunw.widget
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.DialogInterface
 import android.location.Address
 import android.location.Geocoder
 import android.text.InputType
@@ -66,12 +67,13 @@ internal object PlaceSearch {
             }
             body.addView(list, LinearLayout.LayoutParams(MATCH_PARENT, (minOf(recents.size * rowDp, 216) * density).toInt()))
         }
-        dialog = AlertDialog.Builder(activity)
+        val built = AlertDialog.Builder(activity)
             .setTitle(R.string.search)
-            .setView(body, pad, pad / 2, pad, 0)
-            .setPositiveButton(R.string.search) { _, _ -> search(activity, input.text.toString(), onPick) }
+            .setPositiveButton(R.string.search) { _: DialogInterface, _: Int -> search(activity, input.text.toString(), onPick) }
             .setNegativeButton(android.R.string.cancel, null)
             .create()
+        built.setView(body, pad, pad / 2, pad, 0) // the five-argument form is the dialog's, not the builder's
+        dialog = built
         input.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 dialog?.dismiss()
