@@ -349,6 +349,12 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         paint.strokeWidth = dp(2.5f)
         paint.color = p.text
         canvas.drawCircle(cx, cy, dp(5.5f), paint)
+        // Wind: an azure dot on the gust line too.
+        gusts.getOrNull(i)?.let { gust ->
+            paint.style = Paint.Style.FILL
+            paint.color = WIND_LINE
+            canvas.drawCircle(cx, y(gust), dp(3.5f), paint)
+        }
     }
 
     /** "Sat 10/10 · 14:00 · Open-Meteo" and "18.0°". */
