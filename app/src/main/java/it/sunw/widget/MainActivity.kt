@@ -212,15 +212,17 @@ class MainActivity : Activity() {
             maxWidth = (resources.displayMetrics.widthPixels * 0.6f).toInt()
         }
         findViewById<TextView>(R.id.date).apply {
-            // Full date beside the settings button; "Fri 9 Oct" when it doesn't fit.
+            // Full date beside the settings button; "Fri 9 Oct" when it doesn't fit and "09/10" when even that
+            // doesn't (a long place name takes the room).
             val date = now.atZone(zone)
             val full = capitalize(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.getDefault()).format(date))
             val short = capitalize(DateTimeFormatter.ofPattern("EEE d MMM", Locale.getDefault()).format(date).replace(".", ""))
+            val numeric = DateTimeFormatter.ofPattern("dd/MM").format(date)
             text = full
             setTextColor(palette.textSecondary)
             post {
                 val room = width - paddingLeft - paddingRight
-                text = if (room > 0 && paint.measureText(full) > room) short else full
+                text = if (room <= 0) full else listOf(full, short).firstOrNull { paint.measureText(it) <= room } ?: numeric
             }
         }
         findViewById<ImageButton>(R.id.settings).setColorFilter(palette.text)
