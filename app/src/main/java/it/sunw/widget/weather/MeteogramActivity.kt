@@ -196,6 +196,7 @@ class MeteogramActivity : Activity() {
         }
         findViewById<Last24hView>(R.id.mg_wind24_chart).show(
             palette, winds.map { it.first to it.second }, Last24hView.Kind.WIND, winds.map { it.third }, gustAndDirection,
+            winds.map { model?.get(it.first)?.gust },
         ) { daylight[it.hour] ?: (it.hour in 7..18) }
     }
 

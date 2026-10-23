@@ -293,6 +293,20 @@ class MeteogramTest {
     }
 
     @Test
+    fun theWindChartDrawsWithItsGustLine() {
+        org.junit.Assume.assumeTrue(utcHour in 1..21)
+        seedPast()
+        seedModel()
+        val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()
+        val chart = activity.findViewById<it.sunw.widget.weather.Last24hView>(R.id.mg_wind24_chart)
+        chart.measure(View.MeasureSpec.makeMeasureSpec(1000, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
+        chart.layout(0, 0, 1000, chart.measuredHeight)
+        chart.draw(android.graphics.Canvas(android.graphics.Bitmap.createBitmap(1000, chart.measuredHeight, android.graphics.Bitmap.Config.ARGB_8888)))
+        // The gust (30 km/h in the sample) is above the mean wind (15), so the scale holds it.
+        assertTrue(chart.scaleTop() >= 30.0)
+    }
+
+    @Test
     fun withoutTheHoursOfOpenMeteoTheWindCardStaysHidden() {
         seedPast()
         val activity = Robolectric.buildActivity(MeteogramActivity::class.java).setup().get()

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
@@ -46,6 +47,9 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     /** Per point, what the readout's third line says besides the trend: felt temperature, rain, gust and direction. */
     private var details = emptyList<String?>()
 
+    /** Per point, the gust of the hour (km/h); only for [Kind.WIND]: a dashed line over the mean wind. */
+    private var gusts = emptyList<Double?>()
+
     /** What the chart shows: the temperature (degrees, coloured by value), the sea-level pressure (mbar) or the wind (km/h, with its direction). */
     enum class Kind { TEMPERATURE, PRESSURE, WIND }
 
@@ -68,11 +72,13 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         kind: Kind = Kind.TEMPERATURE,
         directions: List<Int?> = emptyList(),
         details: List<String?> = emptyList(),
+        gusts: List<Double?> = emptyList(),
         isDaylight: (LocalDateTime) -> Boolean,
     ) {
         this.kind = kind
         this.directions = directions
         this.details = details
+        this.gusts = if (kind == Kind.WIND) gusts else emptyList()
         this.palette = palette
         this.points = points
         this.daylight = isDaylight
@@ -106,7 +112,10 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         return points.indices.minBy { abs(x(it) - px) }
     }
 
-    private val temps get() = points.map { it.second }
+    /** What the scale has to hold: the points and, for the wind, the gusts above them. */
+    private val temps get() = points.map { it.second } + gusts.filterNotNull()
+    /** For tests: the top of the scale. */
+    internal fun scaleTop() = hi()
     private fun lo() = if (kind == Kind.WIND) 0.0 else floor(temps.min() - 1)
     private fun hi() = max(ceil(temps.max() + 1), lo() + 4)
     private fun y(t: Double) = (chartBottom - (t - lo()) / (hi() - lo()) * (chartBottom - chartTop)).toFloat()
@@ -200,6 +209,7 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         paint.alpha = 18
         canvas.drawPath(fill, paint)
         paint.alpha = 255
+        if (gusts.any { it != null }) drawGusts(canvas)
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = dp(2.6f)
         paint.strokeCap = Paint.Cap.ROUND
@@ -273,6 +283,29 @@ class Last24hView @JvmOverloads constructor(context: Context, attrs: AttributeSe
         Kind.PRESSURE -> PRESSURE_LINE
         Kind.WIND -> WIND_LINE
         Kind.TEMPERATURE -> null
+    }
+
+    /** The gust: the same azure as the mean wind, dashed and thinner (1.8 dp), through the hours that have one. */
+    private fun drawGusts(canvas: Canvas) {
+        val path = Path()
+        var open = false
+        for (i in points.indices) {
+            val gust = gusts.getOrNull(i)
+            if (gust == null) {
+                open = false
+                continue
+            }
+            if (open) path.lineTo(x(i), y(gust)) else path.moveTo(x(i), y(gust))
+            open = true
+        }
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = dp(1.8f)
+        paint.strokeCap = Paint.Cap.ROUND
+        paint.strokeJoin = Paint.Join.ROUND
+        paint.color = WIND_LINE
+        paint.pathEffect = DashPathEffect(floatArrayOf(dp(7f), dp(5f)), 0f)
+        canvas.drawPath(path, paint)
+        paint.pathEffect = null
     }
 
     /** One arrow every two hours under the chart: where the wind goes (the data say where it comes from). */

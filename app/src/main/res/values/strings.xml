@@ -365,7 +365,7 @@
     <string name="p24_title">Pressure, last 24 hours</string>
     <string name="p24_legend">Sea-level pressure in mbar (= hPa), every hour. Long press and drag for the pressure at that time.</string>
     <string name="w24_title">Wind, last 24 hours</string>
-    <string name="w24_legend">Mean wind at 10 m in km/h, every hour; the arrows show where it blows to. Long press and drag for the wind at that time.</string>
+    <string name="w24_legend">Mean wind at 10 m in km/h, every hour (dashed: the gust); the arrows show where it blows to. Long press and drag for the wind at that time.</string>
     <string name="l24_avg">Avg</string>
     <string name="wind_unit">km/h</string>
     <string-array name="wind_compass">
